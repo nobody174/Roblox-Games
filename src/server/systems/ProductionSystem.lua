@@ -17,6 +17,8 @@ function ProductionSystem:new()
 	self.currencySystem = nil
 	self.ghostSystem = nil
 	self.hqSystem = nil
+	self.eventSystem = nil
+	self.prestigeSystem = nil
 	self.lastProductionTick = {} -- UserId -> os.clock()
 	self.accumulatedEnergy = {} -- UserId -> energy amount
 	return self
@@ -32,6 +34,14 @@ end
 
 function ProductionSystem:setHQSystem(hqSystem)
 	self.hqSystem = hqSystem
+end
+
+function ProductionSystem:setEventSystem(eventSystem)
+	self.eventSystem = eventSystem
+end
+
+function ProductionSystem:setPrestigeSystem(prestigeSystem)
+	self.prestigeSystem = prestigeSystem
 end
 
 function ProductionSystem:initializePlayer(player)

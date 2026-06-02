@@ -29,6 +29,7 @@ Constants.Services = {
 Constants.DataStores = {
 	PlayerData = "PlayerData_v1",
 	Analytics = "Analytics_v1",
+	Leaderboard = "Leaderboard_v1",
 }
 
 -- Remote Event/Function Names
@@ -42,6 +43,19 @@ Constants.Remotes = {
 	GetGameState = "GetGameState",
 	UpdateUI = "UpdateUI",
 	ShowNotification = "ShowNotification",
+	Prestige = "Prestige",
+	GetPrestigeInfo = "GetPrestigeInfo",
+	GetQuests = "GetQuests",
+	ClaimQuestReward = "ClaimQuestReward",
+	GetLeaderboard = "GetLeaderboard",
+	GetEventInfo = "GetEventInfo",
+	GachaPull = "GachaPull",
+	UnlockSkin = "UnlockSkin",
+	ApplySkin = "ApplySkin",
+	GetSkins = "GetSkins",
+	ChallengePlayer = "ChallengePlayer",
+	RespondToChallenge = "RespondToChallenge",
+	BattleResult = "BattleResult",
 }
 
 -- Time Constants (in seconds)
@@ -68,6 +82,11 @@ Constants.Notifications = {
 	UpgradeSuccess = "Room upgraded!",
 	ZoneUnlocked = "New zone unlocked!",
 	LevelUp = "Ghost leveled up!",
+	PrestigeSuccess = "Prestige successful! Permanent bonuses increased.",
+	QuestComplete = "Quest complete! Claim your reward.",
+	BattleWon = "You won the ghost battle!",
+	BattleLost = "You lost the ghost battle.",
+	GachaPull = "You pulled a ghost!",
 }
 
 return Constants

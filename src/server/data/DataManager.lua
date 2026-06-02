@@ -53,7 +53,29 @@ local function getDefaultPlayerData(userId)
 		Statistics = {
 			TotalGhostsCaught = 0,
 			TotalEnergieEarned = 0,
+			TotalEnergyEarned = 0,
+			GhostsCaught = 0,
+			HighestZoneReached = "Forest",
 			SessionTime = 0,
+		},
+		Prestige = {
+			Level = 0,
+			TotalPrestiges = 0,
+		},
+		Quests = {
+			Daily = {},
+			Weekly = {},
+			LastDailyReset = 0,
+			LastWeeklyReset = 0,
+		},
+		Gacha = {
+			PityCount = 0,
+			LegendaryPityCount = 0,
+			TotalPulls = 0,
+		},
+		Cosmetics = {
+			UnlockedSkins = { Default = true },
+			GhostSkins = {},
 		},
 	}
 end

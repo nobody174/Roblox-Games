@@ -236,4 +236,131 @@ Config.Security = {
 	RateLimitPerSecond = 10, -- Max requests per second
 }
 
+-- Prestige System
+Config.Prestige = {
+	MaxLevel = 20,
+	BaseThreshold = 1000000, -- 1M energy required for prestige 1
+	ThresholdMultiplier = 2, -- Each level requires 2x more
+	EnergyProductionBonusPerLevel = 0.10, -- +10% per prestige level
+	CatchRateBonusPerLevel = 0.05, -- +5% per prestige level
+	StorageBonusPerFiveLevels = 1, -- +1 ghost storage per 5 levels
+}
+
+-- Quest System
+Config.Quests = {
+	DailyQuestCount = 3,
+	WeeklyQuestCount = 1,
+	DailyResetHour = 0, -- UTC midnight
+	WeeklyResetDay = 2, -- Monday (os.date %w: 2=Mon)
+	Types = {
+		CatchGhosts = {
+			Description = "Catch %d ghosts",
+			Targets = { 5, 10, 25, 50 },
+			Rewards = { Energy = 500, XP = 10 },
+		},
+		EarnEnergy = {
+			Description = "Earn %d energy",
+			Targets = { 1000, 5000, 20000, 100000 },
+			Rewards = { BonusCatches = 3, XP = 15 },
+		},
+		UpgradeRooms = {
+			Description = "Upgrade %d rooms",
+			Targets = { 1, 3, 5 },
+			Rewards = { Energy = 2000, XP = 20 },
+		},
+		TrainGhosts = {
+			Description = "Train a ghost to level %d",
+			Targets = { 3, 5, 8, 10 },
+			Rewards = { Energy = 1000, XP = 25 },
+		},
+	},
+}
+
+-- Leaderboard System
+Config.Leaderboard = {
+	UpdateInterval = 60, -- seconds
+	TopCount = 10,
+	Categories = { "TotalEnergyEarned", "GhostsCaught", "PrestigeLevel", "HighestZone" },
+	ZoneRanks = {
+		Forest = 1,
+		Graveyard = 2,
+		Mansion = 3,
+		DarkDimension = 4,
+	},
+}
+
+-- Event System
+Config.Events = {
+	Active = {}, -- Populated at runtime or by developer
+	DefaultBonusMultiplier = 1.0,
+}
+
+-- Gacha System
+Config.Gacha = {
+	StandardPullCost = 100,
+	PremiumPullCost = 500,
+	TenPullCostStandard = 900,
+	TenPullCostPremium = 4500,
+	PityRareAt = 10,
+	PityLegendaryAt = 50,
+	StandardWeights = {
+		Common = 0.60,
+		Uncommon = 0.25,
+		Rare = 0.10,
+		Legendary = 0.04,
+		Mythic = 0.01,
+	},
+	PremiumWeights = {
+		Common = 0.30,
+		Uncommon = 0.35,
+		Rare = 0.20,
+		Legendary = 0.12,
+		Mythic = 0.03,
+	},
+}
+
+-- Cosmetics System
+Config.Cosmetics = {
+	Skins = {
+		Default = {
+			DisplayName = "Default",
+			Cost = 0,
+			CostType = "free",
+		},
+		GhostKing = {
+			DisplayName = "Ghost King",
+			Cost = 50000,
+			CostType = "energy",
+		},
+		Neon = {
+			DisplayName = "Neon",
+			Cost = 25000,
+			CostType = "energy",
+		},
+		Sparkle = {
+			DisplayName = "Sparkle",
+			Cost = 15000,
+			CostType = "energy",
+		},
+		Phantom = {
+			DisplayName = "Phantom",
+			Cost = 999,
+			CostType = "robux",
+		},
+	},
+}
+
+-- PvP System
+Config.PvP = {
+	BattleCooldown = 300, -- 5 minutes
+	WinnerEnergyPercent = 0.10, -- 10% transfer
+	RarityPowerWeights = {
+		Common = 1,
+		Uncommon = 2,
+		Rare = 5,
+		Legendary = 10,
+		Mythic = 25,
+	},
+}
+
 return Config

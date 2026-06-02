@@ -1,33 +1,9 @@
-# System files
+*.rbxl.lock
 .DS_Store
 Thumbs.db
-
-# IDE
-.vscode/
-.idea/
 *.swp
 *.swo
-
-# Roblox Studio
-*.rbxl
-*.rbxm
-*.rbxlx
-
-# Local environment
-.env
-.env.local
-.env.*.local
-
-# Build artifacts
-build/
-dist/
-
-# Testing
-*.coverage
-.nyc_output/
-coverage/
-
-# Node (if using any build tools)
+*~
+.vscode/
 node_modules/
-package-lock.json
-yarn.lock
+*.log
