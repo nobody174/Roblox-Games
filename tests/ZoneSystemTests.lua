@@ -6,7 +6,7 @@
   "It's never too late to give up!"
 ]=]
 
-local TestRunner = require(script.Parent:WaitForChild("testRunner"))
+local TestRunner = require("testRunner")
 
 local Config = {
 	Zones = {
