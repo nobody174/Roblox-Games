@@ -55,7 +55,7 @@ jobs:
 
     - name: Verify Lua Syntax
       run: |
-        for file in $(find src/server/Systems -name "*.lua" -type f); do
+        for file in $(find src/server/systems -name "*.lua" -type f); do
           echo "Checking $file"
           luac -p "$file" || exit 1
         done
@@ -82,7 +82,7 @@ jobs:
 
     - name: Validate Project Structure
       run: |
-        test -d "src/server/Systems" || exit 1
+        test -d "src/server/systems" || exit 1
         test -d "src/server/Tests" || exit 1
         test -d "src/server/data" || exit 1
         test -d "src/shared" || exit 1
@@ -92,14 +92,14 @@ jobs:
     - name: Check for Required Files
       run: |
         required_files=(
-          "src/server/Systems/QuestSystem.lua"
-          "src/server/Systems/LeaderboardSystem.lua"
-          "src/server/Systems/GachaSystem.lua"
-          "src/server/Systems/CosmeticsSystem.lua"
-          "src/server/Systems/PvPSystem.lua"
-          "src/server/Systems/ProductionSystem.lua"
-          "src/server/Systems/PrestigeSystem.lua"
-          "src/server/Systems/EventSystem.lua"
+          "src/server/systems/QuestSystem.lua"
+          "src/server/systems/LeaderboardSystem.lua"
+          "src/server/systems/GachaSystem.lua"
+          "src/server/systems/CosmeticsSystem.lua"
+          "src/server/systems/PvPSystem.lua"
+          "src/server/systems/ProductionSystem.lua"
+          "src/server/systems/PrestigeSystem.lua"
+          "src/server/systems/EventSystem.lua"
           "src/server/Tests/QuestSystemTests.lua"
           "src/server/Tests/LeaderboardSystemTests.lua"
           "src/server/Tests/GachaSystemTests.lua"
