@@ -115,6 +115,8 @@ end
 
 -- Mock Monetization System
 local MockMonetizationSystem = {}
+MockMonetizationSystem.__index = MockMonetizationSystem
+
 function MockMonetizationSystem:new()
 	local self = setmetatable({}, MockMonetizationSystem)
 	self.passes = {}

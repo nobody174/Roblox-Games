@@ -55,6 +55,8 @@ end
 
 -- Mock Ghost System
 local MockGhostSystem = {}
+MockGhostSystem.__index = MockGhostSystem
+
 function MockGhostSystem:new()
 	local self = setmetatable({}, MockGhostSystem)
 	self.ghosts = {}
