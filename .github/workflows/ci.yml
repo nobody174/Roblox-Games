@@ -18,34 +18,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Lua
-        uses: leafo/gh-action-lua@v10
-        with:
-          luaVersion: "5.3"
+      - name: Install Lua
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.3
 
       - name: Run Ghost System Tests
-        run: lua tests/GhostSystemTests.lua
+        run: lua5.3 tests/GhostSystemTests.lua
 
       - name: Run Production System Tests
-        run: lua tests/ProductionSystemTests.lua
+        run: lua5.3 tests/ProductionSystemTests.lua
 
       - name: Run HQ System Tests
-        run: lua tests/HQSystemTests.lua
+        run: lua5.3 tests/HQSystemTests.lua
 
       - name: Run Training System Tests
-        run: lua tests/TrainingSystemTests.lua
+        run: lua5.3 tests/TrainingSystemTests.lua
 
       - name: Run Zone System Tests
-        run: lua tests/ZoneSystemTests.lua
+        run: lua5.3 tests/ZoneSystemTests.lua
 
       - name: Run Monetization System Tests
-        run: lua tests/MonetizationSystemTests.lua
+        run: lua5.3 tests/MonetizationSystemTests.lua
 
       - name: Run Auto-Catch System Tests
-        run: lua tests/AutoCatchSystemTests.lua
+        run: lua5.3 tests/AutoCatchSystemTests.lua
 
       - name: Run Auto-Train System Tests
-        run: lua tests/AutoTrainSystemTests.lua
+        run: lua5.3 tests/AutoTrainSystemTests.lua
 
   # ── Job 2: Lint Code ─────────────────────────────────────────
   lint:
@@ -54,15 +54,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Lua
-        uses: leafo/gh-action-lua@v10
-        with:
-          luaVersion: "5.3"
-
-      - name: Install luacheck
+      - name: Install Lua & Luacheck
         run: |
-          apt-get update
-          apt-get install -y luacheck
+          sudo apt-get update
+          sudo apt-get install -y lua5.3 luarocks
+          sudo luarocks install luacheck
 
       - name: Lint server code
         run: luacheck src/server --no-undefined-globals -d
