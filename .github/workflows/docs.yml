@@ -2,7 +2,7 @@ name: Docs — Build & Update
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop, master]
     paths:
       - 'docs/**'
       - 'src/**'
