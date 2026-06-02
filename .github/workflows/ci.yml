@@ -1,0 +1,101 @@
+name: CI/CD — Test & Validate
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  # ── Job 1: Run Lua Tests ─────────────────────────────────────
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Lua
+        uses: leafo/gh-action-lua@v10
+        with:
+          luaVersion: "5.3"
+
+      - name: Run Ghost System Tests
+        run: lua tests/GhostSystemTests.lua
+
+      - name: Run Production System Tests
+        run: lua tests/ProductionSystemTests.lua
+
+      - name: Run HQ System Tests
+        run: lua tests/HQSystemTests.lua
+
+  # ── Job 2: Lint Code ─────────────────────────────────────────
+  lint:
+    name: 📝 Lint Code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Lua
+        uses: leafo/gh-action-lua@v10
+        with:
+          luaVersion: "5.3"
+
+      - name: Install luacheck
+        run: |
+          apt-get update
+          apt-get install -y luacheck
+
+      - name: Lint server code
+        run: luacheck src/server --no-undefined-globals -d
+        continue-on-error: true
+
+      - name: Lint client code
+        run: luacheck src/client --no-undefined-globals -d
+        continue-on-error: true
+
+      - name: Lint shared code
+        run: luacheck src/shared --no-undefined-globals -d
+        continue-on-error: true
+
+  # ── Job 3: Check Code Quality ────────────────────────────────
+  quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count lines of code
+        run: |
+          echo "=== Code Statistics ===" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Source Files:" >> $GITHUB_STEP_SUMMARY
+          find src -name "*.lua" -exec wc -l {} + | tail -1 >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test Files:" >> $GITHUB_STEP_SUMMARY
+          find tests -name "*.lua" -exec wc -l {} + | tail -1 >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify documentation
+        run: |
+          echo "Checking for required files..."
+          test -f README.md || (echo "Missing README.md" && exit 1)
+          test -f MASTER_PROMPT.md || (echo "Missing MASTER_PROMPT.md" && exit 1)
+          echo "All required files present ✓"
+
+  # ── Job 4: Build Summary ─────────────────────────────────────
+  summary:
+    name: ✅ Build Summary
+    needs: [test, lint, quality]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# CI/CD Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Quality: ${{ needs.quality.result }}" >> $GITHUB_STEP_SUMMARY
