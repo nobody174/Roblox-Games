@@ -21,29 +21,17 @@ jobs:
       - name: Install Lua
         run: sudo apt-get update && sudo apt-get install -y lua5.3
 
-      - name: Create test runner wrapper
-        run: |
-          cat > run_tests.lua << 'LUA'
-          local function load_test(path)
-            local chunk, err = loadfile(path)
-            if not chunk then
-              print("Failed to load " .. path .. ": " .. err)
-              os.exit(1)
-            end
-            chunk()
-          end
-          load_test("tests/GhostSystemTests.lua")
-          load_test("tests/ProductionSystemTests.lua")
-          load_test("tests/HQSystemTests.lua")
-          load_test("tests/TrainingSystemTests.lua")
-          load_test("tests/ZoneSystemTests.lua")
-          load_test("tests/MonetizationSystemTests.lua")
-          load_test("tests/AutoCatchSystemTests.lua")
-          load_test("tests/AutoTrainSystemTests.lua")
-          LUA
-
       - name: Run all tests
-        run: lua5.3 run_tests.lua
+        run: |
+          cd tests
+          lua5.3 GhostSystemTests.lua
+          lua5.3 ProductionSystemTests.lua
+          lua5.3 HQSystemTests.lua
+          lua5.3 TrainingSystemTests.lua
+          lua5.3 ZoneSystemTests.lua
+          lua5.3 MonetizationSystemTests.lua
+          lua5.3 AutoCatchSystemTests.lua
+          lua5.3 AutoTrainSystemTests.lua
 
   # ── Job 2: Check Code Quality ────────────────────────────────
   quality:
