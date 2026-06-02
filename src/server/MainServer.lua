@@ -24,6 +24,8 @@ local HQSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("HQS
 local TrainingSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("TrainingSystem"))
 local ZoneSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("ZoneSystem"))
 local MonetizationSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("MonetizationSystem"))
+local AutoCatchSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("AutoCatchSystem"))
+local AutoTrainSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("AutoTrainSystem"))
 
 -- Initialize systems
 local dataManager = DataManager:new()
@@ -35,6 +37,8 @@ local hqSystem = HQSystem:new()
 local trainingSystem = TrainingSystem:new()
 local zoneSystem = ZoneSystem:new()
 local monetizationSystem = MonetizationSystem:new()
+local autoCatchSystem = AutoCatchSystem:new()
+local autoTrainSystem = AutoTrainSystem:new()
 
 -- Link systems together
 currencySystem:setDataManager(dataManager)
@@ -48,6 +52,13 @@ zoneSystem:setCurrencySystem(currencySystem)
 zoneSystem:setGhostSystem(ghostSystem)
 monetizationSystem:setCurrencySystem(currencySystem)
 monetizationSystem:setGhostSystem(ghostSystem)
+autoCatchSystem:setGhostSystem(ghostSystem)
+autoCatchSystem:setVacuumSystem(vacuumSystem)
+autoCatchSystem:setMonetizationSystem(monetizationSystem)
+autoTrainSystem:setTrainingSystem(trainingSystem)
+autoTrainSystem:setGhostSystem(ghostSystem)
+autoTrainSystem:setMonetizationSystem(monetizationSystem)
+autoTrainSystem:setCurrencySystem(currencySystem)
 
 print("[Ghost Catcher Tycoon] Server started")
 
@@ -107,6 +118,8 @@ local function onPlayerJoined(player)
 	trainingSystem:initializePlayer(player)
 	zoneSystem:initializePlayer(player)
 	monetizationSystem:initializePlayer(player)
+	autoCatchSystem:initializePlayer(player)
+	autoTrainSystem:initializePlayer(player)
 
 	-- Send initial game state to client
 	local rs = Constants.Paths.ReplicatedStorage
@@ -137,6 +150,8 @@ local function onPlayerLeft(player)
 	trainingSystem:removePlayer(player.UserId)
 	zoneSystem:removePlayer(player.UserId)
 	monetizationSystem:removePlayer(player.UserId)
+	autoCatchSystem:removePlayer(player.UserId)
+	autoTrainSystem:removePlayer(player.UserId)
 	dataManager:clearCache(player.UserId)
 end
 
@@ -215,10 +230,12 @@ local function setupProductionLoop()
 	while true do
 		task.wait(Config.Production.UpdateFrequency)
 
-		-- Process production and training for all online players
+		-- Process production, training, and auto systems for all online players
 		for _, player in pairs(Players:GetPlayers()) do
 			productionSystem:tick(player)
 			trainingSystem:tick(player)
+			autoCatchSystem:tick(player, zoneSystem:getUnlockedZones(player)[1] or "Forest")
+			autoTrainSystem:tick(player)
 
 			-- Send updated UI data
 			local updateRemote = Constants.Paths.ReplicatedStorage:FindChild("Remotes"):FindChild(Constants.Remotes.UpdateUI)
@@ -230,6 +247,8 @@ local function setupProductionLoop()
 					ProductionRate = productionSystem:calculateEnergyPerSecond(player),
 					UnlockedZones = zoneSystem:getUnlockedZones(player),
 					MonetizationData = monetizationSystem:getPlayerMonetizationData(player),
+					AutoCatchEnabled = autoCatchSystem:isAutoCatchEnabled(player),
+					AutoTrainQueue = autoTrainSystem:getAutoTrainQueue(player),
 				}
 				updateRemote:FireClient(player, uiData)
 			end

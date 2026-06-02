@@ -41,6 +41,12 @@ jobs:
       - name: Run Monetization System Tests
         run: lua tests/MonetizationSystemTests.lua
 
+      - name: Run Auto-Catch System Tests
+        run: lua tests/AutoCatchSystemTests.lua
+
+      - name: Run Auto-Train System Tests
+        run: lua tests/AutoTrainSystemTests.lua
+
   # ── Job 2: Lint Code ─────────────────────────────────────────
   lint:
     name: 📝 Lint Code
