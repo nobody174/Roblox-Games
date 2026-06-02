@@ -42,6 +42,42 @@ jobs:
       run: lua src/server/Tests/PvPSystemTests.lua
       continue-on-error: false
 
+    - name: Run PrestigeSystem Tests
+      run: lua tests/PrestigeSystemTests.lua
+      continue-on-error: false
+
+    - name: Run GhostSystem Tests
+      run: lua tests/GhostSystemTests.lua
+      continue-on-error: false
+
+    - name: Run ProductionSystem Tests
+      run: lua tests/ProductionSystemTests.lua
+      continue-on-error: false
+
+    - name: Run TrainingSystem Tests
+      run: lua tests/TrainingSystemTests.lua
+      continue-on-error: false
+
+    - name: Run ZoneSystem Tests
+      run: lua tests/ZoneSystemTests.lua
+      continue-on-error: false
+
+    - name: Run HQSystem Tests
+      run: lua tests/HQSystemTests.lua
+      continue-on-error: false
+
+    - name: Run MonetizationSystem Tests
+      run: lua tests/MonetizationSystemTests.lua
+      continue-on-error: false
+
+    - name: Run AutoCatchSystem Tests
+      run: lua tests/AutoCatchSystemTests.lua
+      continue-on-error: false
+
+    - name: Run AutoTrainSystem Tests
+      run: lua tests/AutoTrainSystemTests.lua
+      continue-on-error: false
+
   code-quality:
     runs-on: ubuntu-latest
 
