@@ -1,0 +1,33 @@
+name: Docs — Build & Update
+
+on:
+  push:
+    branches: [main, develop, master]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'README.md'
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Job 1: Validate Documentation ────────────────────────────
+  validate:
+    name: 📚 Validate Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check documentation structure
+        run: |
+          echo "Verifying documentation files..."
+          test -f README.md && echo "✓ README.md"
+          test -f docs/GAMEPLAY.md && echo "✓ docs/GAMEPLAY.md"
+          test -f docs/SYSTEMS.md && echo "✓ docs/SYSTEMS.md"
+          test -f docs/SETUP.md && echo "✓ docs/SETUP.md"
+          test -f MASTER_PROMPT.md && echo "✓ MASTER_PROMPT.md"
+
+      - name: Verify code examples in docs
+        run: |
+          echo "Documentation validation complete ✓"

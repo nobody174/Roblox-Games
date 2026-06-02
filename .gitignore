@@ -1,36 +1,33 @@
-# Roblox Studio
-*.rbxl~
-*.rbxl.backup
-.Roblox/
+# System files
+.DS_Store
+Thumbs.db
 
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-.DS_Store
 
-# OS
-Thumbs.db
-.DS_Store
-*.log
+# Roblox Studio
+*.rbxl
+*.rbxm
+*.rbxlx
 
-# Dependencies
-node_modules/
-packages/
-
-# Local testing
-local_tests/
-*.tmp
-
-# Secrets
+# Local environment
 .env
 .env.local
-*.key
-*.pem
+.env.*.local
 
-# Build outputs
-dist/
+# Build artifacts
 build/
-out/
+dist/
+
+# Testing
+*.coverage
+.nyc_output/
+coverage/
+
+# Node (if using any build tools)
+node_modules/
+package-lock.json
+yarn.lock
