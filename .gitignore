@@ -1,0 +1,36 @@
+# Roblox Studio
+*.rbxl~
+*.rbxl.backup
+.Roblox/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+*.log
+
+# Dependencies
+node_modules/
+packages/
+
+# Local testing
+local_tests/
+*.tmp
+
+# Secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Build outputs
+dist/
+build/
+out/
