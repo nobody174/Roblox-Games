@@ -21,6 +21,9 @@ local VacuumSystem = require(script.Parent:WaitForChild("systems"):WaitForChild(
 local GhostSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("GhostSystem"))
 local ProductionSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("ProductionSystem"))
 local HQSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("HQSystem"))
+local TrainingSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("TrainingSystem"))
+local ZoneSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("ZoneSystem"))
+local MonetizationSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("MonetizationSystem"))
 
 -- Initialize systems
 local dataManager = DataManager:new()
@@ -29,6 +32,9 @@ local vacuumSystem = VacuumSystem:new()
 local ghostSystem = GhostSystem:new()
 local productionSystem = ProductionSystem:new()
 local hqSystem = HQSystem:new()
+local trainingSystem = TrainingSystem:new()
+local zoneSystem = ZoneSystem:new()
+local monetizationSystem = MonetizationSystem:new()
 
 -- Link systems together
 currencySystem:setDataManager(dataManager)
@@ -36,6 +42,12 @@ productionSystem:setCurrencySystem(currencySystem)
 productionSystem:setGhostSystem(ghostSystem)
 productionSystem:setHQSystem(hqSystem)
 hqSystem:setCurrencySystem(currencySystem)
+trainingSystem:setCurrencySystem(currencySystem)
+trainingSystem:setGhostSystem(ghostSystem)
+zoneSystem:setCurrencySystem(currencySystem)
+zoneSystem:setGhostSystem(ghostSystem)
+monetizationSystem:setCurrencySystem(currencySystem)
+monetizationSystem:setGhostSystem(ghostSystem)
 
 print("[Ghost Catcher Tycoon] Server started")
 
@@ -72,6 +84,9 @@ local function setupRemotes()
 	createRemote(Constants.Remotes.UpdateUI, "RemoteEvent")
 	createRemote(Constants.Remotes.ShowNotification, "RemoteEvent")
 	createRemote(Constants.Remotes.GetGameState, "RemoteFunction")
+	createRemote(Constants.Remotes.SpawnBoss, "RemoteEvent")
+	createRemote(Constants.Remotes.PurchaseGamePass, "RemoteEvent")
+	createRemote(Constants.Remotes.PurchaseProduct, "RemoteEvent")
 
 	print("[Ghost Catcher Tycoon] Remotes created")
 end
@@ -89,6 +104,9 @@ local function onPlayerJoined(player)
 	ghostSystem:initializePlayer(player)
 	productionSystem:initializePlayer(player)
 	hqSystem:initializePlayer(player)
+	trainingSystem:initializePlayer(player)
+	zoneSystem:initializePlayer(player)
+	monetizationSystem:initializePlayer(player)
 
 	-- Send initial game state to client
 	local rs = Constants.Paths.ReplicatedStorage
@@ -116,6 +134,9 @@ local function onPlayerLeft(player)
 	ghostSystem:removePlayer(player.UserId)
 	productionSystem:removePlayer(player.UserId)
 	hqSystem:removePlayer(player.UserId)
+	trainingSystem:removePlayer(player.UserId)
+	zoneSystem:removePlayer(player.UserId)
+	monetizationSystem:removePlayer(player.UserId)
 	dataManager:clearCache(player.UserId)
 end
 
@@ -136,14 +157,68 @@ local function setupVacuumRemote()
 	print("[Ghost Catcher Tycoon] Vacuum remote setup complete")
 end
 
+-- Setup training remote
+local function setupTrainingRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local trainRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.TrainGhost)
+
+	trainRemote.OnServerEvent:Connect(function(player, ghostId, targetLevel)
+		local success, result = trainingSystem:startTraining(player, ghostId, targetLevel)
+		if not success then
+			print("[Error] Training failed for " .. player.Name .. ": " .. result)
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Training remote setup complete")
+end
+
+-- Setup zone unlock remote
+local function setupZoneRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local unlockRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.UnlockZone)
+
+	unlockRemote.OnServerEvent:Connect(function(player, zoneName)
+		local success, result = zoneSystem:unlockZone(player, zoneName)
+		if not success then
+			print("[Error] Zone unlock failed for " .. player.Name .. ": " .. result)
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Zone remote setup complete")
+end
+
+-- Setup monetization remote
+local function setupMonetizationRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local passRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.PurchaseGamePass)
+	local productRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.PurchaseProduct)
+
+	passRemote.OnServerEvent:Connect(function(player, passName)
+		local success, result = monetizationSystem:grantGamePass(player, passName)
+		if not success then
+			print("[Error] GamePass grant failed for " .. player.Name .. ": " .. result)
+		end
+	end)
+
+	productRemote.OnServerEvent:Connect(function(player, productName, quantity)
+		local success, result = monetizationSystem:purchaseProduct(player, productName, quantity or 1)
+		if not success then
+			print("[Error] Product purchase failed for " .. player.Name .. ": " .. result)
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Monetization remotes setup complete")
+end
+
 -- Setup production loop
 local function setupProductionLoop()
 	while true do
 		task.wait(Config.Production.UpdateFrequency)
 
-		-- Process production for all online players
+		-- Process production and training for all online players
 		for _, player in pairs(Players:GetPlayers()) do
 			productionSystem:tick(player)
+			trainingSystem:tick(player)
 
 			-- Send updated UI data
 			local updateRemote = Constants.Paths.ReplicatedStorage:FindChild("Remotes"):FindChild(Constants.Remotes.UpdateUI)
@@ -153,6 +228,8 @@ local function setupProductionLoop()
 					VacuumCharge = vacuumSystem:getCharge(player),
 					GhostCount = ghostSystem:getPlayerGhostCount(player),
 					ProductionRate = productionSystem:calculateEnergyPerSecond(player),
+					UnlockedZones = zoneSystem:getUnlockedZones(player),
+					MonetizationData = monetizationSystem:getPlayerMonetizationData(player),
 				}
 				updateRemote:FireClient(player, uiData)
 			end
@@ -197,6 +274,9 @@ local function initialize()
 
 	-- Setup remotes
 	setupVacuumRemote()
+	setupTrainingRemote()
+	setupZoneRemote()
+	setupMonetizationRemote()
 
 	-- Start production loop
 	task.spawn(setupProductionLoop)

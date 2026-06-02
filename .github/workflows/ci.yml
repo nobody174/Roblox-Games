@@ -32,6 +32,15 @@ jobs:
       - name: Run HQ System Tests
         run: lua tests/HQSystemTests.lua
 
+      - name: Run Training System Tests
+        run: lua tests/TrainingSystemTests.lua
+
+      - name: Run Zone System Tests
+        run: lua tests/ZoneSystemTests.lua
+
+      - name: Run Monetization System Tests
+        run: lua tests/MonetizationSystemTests.lua
+
   # ── Job 2: Lint Code ─────────────────────────────────────────
   lint:
     name: 📝 Lint Code
@@ -83,6 +92,7 @@ jobs:
           echo "Checking for required files..."
           test -f README.md || (echo "Missing README.md" && exit 1)
           test -f MASTER_PROMPT.md || (echo "Missing MASTER_PROMPT.md" && exit 1)
+          test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
           echo "All required files present ✓"
 
   # ── Job 4: Build Summary ─────────────────────────────────────
