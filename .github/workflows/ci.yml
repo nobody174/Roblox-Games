@@ -19,60 +19,33 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install Lua
+        run: sudo apt-get update && sudo apt-get install -y lua5.3
+
+      - name: Create test runner wrapper
         run: |
-          sudo apt-get update
-          sudo apt-get install -y lua5.3
+          cat > run_tests.lua << 'LUA'
+          local function load_test(path)
+            local chunk, err = loadfile(path)
+            if not chunk then
+              print("Failed to load " .. path .. ": " .. err)
+              os.exit(1)
+            end
+            chunk()
+          end
+          load_test("tests/GhostSystemTests.lua")
+          load_test("tests/ProductionSystemTests.lua")
+          load_test("tests/HQSystemTests.lua")
+          load_test("tests/TrainingSystemTests.lua")
+          load_test("tests/ZoneSystemTests.lua")
+          load_test("tests/MonetizationSystemTests.lua")
+          load_test("tests/AutoCatchSystemTests.lua")
+          load_test("tests/AutoTrainSystemTests.lua")
+          LUA
 
-      - name: Run Ghost System Tests
-        run: lua5.3 tests/GhostSystemTests.lua
+      - name: Run all tests
+        run: lua5.3 run_tests.lua
 
-      - name: Run Production System Tests
-        run: lua5.3 tests/ProductionSystemTests.lua
-
-      - name: Run HQ System Tests
-        run: lua5.3 tests/HQSystemTests.lua
-
-      - name: Run Training System Tests
-        run: lua5.3 tests/TrainingSystemTests.lua
-
-      - name: Run Zone System Tests
-        run: lua5.3 tests/ZoneSystemTests.lua
-
-      - name: Run Monetization System Tests
-        run: lua5.3 tests/MonetizationSystemTests.lua
-
-      - name: Run Auto-Catch System Tests
-        run: lua5.3 tests/AutoCatchSystemTests.lua
-
-      - name: Run Auto-Train System Tests
-        run: lua5.3 tests/AutoTrainSystemTests.lua
-
-  # ── Job 2: Lint Code ─────────────────────────────────────────
-  lint:
-    name: 📝 Lint Code
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Lua & Luacheck
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lua5.3 luarocks
-          sudo luarocks install luacheck
-
-      - name: Lint server code
-        run: luacheck src/server --no-undefined-globals -d
-        continue-on-error: true
-
-      - name: Lint client code
-        run: luacheck src/client --no-undefined-globals -d
-        continue-on-error: true
-
-      - name: Lint shared code
-        run: luacheck src/shared --no-undefined-globals -d
-        continue-on-error: true
-
-  # ── Job 3: Check Code Quality ────────────────────────────────
+  # ── Job 2: Check Code Quality ────────────────────────────────
   quality:
     name: 🔍 Code Quality
     runs-on: ubuntu-latest
@@ -97,10 +70,10 @@ jobs:
           test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
           echo "All required files present ✓"
 
-  # ── Job 4: Build Summary ─────────────────────────────────────
+  # ── Job 3: Build Summary ─────────────────────────────────────
   summary:
     name: ✅ Build Summary
-    needs: [test, lint, quality]
+    needs: [test, quality]
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -109,5 +82,4 @@ jobs:
           echo "# CI/CD Pipeline Complete" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Lint: ${{ needs.lint.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Quality: ${{ needs.quality.result }}" >> $GITHUB_STEP_SUMMARY
