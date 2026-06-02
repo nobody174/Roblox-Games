@@ -50,7 +50,8 @@
 ```
 ghost-catcher-tycoon/
 ├── README.md                     [Main game overview]
-├── STATUS.md                     [Current game status]
+├── START_HERE.md                 [Quick start guide]
+├── PROJECT_SUMMARY.md            [This file]
 ├── .gitignore                    [Git ignore rules]
 │
 ├── src/
@@ -68,11 +69,11 @@ ghost-catcher-tycoon/
 │       └── constants.lua         [Service constants (70 lines)]
 │
 ├── docs/
-│   ├── SETUP.md                  [Installation & setup]
-│   ├── FEATURES.md               [Feature documentation]
-│   ├── GAMEPLAY.md               [Gameplay mechanics]
+│   ├── README.md                 [Game overview]
+│   ├── GAMEPLAY.md               [Game rules & mechanics]
+│   ├── SETUP.md                  [Setup instructions]
 │   ├── SYSTEMS.md                [Technical architecture]
-│   └── archive/                  [Historical development docs]
+│   └── FEATURES.md               [Feature tracking]
 │
 └── place.rbxl                    [Roblox game file]
 ```
@@ -261,5 +262,3 @@ Premium Robux Egg:   199 Robux, best rate
 **Last Updated:** June 2, 2026
 
 🎮 Ghost Catcher Tycoon is feature-complete and ready for launch! 👻
-
-Built with assistance from Claude Code by Anthropic.
