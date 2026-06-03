@@ -18,19 +18,19 @@ Config.DataStoreRetries = 3
 Config.DataStoreRetryDelay = 2 -- seconds
 
 -- Currency
-Config.InitialEnergy = 5000
-Config.EnergyPerSecondBase = 1
+Config.InitialEnergy = 5000 -- Starting energy helps players catch ghosts immediately
+Config.EnergyPerSecondBase = 1 -- Base energy per second (multiplied by ghost stats)
 
 -- Vacuum System
-Config.VacuumChargePerClick = 5
-Config.VacuumMaxCharge = 100
-Config.VacuumChargeCooldown = 0 -- no cooldown
+Config.VacuumChargePerClick = 5 -- +5% charge per click (20 clicks to full)
+Config.VacuumMaxCharge = 100 -- 100% max charge
+Config.VacuumChargeCooldown = 0 -- no cooldown (players can spam charge)
 
 -- Ghost System
 Config.DefaultGhostStorage = 5
 Config.GhostStoragePerUpgrade = 5
-Config.GhostSpawnRate = 5 -- ghosts per second per zone
-Config.GhostDespawnTime = 60 -- seconds before ghost leaves
+Config.GhostSpawnRate = 3 -- spawn 1 ghost every 3 seconds per zone (balanced for catching)
+Config.GhostDespawnTime = 60 -- seconds before ghost leaves (players have 60s to catch)
 
 -- Ghost Rarities (Catch Chance, Energy Output)
 Config.Rarities = {

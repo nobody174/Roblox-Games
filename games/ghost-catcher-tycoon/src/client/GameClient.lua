@@ -417,6 +417,8 @@ function GameClient:setupInputHandlers()
 	self.ui.catchButton.MouseButton1Click:Connect(function()
 		self.remotes.CatchGhost:FireServer()
 		self:showButtonFeedback(self.ui.catchButton)
+		-- Show catch animation feedback
+		self:playCatchAnimation()
 	end)
 
 	-- Handle bring home button click
@@ -1153,6 +1155,24 @@ function GameClient:showButtonFeedback(button)
 	button.BackgroundColor3 = Color3.fromRGB(255, 255, 100)
 	task.wait(0.15)
 	button.BackgroundColor3 = originalColor
+end
+
+function GameClient:playCatchAnimation()
+	-- Create a flash effect on catch button
+	local catchButton = self.ui.catchButton
+	local originalSize = catchButton.Size
+
+	-- Pulse animation
+	local tweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+	local tween = TweenService:Create(catchButton, tweenInfo, { Size = UDim2.new(0, 100, 0, 100) })
+	tween:Play()
+
+	task.wait(0.1)
+
+	-- Shrink back
+	local tweenInfo2 = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	local tween2 = TweenService:Create(catchButton, tweenInfo2, { Size = originalSize })
+	tween2:Play()
 end
 
 function GameClient:showNotification(message, color)
