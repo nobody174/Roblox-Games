@@ -54,6 +54,7 @@ function GameClient:waitForRemotes()
 	self.remotes.GetGameState = remotesFolder:WaitForChild(Constants.Remotes.GetGameState)
 	self.remotes.ShowNotification = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
 	self.remotes.UpgradeRoom = remotesFolder:WaitForChild(Constants.Remotes.UpgradeRoom)
+	self.remotes.UnlockZone = remotesFolder:WaitForChild(Constants.Remotes.UnlockZone)
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -229,6 +230,12 @@ function GameClient:setupUI()
 					print("[Ghost Catcher Tycoon] Calling populateHQTab...")
 					self:populateHQTab()
 					self.populatedTabs["HQ"] = true
+				end
+
+				if tabName == "Zones" and not self.populatedTabs["Zones"] then
+					print("[Ghost Catcher Tycoon] Calling populateZonesTab...")
+					self:populateZonesTab()
+					self.populatedTabs["Zones"] = true
 				end
 
 				if not self.tabExpanded then
@@ -584,6 +591,140 @@ function GameClient:populateHQTab()
 		end)
 		upgradeButton.MouseLeave:Connect(function()
 			upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		end)
+	end
+end
+
+function GameClient:populateZonesTab()
+	local zonesTabContent = self.ui.tabContents["Zones"]
+	if not zonesTabContent then return end
+
+	-- Clear existing content
+	for _, child in ipairs(zonesTabContent:GetChildren()) do
+		if child:IsA("Frame") and child.Name:match("ZoneCard_") then
+			child:Destroy()
+		end
+		if child:IsA("UIListLayout") then
+			child:Destroy()
+		end
+	end
+
+	zonesTabContent.CanvasSize = UDim2.new(1, 0, 0, 1100)
+
+	local zoneListLayout = Instance.new("UIListLayout")
+	zoneListLayout.FillDirection = Enum.FillDirection.Vertical
+	zoneListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	zoneListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	zoneListLayout.Padding = UDim.new(0, 8)
+	zoneListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	zoneListLayout.Parent = zonesTabContent
+
+	print("[Ghost Catcher Tycoon] Populating Zones tab...")
+
+	-- Define zones (from config)
+	local zones = {
+		{ name = "Whisper Woods", emoji = "🌲", cost = 0, description = "Starter zone" },
+		{ name = "Foggy Fields", emoji = "🌫", cost = 1500, description = "Slightly thicker fog" },
+		{ name = "Gloomy Graveyard", emoji = "⚰", cost = 6000, description = "First real challenge" },
+		{ name = "Electro Alley", emoji = "⚡", cost = 18000, description = "Electric theme" },
+		{ name = "Frostbite Caverns", emoji = "❄", cost = 42000, description = "Icy crystals" },
+		{ name = "Sunken Spirit Reef", emoji = "🌊", cost = 90000, description = "Underwater ruins" },
+		{ name = "Clocktower District", emoji = "🕰", cost = 180000, description = "Steampunk city" },
+		{ name = "Astral Observatory", emoji = "🔭", cost = 350000, description = "Cosmic vibe" },
+		{ name = "Phantom Fortress", emoji = "🏰", cost = 700000, description = "Dark castle" },
+		{ name = "The Rift", emoji = "🌀", cost = 1500000, description = "Chaotic realm" },
+		{ name = "Eternity Nexus", emoji = "♾", cost = 0, description = "Final zone" },
+	}
+
+	for _, zoneData in ipairs(zones) do
+		-- Create zone card frame
+		local zoneCard = Instance.new("Frame")
+		zoneCard.Name = "ZoneCard_" .. zoneData.name
+		zoneCard.Size = UDim2.new(1, 0, 0, 90)
+		zoneCard.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		zoneCard.BorderSizePixel = 0
+		zoneCard.Parent = zonesTabContent
+
+		local zoneCardCorner = Instance.new("UICorner")
+		zoneCardCorner.CornerRadius = UDim.new(0, 8)
+		zoneCardCorner.Parent = zoneCard
+
+		-- Zone name label
+		local zoneNameLabel = Instance.new("TextLabel")
+		zoneNameLabel.Name = "ZoneName"
+		zoneNameLabel.Size = UDim2.new(0, 200, 0, 30)
+		zoneNameLabel.Position = UDim2.new(0, 10, 0, 5)
+		zoneNameLabel.BackgroundTransparency = 1
+		zoneNameLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+		zoneNameLabel.TextSize = 16
+		zoneNameLabel.Font = Enum.Font.GothamBold
+		zoneNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		zoneNameLabel.Text = zoneData.emoji .. " " .. zoneData.name
+		zoneNameLabel.Parent = zoneCard
+
+		-- Description
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Name = "Description"
+		descLabel.Size = UDim2.new(0, 250, 0, 20)
+		descLabel.Position = UDim2.new(0, 10, 0, 35)
+		descLabel.BackgroundTransparency = 1
+		descLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		descLabel.TextSize = 11
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.TextXAlignment = Enum.TextXAlignment.Left
+		descLabel.Text = zoneData.description
+		descLabel.Parent = zoneCard
+
+		-- Cost/Unlocked label
+		local costLabel = Instance.new("TextLabel")
+		costLabel.Name = "CostLabel"
+		costLabel.Size = UDim2.new(0, 150, 0, 30)
+		costLabel.Position = UDim2.new(1, -250, 0, 5)
+		costLabel.BackgroundTransparency = 1
+		costLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+		costLabel.TextSize = 12
+		costLabel.Font = Enum.Font.GothamBold
+		costLabel.TextXAlignment = Enum.TextXAlignment.Right
+		if zoneData.cost == 0 then
+			costLabel.Text = "Unlocked"
+			costLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
+		else
+			costLabel.Text = "Cost: " .. self:formatNumber(zoneData.cost)
+		end
+		costLabel.Parent = zoneCard
+
+		-- Unlock button
+		local unlockButton = Instance.new("TextButton")
+		unlockButton.Name = "UnlockButton"
+		unlockButton.Size = UDim2.new(0, 80, 0, 30)
+		unlockButton.Position = UDim2.new(1, -90, 0, 35)
+		unlockButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		unlockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		unlockButton.TextSize = 12
+		unlockButton.Font = Enum.Font.GothamBold
+		unlockButton.Text = zoneData.cost == 0 and "Visit" or "Unlock"
+		unlockButton.Parent = zoneCard
+
+		local unlockCorner = Instance.new("UICorner")
+		unlockCorner.CornerRadius = UDim.new(0, 6)
+		unlockCorner.Parent = unlockButton
+
+		-- Button click handler
+		local zoneName = zoneData.name
+		unlockButton.MouseButton1Click:Connect(function()
+			print("[Ghost Catcher Tycoon] Unlock button clicked for " .. zoneName)
+			if zoneData.cost > 0 then
+				self.remotes.UnlockZone:FireServer(zoneName)
+			end
+			self:showButtonFeedback(unlockButton)
+		end)
+
+		-- Hover effects
+		unlockButton.MouseEnter:Connect(function()
+			unlockButton.BackgroundColor3 = Color3.fromRGB(70, 140, 220)
+		end)
+		unlockButton.MouseLeave:Connect(function()
+			unlockButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
 		end)
 	end
 end
