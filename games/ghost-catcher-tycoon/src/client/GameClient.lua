@@ -246,6 +246,12 @@ function GameClient:setupUI()
 					self.populatedTabs["Shop"] = true
 				end
 
+				if tabName == "Info" and not self.populatedTabs["Info"] then
+					print("[Ghost Catcher Tycoon] Calling populateInfoTab...")
+					self:populateInfoTab()
+					self.populatedTabs["Info"] = true
+				end
+
 				if not self.tabExpanded then
 					self:toggleSlidePanel(true)
 				end
@@ -983,6 +989,161 @@ function GameClient:populateShopTab()
 		end)
 		hatchButton.MouseLeave:Connect(function()
 			hatchButton.BackgroundColor3 = Color3.fromRGB(50, 160, 80)
+		end)
+	end
+end
+
+function GameClient:populateInfoTab()
+	local infoTabContent = self.ui.tabContents["Info"]
+	if not infoTabContent then return end
+
+	-- Clear existing content
+	for _, child in ipairs(infoTabContent:GetChildren()) do
+		if child:IsA("Frame") and child.Name:match("GamePassCard_") then
+			child:Destroy()
+		end
+		if child:IsA("TextLabel") and child.Name:match("InfoText_") then
+			child:Destroy()
+		end
+		if child:IsA("UIListLayout") then
+			child:Destroy()
+		end
+	end
+
+	infoTabContent.CanvasSize = UDim2.new(1, 0, 0, 800)
+
+	local infoListLayout = Instance.new("UIListLayout")
+	infoListLayout.FillDirection = Enum.FillDirection.Vertical
+	infoListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	infoListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	infoListLayout.Padding = UDim.new(0, 10)
+	infoListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	infoListLayout.Parent = infoTabContent
+
+	print("[Ghost Catcher Tycoon] Populating Info tab...")
+
+	-- Game info text
+	local gameInfoLabel = Instance.new("TextLabel")
+	gameInfoLabel.Name = "InfoText_GameInfo"
+	gameInfoLabel.Size = UDim2.new(1, -20, 0, 80)
+	gameInfoLabel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+	gameInfoLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	gameInfoLabel.TextSize = 12
+	gameInfoLabel.Font = Enum.Font.Gotham
+	gameInfoLabel.TextWrapped = true
+	gameInfoLabel.TextXAlignment = Enum.TextXAlignment.Left
+	gameInfoLabel.TextYAlignment = Enum.TextYAlignment.Top
+	gameInfoLabel.Text = "Ghost Catcher Tycoon\n\nCatch ghosts, earn energy, train your collection, and unlock new zones. Build your HQ to boost production!\n\nVersion: 0.1.0"
+	gameInfoLabel.Parent = infoTabContent
+
+	local infoCorner = Instance.new("UICorner")
+	infoCorner.CornerRadius = UDim.new(0, 8)
+	infoCorner.Parent = gameInfoLabel
+
+	-- GamePass section header
+	local gpHeaderLabel = Instance.new("TextLabel")
+	gpHeaderLabel.Name = "InfoText_GPHeader"
+	gpHeaderLabel.Size = UDim2.new(1, -20, 0, 30)
+	gpHeaderLabel.BackgroundTransparency = 1
+	gpHeaderLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+	gpHeaderLabel.TextSize = 16
+	gpHeaderLabel.Font = Enum.Font.GothamBold
+	gpHeaderLabel.TextXAlignment = Enum.TextXAlignment.Left
+	gpHeaderLabel.Text = "GamePasses"
+	gpHeaderLabel.Parent = infoTabContent
+
+	-- Define GamePasses
+	local gamePasses = {
+		{ name = "Auto-Catch", price = 699, emoji = "⚙", description = "Automatically catch ghosts without clicking" },
+		{ name = "Auto-Train", price = 499, emoji = "🎓", description = "Automatically train your ghosts" },
+		{ name = "Double Energy", price = 399, emoji = "⚡", description = "Double all energy production" },
+		{ name = "VIP Zone", price = 799, emoji = "👑", description = "Access exclusive VIP zone" },
+		{ name = "Extra Storage", price = 299, emoji = "📦", description = "Double ghost storage slots" },
+	}
+
+	for _, gpData in ipairs(gamePasses) do
+		-- Create GamePass card frame
+		local gpCard = Instance.new("Frame")
+		gpCard.Name = "GamePassCard_" .. gpData.name
+		gpCard.Size = UDim2.new(1, -20, 0, 70)
+		gpCard.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+		gpCard.BorderSizePixel = 0
+		gpCard.Parent = infoTabContent
+
+		local gpCardCorner = Instance.new("UICorner")
+		gpCardCorner.CornerRadius = UDim.new(0, 8)
+		gpCardCorner.Parent = gpCard
+
+		-- GamePass name
+		local gpNameLabel = Instance.new("TextLabel")
+		gpNameLabel.Name = "GPName"
+		gpNameLabel.Size = UDim2.new(0, 150, 0, 25)
+		gpNameLabel.Position = UDim2.new(0, 10, 0, 8)
+		gpNameLabel.BackgroundTransparency = 1
+		gpNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		gpNameLabel.TextSize = 14
+		gpNameLabel.Font = Enum.Font.GothamBold
+		gpNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		gpNameLabel.Text = gpData.emoji .. " " .. gpData.name
+		gpNameLabel.Parent = gpCard
+
+		-- Description
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Name = "Description"
+		descLabel.Size = UDim2.new(0, 250, 0, 35)
+		descLabel.Position = UDim2.new(0, 10, 0, 33)
+		descLabel.BackgroundTransparency = 1
+		descLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		descLabel.TextSize = 11
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.TextWrapped = true
+		descLabel.TextXAlignment = Enum.TextXAlignment.Left
+		descLabel.TextYAlignment = Enum.TextYAlignment.Top
+		descLabel.Text = gpData.description
+		descLabel.Parent = gpCard
+
+		-- Price label (Robux)
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Name = "Price"
+		priceLabel.Size = UDim2.new(0, 80, 0, 25)
+		priceLabel.Position = UDim2.new(1, -150, 0, 8)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+		priceLabel.TextSize = 12
+		priceLabel.Font = Enum.Font.GothamBold
+		priceLabel.TextXAlignment = Enum.TextXAlignment.Right
+		priceLabel.Text = "R$" .. gpData.price
+		priceLabel.Parent = gpCard
+
+		-- Buy button
+		local buyButton = Instance.new("TextButton")
+		buyButton.Name = "BuyButton"
+		buyButton.Size = UDim2.new(0, 60, 0, 25)
+		buyButton.Position = UDim2.new(1, -60, 0, 8)
+		buyButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		buyButton.TextSize = 11
+		buyButton.Font = Enum.Font.GothamBold
+		buyButton.Text = "Buy"
+		buyButton.Parent = gpCard
+
+		local buyCorner = Instance.new("UICorner")
+		buyCorner.CornerRadius = UDim.new(0, 6)
+		buyCorner.Parent = buyButton
+
+		-- Button click handler
+		local gpName = gpData.name
+		buyButton.MouseButton1Click:Connect(function()
+			print("[Ghost Catcher Tycoon] Buy GamePass: " .. gpName)
+			self:showNotification("GamePass purchase not yet implemented", Color3.fromRGB(255, 150, 100))
+		end)
+
+		-- Hover effects
+		buyButton.MouseEnter:Connect(function()
+			buyButton.BackgroundColor3 = Color3.fromRGB(70, 140, 220)
+		end)
+		buyButton.MouseLeave:Connect(function()
+			buyButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
 		end)
 	end
 end
