@@ -12,6 +12,38 @@
 
 ---
 
+## CURRENT PROJECT STATUS (As of 2026-06-03)
+
+### What's Done ✅
+- **18 complete game systems** (all coded, not yet fully wired)
+- **World generation** — 11 zones with terrain, props, bridges, portals, ladders, boss arenas
+- **Polished UI** — Top panel, tab system, charge bar, buttons, notifications
+- **Ghost index** — 120 ghosts across 6 rarities with personalities
+- **Zone progression** — 11 zones with costs, biomes, ghost pools
+- **Boss system** — 5 bosses with HP, loot tables
+- **Egg system** — 7 gacha tiers with drop rates
+- **File documentation** — All files have purpose lines and section headers
+
+### What's Missing (MVP Blocker) ⏳
+1. **Ghost spawning in zones** — Need to spawn colored spheres (by rarity) during gameplay
+2. **Wire Catch/Charge buttons** — Connect UI buttons to GhostService and VacuumSystem
+3. **Populate remaining tabs** — HQ, Zones, Shop, Info tabs need real content binding
+4. **Test in Studio** — Verify catching mechanics, currency flow, UI updates
+
+### How to Resume This Project
+In a new chat, paste this entire MASTER_PROMPT.md and say:
+
+> "Read the MASTER_PROMPT.md file from the ghost-catcher-tycoon project and let's keep working. We completed zones and UI. Next: wire ghost spawning and test catching mechanics in Studio."
+
+This will get me up to speed on:
+- Full system architecture (18 systems)
+- Design philosophy (tycoon loop, monetization)
+- Current code organization
+- What phase we're on (Phase 3/4)
+- What to build next (MVP catching loop)
+
+---
+
 ## PROJECT CONTEXT
 
 You are my coding partner for building **Ghost Catcher Tycoon**, a Roblox tycoon game.
@@ -127,53 +159,77 @@ Controls:
 - [x] Vacuum System (charging)
 - [x] Main Server (initialization/routing)
 - [x] Config & Enums
-- [x] Full documentation
+- [x] All 18 game systems coded (GhostService, BossSystem, EggSystem, TrainingSystem, HQSystem, ZoneSystem, MonetizationSystem, etc.)
+- [x] Full documentation + purpose lines added to all files
+- [x] GhostData (120 ghosts), ZoneData (11 zones), BossData (5 bosses), EggData (7 eggs)
 
-### Phase 2: Ghost System & Gameplay Loop
-- [ ] Ghost spawning system
-- [ ] Ghost catching mechanics
-- [ ] Ghost storage & inventory
-- [ ] Basic UI (energy display, buttons)
-- [ ] Ghost rarity system
-- [ ] Basic catch success calculation
+### Phase 2: World & Infrastructure ✅ COMPLETE
+- [x] Procedural zone generation (ZONE_AUTO_BUILDER.lua)
+  - 11 biome zones with terrain
+  - Bridges connecting zones
+  - Portals for teleportation
+  - 5 boss arenas in sky
+  - Ladders for climbing (with proper anchoring)
+  - Props (towers, fountains, arches)
+  - Proper lighting per biome
+- [x] Fly Tool for testing (FLY_TOOL.lua) — camera-relative flight, WASD movement
+- [x] Hub spawn location at Y=30
 
-### Phase 3: Production & HQ
-- [ ] Production System (passive income)
-- [ ] HQ room system
-- [ ] Room upgrade mechanics
+### Phase 3: UI & Client Wiring ⚠️ IN PROGRESS
+- [x] GameClient.lua — Polished layout with charge button, catch button, bring home button
+- [x] Top panel (80px) — Energy, ghosts, production rate, zone display
+- [x] Bottom tab bar (52px) — Ghost, HQ, Zones, Shop, Info tabs
+- [x] Sliding panel system — Expands/collapses with smooth tween
+- [x] Charge progress bar — Visual feedback with percentage
+- [x] Notification system — Slides in from top, fades out
+- [x] GhostCardBuilder.lua — Reusable card component for ghost inventory
+- [ ] Wire Catch button to GhostService.spawnGhostInWorld (spawn ghosts in zones)
+- [ ] Wire Charge button to VacuumSystem (recharge mechanics)
+- [ ] Populate HQ tab (show rooms, upgrade buttons)
+- [ ] Populate Zones tab (show unlock costs, unlock buttons)
+- [ ] Populate Shop tab (show eggs, hatch buttons)
+- [ ] Populate Info tab (show stats, how to play)
+
+### Phase 4: Ghost Spawning & Catching Loop ⏳ NEXT
+- [ ] Spawn ghosts in zones (call GhostService in ZONE_AUTO_BUILDER or new spawner)
+- [ ] Ghost catching mechanics (color-coded spheres by rarity)
+- [ ] Catch success calculation (based on rarity + vacuum charge)
+- [ ] Ghost inventory persistence (GhostService stores in player)
+- [ ] Reward coins on catch (currency for zone unlocks and upgrades)
+
+### Phase 5: Production & HQ
+- [ ] Production System wiring (passive income from caught ghosts)
+- [ ] HQ room system (GhostChamber, TrainingFacility, EnergyReactor, ResearchLab, BossArena)
+- [ ] Room upgrade mechanics (costs coins, increases income multiplier)
 - [ ] Multiplier calculations
-- [ ] Room-specific benefits
 
-### Phase 4: Training & Progression
-- [ ] Ghost training system
+### Phase 6: Training & Progression
+- [ ] Ghost training system wiring
 - [ ] Stat progression (Catch Speed, Energy, Efficiency)
 - [ ] Level cap system (Level 1-10)
 - [ ] Training cost escalation
 
-### Phase 5: Zones & Content
-- [ ] Zone unlock system
-- [ ] Zone-specific ghost spawning
-- [ ] Zone difficulty scaling
-- [ ] Boss ghost system
+### Phase 7: Zones & Bosses
+- [ ] Zone unlock system wiring
+- [ ] Zone-specific ghost spawning (use ZoneData weighted pools)
+- [ ] Boss ghost system wiring
 - [ ] Boss encounter mechanics
 
-### Phase 6: Auto Systems & Quality of Life
+### Phase 8: Auto Systems & Quality of Life
 - [ ] Auto-catch system
 - [ ] Auto-train system
 - [ ] UI improvements
 - [ ] Notifications
 
-### Phase 7: Monetization
+### Phase 9: Monetization
 - [ ] GamePass detection & benefits
 - [ ] Developer product handling
 - [ ] Premium payout tracking
-- [ ] Revenue analytics
 
-### Phase 8: Polish
+### Phase 10: Polish
 - [ ] Animations & effects
 - [ ] Sound design
 - [ ] Visual feedback
-- [ ] UI polish
 - [ ] Game balance tweaking
 
 ---
@@ -381,6 +437,49 @@ When we're done:
 
 ---
 
+## KEY FILE LOCATIONS (Updated 2026-06-03)
+
+### Data Files (Shared)
+- `src/shared/GhostData.lua` — 120 ghosts, rarities, personalities
+- `src/shared/ZoneData.lua` — 11 zones, unlock costs, ghost pools
+- `src/shared/BossData.lua` — 5 bosses, HP, loot tables
+- `src/shared/EggData.lua` — 7 eggs, rarity chances, drop pools
+- `src/shared/constants.lua` — Services, remotes, time limits
+- `src/shared/enums.lua` — Rarities, zones, rooms, currency types
+
+### Server Systems
+- `src/server/MainServer.lua` — Entry point, system initialization
+- `src/server/systems/GhostService.lua` — Ghost inventory management
+- `src/server/systems/VacuumSystem.lua` — Charge accumulation
+- `src/server/systems/GhostSystem.lua` — Catching mechanics
+- `src/server/systems/CurrencySystem.lua` — Energy tracking
+- `src/server/systems/ProductionSystem.lua` — Passive income
+- `src/server/systems/HQSystem.lua` — Room upgrades
+- `src/server/systems/ZoneSystem.lua` — Zone unlocking
+- `src/server/systems/BossSystem.lua` — Boss encounters
+- `src/server/systems/TrainingSystem.lua` — Ghost leveling
+- `src/server/data/DataManager.lua` — Save/load persistence
+
+### Client & UI
+- `src/client/GameClient.lua` — Main UI: panels, tabs, buttons, notifications
+- `src/client/modules/GhostCardBuilder.lua` — Reusable ghost card component
+
+### World Generation & Testing
+- `ZONE_AUTO_BUILDER.lua` — Procedural zone generation (11 zones, terrain, props, bridges, portals, ladders, boss arenas)
+- `FLY_TOOL.lua` — Camera-relative flight tool for testing (Press F to toggle)
+
+### Game File
+- `place.rbxl` — **Your Roblox Studio game file** (open this in Studio to test)
+- `place.rbxl.lock` — Auto-generated lock file (ignore)
+
+### Documentation
+- `GAMEPLAY_PLAN.md` — Game design, MVP features, implementation strategy
+- `DOCUMENTATION_IMPROVEMENTS.md` — Record of docs added this session
+- `README.md` — Project overview
+- Status docs in root (can be archived or removed)
+
+---
+
 ## FINAL NOTE
 
 This game is built to be **addictive, fair, and profitable**. The design philosophy is:
@@ -390,8 +489,10 @@ This game is built to be **addictive, fair, and profitable**. The design philoso
 
 Build it with this in mind. Every feature should ask: "Does this make the game more fun or more profitable?"
 
+**Current momentum:** Zones + UI done. Ready to wire catching mechanics and test in Studio.
+
 **Let's build something amazing.** 🎮👻
 
 ---
 
-**Ready to code?** Ask me to build any phase. I'll handle the rest.
+**Ready to code?** Start with Phase 4 (Ghost Spawning & Catching Loop) or ask for a specific system. I'll handle the rest.
