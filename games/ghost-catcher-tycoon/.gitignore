@@ -1,0 +1,9 @@
+*.rbxl.lock
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+node_modules/
+*.log

@@ -1,0 +1,185 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lua-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        lua-version: ['5.1', '5.3']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Lua ${{ matrix.lua-version }}
+      uses: leafo/gh-action-lua@v10
+      with:
+        luaVersion: ${{ matrix.lua-version }}
+
+    - name: Run QuestSystem Tests
+      run: lua src/server/Tests/QuestSystemTests.lua
+      continue-on-error: false
+
+    - name: Run LeaderboardSystem Tests
+      run: lua src/server/Tests/LeaderboardSystemTests.lua
+      continue-on-error: false
+
+    - name: Run GachaSystem Tests
+      run: lua src/server/Tests/GachaSystemTests.lua
+      continue-on-error: false
+
+    - name: Run CosmeticsSystem Tests
+      run: lua src/server/Tests/CosmeticsSystemTests.lua
+      continue-on-error: false
+
+    - name: Run PvPSystem Tests
+      run: lua src/server/Tests/PvPSystemTests.lua
+      continue-on-error: false
+
+    - name: Run PrestigeSystem Tests
+      run: lua tests/PrestigeSystemTests.lua
+      continue-on-error: false
+
+    - name: Run GhostSystem Tests
+      run: lua tests/GhostSystemTests.lua
+      continue-on-error: false
+
+    - name: Run ProductionSystem Tests
+      run: lua tests/ProductionSystemTests.lua
+      continue-on-error: false
+
+    - name: Run TrainingSystem Tests
+      run: lua tests/TrainingSystemTests.lua
+      continue-on-error: false
+
+    - name: Run ZoneSystem Tests
+      run: lua tests/ZoneSystemTests.lua
+      continue-on-error: false
+
+    - name: Run HQSystem Tests
+      run: lua tests/HQSystemTests.lua
+      continue-on-error: false
+
+    - name: Run MonetizationSystem Tests
+      run: lua tests/MonetizationSystemTests.lua
+      continue-on-error: false
+
+    - name: Run AutoCatchSystem Tests
+      run: lua tests/AutoCatchSystemTests.lua
+      continue-on-error: false
+
+    - name: Run AutoTrainSystem Tests
+      run: lua tests/AutoTrainSystemTests.lua
+      continue-on-error: false
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Lua
+      uses: leafo/gh-action-lua@v10
+      with:
+        luaVersion: '5.3'
+
+    - name: Verify Lua Syntax
+      run: |
+        for file in $(find src/server/systems -name "*.lua" -type f); do
+          echo "Checking $file"
+          luac -p "$file" || exit 1
+        done
+
+    - name: Verify Test Files
+      run: |
+        for file in $(find src/server/Tests -name "*.lua" -type f); do
+          echo "Checking $file"
+          luac -p "$file" || exit 1
+        done
+
+    - name: Verify Shared Modules
+      run: |
+        for file in $(find src/shared -name "*.lua" -type f); do
+          echo "Checking $file"
+          luac -p "$file" || exit 1
+        done
+
+  integration:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Validate Project Structure
+      run: |
+        test -d "src/server/systems" || exit 1
+        test -d "src/server/Tests" || exit 1
+        test -d "src/server/data" || exit 1
+        test -d "src/shared" || exit 1
+        test -f "src/server/MainServer.lua" || exit 1
+        echo "Project structure is valid"
+
+    - name: Check for Required Files
+      run: |
+        required_files=(
+          "src/server/systems/QuestSystem.lua"
+          "src/server/systems/LeaderboardSystem.lua"
+          "src/server/systems/GachaSystem.lua"
+          "src/server/systems/CosmeticsSystem.lua"
+          "src/server/systems/PvPSystem.lua"
+          "src/server/systems/ProductionSystem.lua"
+          "src/server/systems/PrestigeSystem.lua"
+          "src/server/systems/EventSystem.lua"
+          "src/server/systems/EggSystem.lua"
+          "src/server/Tests/QuestSystemTests.lua"
+          "src/server/Tests/LeaderboardSystemTests.lua"
+          "src/server/Tests/GachaSystemTests.lua"
+          "src/server/Tests/CosmeticsSystemTests.lua"
+          "src/server/Tests/PvPSystemTests.lua"
+          "src/shared/config.lua"
+          "src/shared/constants.lua"
+          "src/shared/EggData.lua"
+          "src/shared/GhostData.lua"
+          "src/shared/ZoneData.lua"
+          "src/server/MainServer.lua"
+        )
+
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required file: $file"
+            exit 1
+          fi
+        done
+        echo "All required files present"
+
+    - name: Verify System Wiring in MainServer
+      run: |
+        grep -q "QuestSystem" src/server/MainServer.lua || exit 1
+        grep -q "LeaderboardSystem" src/server/MainServer.lua || exit 1
+        grep -q "GachaSystem" src/server/MainServer.lua || exit 1
+        grep -q "CosmeticsSystem" src/server/MainServer.lua || exit 1
+        grep -q "PvPSystem" src/server/MainServer.lua || exit 1
+        grep -q "PrestigeSystem" src/server/MainServer.lua || exit 1
+        grep -q "EventSystem" src/server/MainServer.lua || exit 1
+        grep -q "EggSystem" src/server/MainServer.lua || exit 1
+        grep -q "HatchEgg" src/server/MainServer.lua || exit 1
+        echo "All systems wired in MainServer"
+
+  documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Check Documentation
+      run: |
+        test -f "README.md" || echo "Warning: README.md not found"
+        test -f "docs/SYSTEMS.md" || echo "Warning: docs/SYSTEMS.md not found"
+        test -f "START_HERE.md" || echo "Warning: START_HERE.md not found"
+        echo "Documentation check complete"

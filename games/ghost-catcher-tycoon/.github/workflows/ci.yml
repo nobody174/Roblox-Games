@@ -1,0 +1,73 @@
+name: CI/CD — Test & Validate
+
+on:
+  push:
+    branches: [main, develop, master]
+  pull_request:
+    branches: [main, develop, master]
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  # ── Job 1: Run Lua Tests ─────────────────────────────────────
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua
+        run: sudo apt-get update && sudo apt-get install -y lua5.3
+
+      - name: Run all tests
+        run: |
+          cd tests
+          lua5.3 GhostSystemTests.lua
+          lua5.3 ProductionSystemTests.lua
+          lua5.3 HQSystemTests.lua
+          lua5.3 TrainingSystemTests.lua
+          lua5.3 ZoneSystemTests.lua
+          lua5.3 MonetizationSystemTests.lua
+          lua5.3 AutoCatchSystemTests.lua
+          lua5.3 AutoTrainSystemTests.lua
+
+  # ── Job 2: Check Code Quality ────────────────────────────────
+  quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Count lines of code
+        run: |
+          echo "=== Code Statistics ===" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Source Files:" >> $GITHUB_STEP_SUMMARY
+          find src -name "*.lua" -exec wc -l {} + | tail -1 >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test Files:" >> $GITHUB_STEP_SUMMARY
+          find tests -name "*.lua" -exec wc -l {} + | tail -1 >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify documentation
+        run: |
+          echo "Checking for required files..."
+          test -f README.md || (echo "Missing README.md" && exit 1)
+          test -f MASTER_PROMPT.md || (echo "Missing MASTER_PROMPT.md" && exit 1)
+          test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
+          echo "All required files present ✓"
+
+  # ── Job 3: Build Summary ─────────────────────────────────────
+  summary:
+    name: ✅ Build Summary
+    needs: [test, quality]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# CI/CD Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Quality: ${{ needs.quality.result }}" >> $GITHUB_STEP_SUMMARY
