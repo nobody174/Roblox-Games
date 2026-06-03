@@ -319,7 +319,13 @@ local function setupTrainingRemote()
 
 	trainRemote.OnServerEvent:Connect(function(player, ghostId, targetLevel)
 		local success, result = trainingSystem:startTraining(player, ghostId, targetLevel)
-		if not success then
+		if success then
+			-- Training started successfully
+			Constants.Remotes.ShowNotification:FireClient(player, "🎓 Training: " .. result.ghostId .. " → Level " .. result.targetLevel, Color3.fromRGB(120, 50, 200))
+			print("[Ghost Catcher Tycoon] " .. player.Name .. " started training ghost to level " .. result.targetLevel)
+		else
+			-- Training failed
+			Constants.Remotes.ShowNotification:FireClient(player, "❌ " .. tostring(result), Color3.fromRGB(255, 100, 100))
 			print("[Error] Training failed for " .. player.Name .. ": " .. result)
 		end
 	end)

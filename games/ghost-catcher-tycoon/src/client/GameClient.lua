@@ -55,6 +55,7 @@ function GameClient:waitForRemotes()
 	self.remotes.ShowNotification = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
 	self.remotes.UpgradeRoom = remotesFolder:WaitForChild(Constants.Remotes.UpgradeRoom)
 	self.remotes.UnlockZone = remotesFolder:WaitForChild(Constants.Remotes.UnlockZone)
+	self.remotes.TrainGhost = remotesFolder:WaitForChild(Constants.Remotes.TrainGhost)
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -430,8 +431,7 @@ function GameClient:populateGhostTab()
 	local ghostTabContent = self.ui.tabContents["Ghost"]
 	if not ghostTabContent then return end
 
-	local cardBuilder = GhostCardBuilder:new()
-
+	-- Clear existing content
 	for _, child in ipairs(ghostTabContent:GetChildren()) do
 		if child:IsA("Frame") and child.Name:match("GhostCard_") then
 			child:Destroy()
@@ -441,11 +441,11 @@ function GameClient:populateGhostTab()
 		end
 	end
 
-	ghostTabContent.CanvasSize = UDim2.new(1, 0, 0, 500)
+	ghostTabContent.CanvasSize = UDim2.new(1, 0, 0, 600)
 
 	local ghostGridLayout = Instance.new("UIGridLayout")
-	ghostGridLayout.CellSize = UDim2.new(0, 200, 0, 120)
-	ghostGridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+	ghostGridLayout.CellSize = UDim2.new(0, 230, 0, 140)
+	ghostGridLayout.CellPadding = UDim2.new(0, 8, 0, 8)
 	ghostGridLayout.FillDirection = Enum.FillDirection.Horizontal
 	ghostGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 	ghostGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
@@ -454,6 +454,17 @@ function GameClient:populateGhostTab()
 
 	print("[Ghost Catcher Tycoon] Populating Ghost tab...")
 
+	-- Define rarity colors for display
+	local rarityColors = {
+		Common = Color3.fromRGB(128, 128, 128),
+		Uncommon = Color3.fromRGB(0, 255, 0),
+		Rare = Color3.fromRGB(0, 0, 255),
+		Epic = Color3.fromRGB(255, 140, 0),
+		Legendary = Color3.fromRGB(128, 0, 128),
+		Corrupted = Color3.fromRGB(139, 0, 139),
+	}
+
+	-- Test ghosts (in real implementation, would fetch from server)
 	local testGhosts = {
 		{ id = 1, name = "Specter", rarity = "Common", level = 5, energyPerSec = 1 },
 		{ id = 2, name = "Phantom", rarity = "Uncommon", level = 8, energyPerSec = 2 },
@@ -462,14 +473,102 @@ function GameClient:populateGhostTab()
 	}
 
 	for _, ghostData in ipairs(testGhosts) do
-		cardBuilder:buildCard(ghostData, ghostTabContent, {
-			onTrain = function(ghost)
-				self:showNotification("🎓 Training: " .. ghost.name, Color3.fromRGB(120, 50, 200))
-			end,
-			onRelease = function(ghost)
-				self:showNotification("❌ Released: " .. ghost.name, Color3.fromRGB(200, 50, 50))
-			end,
-		})
+		-- Create ghost card frame
+		local ghostCard = Instance.new("Frame")
+		ghostCard.Name = "GhostCard_" .. ghostData.name
+		ghostCard.Size = UDim2.new(0, 230, 0, 140)
+		ghostCard.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		ghostCard.BorderSizePixel = 0
+		ghostCard.Parent = ghostTabContent
+
+		local ghostCardCorner = Instance.new("UICorner")
+		ghostCardCorner.CornerRadius = UDim.new(0, 8)
+		ghostCardCorner.Parent = ghostCard
+
+		-- Ghost name label
+		local ghostNameLabel = Instance.new("TextLabel")
+		ghostNameLabel.Name = "GhostName"
+		ghostNameLabel.Size = UDim2.new(1, -10, 0, 30)
+		ghostNameLabel.Position = UDim2.new(0, 5, 0, 5)
+		ghostNameLabel.BackgroundTransparency = 1
+		ghostNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		ghostNameLabel.TextSize = 16
+		ghostNameLabel.Font = Enum.Font.GothamBold
+		ghostNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		ghostNameLabel.Text = ghostData.name
+		ghostNameLabel.Parent = ghostCard
+
+		-- Rarity label
+		local rarityLabel = Instance.new("TextLabel")
+		rarityLabel.Name = "Rarity"
+		rarityLabel.Size = UDim2.new(1, -10, 0, 20)
+		rarityLabel.Position = UDim2.new(0, 5, 0, 33)
+		rarityLabel.BackgroundTransparency = 1
+		rarityLabel.TextColor3 = rarityColors[ghostData.rarity] or Color3.fromRGB(200, 200, 200)
+		rarityLabel.TextSize = 11
+		rarityLabel.Font = Enum.Font.GothamBold
+		rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
+		rarityLabel.Text = ghostData.rarity
+		rarityLabel.Parent = ghostCard
+
+		-- Level label
+		local levelLabel = Instance.new("TextLabel")
+		levelLabel.Name = "Level"
+		levelLabel.Size = UDim2.new(1, -10, 0, 20)
+		levelLabel.Position = UDim2.new(0, 5, 0, 53)
+		levelLabel.BackgroundTransparency = 1
+		levelLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		levelLabel.TextSize = 11
+		levelLabel.Font = Enum.Font.Gotham
+		levelLabel.TextXAlignment = Enum.TextXAlignment.Left
+		levelLabel.Text = "Level: " .. ghostData.level .. " / 10"
+		levelLabel.Parent = ghostCard
+
+		-- Energy output label
+		local energyLabel = Instance.new("TextLabel")
+		energyLabel.Name = "Energy"
+		energyLabel.Size = UDim2.new(1, -10, 0, 20)
+		energyLabel.Position = UDim2.new(0, 5, 0, 73)
+		energyLabel.BackgroundTransparency = 1
+		energyLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
+		energyLabel.TextSize = 11
+		energyLabel.Font = Enum.Font.Gotham
+		energyLabel.TextXAlignment = Enum.TextXAlignment.Left
+		energyLabel.Text = "Energy: " .. ghostData.energyPerSec .. "/sec"
+		energyLabel.Parent = ghostCard
+
+		-- Train button
+		local trainButton = Instance.new("TextButton")
+		trainButton.Name = "TrainButton"
+		trainButton.Size = UDim2.new(1, -10, 0, 28)
+		trainButton.Position = UDim2.new(0, 5, 0, 105)
+		trainButton.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+		trainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		trainButton.TextSize = 12
+		trainButton.Font = Enum.Font.GothamBold
+		trainButton.Text = "🎓 Train"
+		trainButton.Parent = ghostCard
+
+		local trainCorner = Instance.new("UICorner")
+		trainCorner.CornerRadius = UDim.new(0, 6)
+		trainCorner.Parent = trainButton
+
+		-- Button click handler
+		local ghostId = ghostData.id
+		local ghostName = ghostData.name
+		trainButton.MouseButton1Click:Connect(function()
+			print("[Ghost Catcher Tycoon] Train button clicked for " .. ghostName)
+			self.remotes.TrainGhost:FireServer(ghostId, ghostData.level + 1)
+			self:showButtonFeedback(trainButton)
+		end)
+
+		-- Hover effects
+		trainButton.MouseEnter:Connect(function()
+			trainButton.BackgroundColor3 = Color3.fromRGB(140, 70, 220)
+		end)
+		trainButton.MouseLeave:Connect(function()
+			trainButton.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
+		end)
 	end
 end
 
