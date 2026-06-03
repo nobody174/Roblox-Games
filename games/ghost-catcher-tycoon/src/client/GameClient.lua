@@ -56,6 +56,7 @@ function GameClient:waitForRemotes()
 	self.remotes.UpgradeRoom = remotesFolder:WaitForChild(Constants.Remotes.UpgradeRoom)
 	self.remotes.UnlockZone = remotesFolder:WaitForChild(Constants.Remotes.UnlockZone)
 	self.remotes.TrainGhost = remotesFolder:WaitForChild(Constants.Remotes.TrainGhost)
+	self.remotes.HatchEgg = remotesFolder:FindFirstChild("HatchEgg")
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -237,6 +238,12 @@ function GameClient:setupUI()
 					print("[Ghost Catcher Tycoon] Calling populateZonesTab...")
 					self:populateZonesTab()
 					self.populatedTabs["Zones"] = true
+				end
+
+				if tabName == "Shop" and not self.populatedTabs["Shop"] then
+					print("[Ghost Catcher Tycoon] Calling populateShopTab...")
+					self:populateShopTab()
+					self.populatedTabs["Shop"] = true
 				end
 
 				if not self.tabExpanded then
@@ -824,6 +831,158 @@ function GameClient:populateZonesTab()
 		end)
 		unlockButton.MouseLeave:Connect(function()
 			unlockButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		end)
+	end
+end
+
+function GameClient:populateShopTab()
+	local shopTabContent = self.ui.tabContents["Shop"]
+	if not shopTabContent then return end
+
+	-- Clear existing content
+	for _, child in ipairs(shopTabContent:GetChildren()) do
+		if child:IsA("Frame") and child.Name:match("EggCard_") then
+			child:Destroy()
+		end
+		if child:IsA("UIGridLayout") then
+			child:Destroy()
+		end
+	end
+
+	shopTabContent.CanvasSize = UDim2.new(1, 0, 0, 700)
+
+	local eggGridLayout = Instance.new("UIGridLayout")
+	eggGridLayout.CellSize = UDim2.new(0, 250, 0, 180)
+	eggGridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+	eggGridLayout.FillDirection = Enum.FillDirection.Horizontal
+	eggGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	eggGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	eggGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	eggGridLayout.Parent = shopTabContent
+
+	print("[Ghost Catcher Tycoon] Populating Shop tab...")
+
+	-- Define eggs
+	local eggs = {
+		{ name = "Common Egg", emoji = "🥚", price = 250, rarity = "Common", description = "80% Common, 18% Uncommon, 2% Rare" },
+		{ name = "Uncommon Egg", emoji = "🥚", price = 1200, rarity = "Uncommon", description = "40% Common, 45% Uncommon, 12% Rare, 3% Epic" },
+		{ name = "Rare Egg", emoji = "🥚", price = 5000, rarity = "Rare", description = "20% Uncommon, 50% Rare, 25% Epic, 5% Legendary" },
+		{ name = "Epic Egg", emoji = "🥚", price = 20000, rarity = "Epic", description = "40% Rare, 45% Epic, 12% Legendary, 3% Corrupted" },
+		{ name = "Legendary Egg", emoji = "🥚", price = 80000, rarity = "Legendary", description = "50% Epic, 40% Legendary, 10% Corrupted" },
+		{ name = "Corrupted Egg", emoji = "🥚", price = 250000, rarity = "Corrupted", description = "80% Legendary, 20% Corrupted (Robux only)" },
+		{ name = "Premium Egg", emoji = "💎", price = 4999, rarity = "Premium", description = "All rarities! (Robux only)" },
+	}
+
+	-- Rarity colors
+	local rarityColors = {
+		Common = Color3.fromRGB(128, 128, 128),
+		Uncommon = Color3.fromRGB(0, 255, 0),
+		Rare = Color3.fromRGB(0, 0, 255),
+		Epic = Color3.fromRGB(255, 140, 0),
+		Legendary = Color3.fromRGB(128, 0, 128),
+		Corrupted = Color3.fromRGB(139, 0, 139),
+		Premium = Color3.fromRGB(255, 215, 0),
+	}
+
+	for _, eggData in ipairs(eggs) do
+		-- Create egg card frame
+		local eggCard = Instance.new("Frame")
+		eggCard.Name = "EggCard_" .. eggData.name
+		eggCard.Size = UDim2.new(0, 250, 0, 180)
+		eggCard.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		eggCard.BorderSizePixel = 0
+		eggCard.Parent = shopTabContent
+
+		local eggCardCorner = Instance.new("UICorner")
+		eggCardCorner.CornerRadius = UDim.new(0, 8)
+		eggCardCorner.Parent = eggCard
+
+		-- Egg emoji display
+		local eggEmoji = Instance.new("TextLabel")
+		eggEmoji.Name = "Emoji"
+		eggEmoji.Size = UDim2.new(1, 0, 0, 40)
+		eggEmoji.Position = UDim2.new(0, 0, 0, 5)
+		eggEmoji.BackgroundTransparency = 1
+		eggEmoji.TextColor3 = rarityColors[eggData.rarity] or Color3.fromRGB(200, 200, 200)
+		eggEmoji.TextSize = 32
+		eggEmoji.Font = Enum.Font.GothamBold
+		eggEmoji.Text = eggData.emoji
+		eggEmoji.Parent = eggCard
+
+		-- Egg name label
+		local eggNameLabel = Instance.new("TextLabel")
+		eggNameLabel.Name = "EggName"
+		eggNameLabel.Size = UDim2.new(1, -10, 0, 25)
+		eggNameLabel.Position = UDim2.new(0, 5, 0, 45)
+		eggNameLabel.BackgroundTransparency = 1
+		eggNameLabel.TextColor3 = rarityColors[eggData.rarity] or Color3.fromRGB(200, 200, 200)
+		eggNameLabel.TextSize = 14
+		eggNameLabel.Font = Enum.Font.GothamBold
+		eggNameLabel.TextXAlignment = Enum.TextXAlignment.Center
+		eggNameLabel.Text = eggData.name
+		eggNameLabel.Parent = eggCard
+
+		-- Price label
+		local priceLabel = Instance.new("TextLabel")
+		priceLabel.Name = "Price"
+		priceLabel.Size = UDim2.new(1, -10, 0, 20)
+		priceLabel.Position = UDim2.new(0, 5, 0, 70)
+		priceLabel.BackgroundTransparency = 1
+		priceLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+		priceLabel.TextSize = 12
+		priceLabel.Font = Enum.Font.GothamBold
+		priceLabel.TextXAlignment = Enum.TextXAlignment.Center
+		if eggData.price > 100 then
+			priceLabel.Text = self:formatNumber(eggData.price) .. " energy"
+		else
+			priceLabel.Text = eggData.price .. " Robux"
+		end
+		priceLabel.Parent = eggCard
+
+		-- Description (rarity chances)
+		local descLabel = Instance.new("TextLabel")
+		descLabel.Name = "Description"
+		descLabel.Size = UDim2.new(1, -10, 0, 40)
+		descLabel.Position = UDim2.new(0, 5, 0, 90)
+		descLabel.BackgroundTransparency = 1
+		descLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		descLabel.TextSize = 9
+		descLabel.Font = Enum.Font.Gotham
+		descLabel.TextXAlignment = Enum.TextXAlignment.Center
+		descLabel.TextWrapped = true
+		descLabel.Text = eggData.description
+		descLabel.Parent = eggCard
+
+		-- Hatch button
+		local hatchButton = Instance.new("TextButton")
+		hatchButton.Name = "HatchButton"
+		hatchButton.Size = UDim2.new(1, -10, 0, 30)
+		hatchButton.Position = UDim2.new(0, 5, 0, 145)
+		hatchButton.BackgroundColor3 = Color3.fromRGB(50, 160, 80)
+		hatchButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		hatchButton.TextSize = 12
+		hatchButton.Font = Enum.Font.GothamBold
+		hatchButton.Text = "Hatch"
+		hatchButton.Parent = eggCard
+
+		local hatchCorner = Instance.new("UICorner")
+		hatchCorner.CornerRadius = UDim.new(0, 6)
+		hatchCorner.Parent = hatchButton
+
+		-- Button click handler
+		local eggName = eggData.name
+		hatchButton.MouseButton1Click:Connect(function()
+			print("[Ghost Catcher Tycoon] Hatch button clicked for " .. eggName)
+			self.remotes.HatchEgg:FireServer(eggName)
+			self:showButtonFeedback(hatchButton)
+		end)
+
+		-- Hover effects
+		hatchButton.MouseEnter:Connect(function()
+			hatchButton.BackgroundColor3 = Color3.fromRGB(70, 180, 100)
+		end)
+		hatchButton.MouseLeave:Connect(function()
+			hatchButton.BackgroundColor3 = Color3.fromRGB(50, 160, 80)
 		end)
 	end
 end
