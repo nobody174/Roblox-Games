@@ -53,6 +53,7 @@ function GameClient:waitForRemotes()
 	self.remotes.UpdateUI = remotesFolder:WaitForChild(Constants.Remotes.UpdateUI)
 	self.remotes.GetGameState = remotesFolder:WaitForChild(Constants.Remotes.GetGameState)
 	self.remotes.ShowNotification = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+	self.remotes.UpgradeRoom = remotesFolder:WaitForChild(Constants.Remotes.UpgradeRoom)
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -222,6 +223,12 @@ function GameClient:setupUI()
 					print("[Ghost Catcher Tycoon] Calling populateGhostTab...")
 					self:populateGhostTab()
 					self.populatedTabs["Ghost"] = true
+				end
+
+				if tabName == "HQ" and not self.populatedTabs["HQ"] then
+					print("[Ghost Catcher Tycoon] Calling populateHQTab...")
+					self:populateHQTab()
+					self.populatedTabs["HQ"] = true
 				end
 
 				if not self.tabExpanded then
@@ -456,6 +463,128 @@ function GameClient:populateGhostTab()
 				self:showNotification("❌ Released: " .. ghost.name, Color3.fromRGB(200, 50, 50))
 			end,
 		})
+	end
+end
+
+function GameClient:populateHQTab()
+	local hqTabContent = self.ui.tabContents["HQ"]
+	if not hqTabContent then return end
+
+	-- Clear existing content
+	for _, child in ipairs(hqTabContent:GetChildren()) do
+		if child:IsA("Frame") and child.Name:match("RoomCard_") then
+			child:Destroy()
+		end
+		if child:IsA("UIGridLayout") then
+			child:Destroy()
+		end
+	end
+
+	hqTabContent.CanvasSize = UDim2.new(1, 0, 0, 600)
+
+	local roomGridLayout = Instance.new("UIGridLayout")
+	roomGridLayout.CellSize = UDim2.new(0, 250, 0, 140)
+	roomGridLayout.CellPadding = UDim2.new(0, 10, 0, 10)
+	roomGridLayout.FillDirection = Enum.FillDirection.Horizontal
+	roomGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	roomGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	roomGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	roomGridLayout.Parent = hqTabContent
+
+	print("[Ghost Catcher Tycoon] Populating HQ tab...")
+
+	-- Define rooms (from config)
+	local rooms = {
+		{ name = "GhostChamber", displayName = "Ghost Chamber", emoji = "👻", description = "Stores ghosts" },
+		{ name = "TrainingFacility", displayName = "Training Facility", emoji = "🎓", description = "Train ghosts" },
+		{ name = "EnergyReactor", displayName = "Energy Reactor", emoji = "⚡", description = "Boost energy" },
+		{ name = "ResearchLab", displayName = "Research Lab", emoji = "🔬", description = "Unlock content" },
+		{ name = "BossArena", displayName = "Boss Arena", emoji = "⚔", description = "Boss fights" },
+	}
+
+	for _, roomData in ipairs(rooms) do
+		-- Create room card frame
+		local roomCard = Instance.new("Frame")
+		roomCard.Name = "RoomCard_" .. roomData.name
+		roomCard.Size = UDim2.new(0, 250, 0, 140)
+		roomCard.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+		roomCard.BorderSizePixel = 0
+		roomCard.Parent = hqTabContent
+
+		local roomCardCorner = Instance.new("UICorner")
+		roomCardCorner.CornerRadius = UDim.new(0, 8)
+		roomCardCorner.Parent = roomCard
+
+		-- Room name label
+		local roomNameLabel = Instance.new("TextLabel")
+		roomNameLabel.Name = "RoomName"
+		roomNameLabel.Size = UDim2.new(1, -10, 0, 30)
+		roomNameLabel.Position = UDim2.new(0, 5, 0, 5)
+		roomNameLabel.BackgroundTransparency = 1
+		roomNameLabel.TextColor3 = Color3.fromRGB(150, 200, 255)
+		roomNameLabel.TextSize = 16
+		roomNameLabel.Font = Enum.Font.GothamBold
+		roomNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+		roomNameLabel.Text = roomData.emoji .. " " .. roomData.displayName
+		roomNameLabel.Parent = roomCard
+
+		-- Level display
+		local levelLabel = Instance.new("TextLabel")
+		levelLabel.Name = "LevelLabel"
+		levelLabel.Size = UDim2.new(1, -10, 0, 20)
+		levelLabel.Position = UDim2.new(0, 5, 0, 35)
+		levelLabel.BackgroundTransparency = 1
+		levelLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+		levelLabel.TextSize = 12
+		levelLabel.Font = Enum.Font.Gotham
+		levelLabel.TextXAlignment = Enum.TextXAlignment.Left
+		levelLabel.Text = "Level: 1 (Max 10)"
+		levelLabel.Parent = roomCard
+
+		-- Cost display
+		local costLabel = Instance.new("TextLabel")
+		costLabel.Name = "CostLabel"
+		costLabel.Size = UDim2.new(1, -10, 0, 20)
+		costLabel.Position = UDim2.new(0, 5, 0, 55)
+		costLabel.BackgroundTransparency = 1
+		costLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+		costLabel.TextSize = 12
+		costLabel.Font = Enum.Font.Gotham
+		costLabel.TextXAlignment = Enum.TextXAlignment.Left
+		costLabel.Text = "Cost: 100 energy"
+		costLabel.Parent = roomCard
+
+		-- Upgrade button
+		local upgradeButton = Instance.new("TextButton")
+		upgradeButton.Name = "UpgradeButton"
+		upgradeButton.Size = UDim2.new(1, -10, 0, 35)
+		upgradeButton.Position = UDim2.new(0, 5, 0, 75)
+		upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		upgradeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+		upgradeButton.TextSize = 14
+		upgradeButton.Font = Enum.Font.GothamBold
+		upgradeButton.Text = "Upgrade"
+		upgradeButton.Parent = roomCard
+
+		local upgradeCorner = Instance.new("UICorner")
+		upgradeCorner.CornerRadius = UDim.new(0, 6)
+		upgradeCorner.Parent = upgradeButton
+
+		-- Button click handler
+		local roomName = roomData.name
+		upgradeButton.MouseButton1Click:Connect(function()
+			print("[Ghost Catcher Tycoon] Upgrade button clicked for " .. roomName)
+			self.remotes.UpgradeRoom:FireServer(roomName)
+			self:showButtonFeedback(upgradeButton)
+		end)
+
+		-- Hover effects
+		upgradeButton.MouseEnter:Connect(function()
+			upgradeButton.BackgroundColor3 = Color3.fromRGB(70, 140, 220)
+		end)
+		upgradeButton.MouseLeave:Connect(function()
+			upgradeButton.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+		end)
 	end
 end
 

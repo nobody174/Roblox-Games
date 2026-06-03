@@ -342,6 +342,27 @@ local function setupZoneRemote()
 	print("[Ghost Catcher Tycoon] Zone remote setup complete")
 end
 
+-- Setup HQ room upgrade remote
+local function setupUpgradeRoomRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local upgradeRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.UpgradeRoom)
+
+	upgradeRemote.OnServerEvent:Connect(function(player, roomName)
+		local success, result = hqSystem:upgradeRoom(player, roomName)
+		if success then
+			-- Notify client
+			Constants.Remotes.ShowNotification:FireClient(player, "✅ " .. roomName .. " upgraded to level " .. result.level, Color3.fromRGB(100, 255, 100))
+			print("[Ghost Catcher Tycoon] " .. player.Name .. " upgraded " .. roomName .. " to level " .. result.level)
+		else
+			-- Notify client of failure
+			Constants.Remotes.ShowNotification:FireClient(player, "❌ " .. tostring(result), Color3.fromRGB(255, 100, 100))
+			print("[Error] Room upgrade failed for " .. player.Name .. ": " .. tostring(result))
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Upgrade room remote setup complete")
+end
+
 -- Setup monetization remote
 local function setupMonetizationRemote()
 	local rs = Constants.Paths.ReplicatedStorage
@@ -506,6 +527,9 @@ local function initialize()
 
 	local ok3, err3 = pcall(setupZoneRemote)
 	if not ok3 then print("[Error] Zone setup failed: " .. tostring(err3)) end
+
+	local okUpgrade, errUpgrade = pcall(setupUpgradeRoomRemote)
+	if not okUpgrade then print("[Error] Upgrade room setup failed: " .. tostring(errUpgrade)) end
 
 	local ok4, err4 = pcall(setupMonetizationRemote)
 	if not ok4 then print("[Error] Monetization setup failed: " .. tostring(err4)) end
