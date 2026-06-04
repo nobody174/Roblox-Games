@@ -25,6 +25,21 @@ local MAX_GHOSTS_PER_ZONE = 5
 local GHOST_DESPAWN_TIME = 60
 local SPAWN_CHECK_INTERVAL = 3
 
+-- Map ZoneData keys to ZoneContainer folder names (built by ZONE_AUTO_BUILDER)
+local ZONE_FOLDER_MAPPING = {
+	["Whisper Woods"] = "Zone_1_Meadow",
+	["Foggy Fields"] = "Zone_2_Desert",
+	["Gloomy Graveyard"] = "Zone_3_Frost",
+	["Electro Alley"] = "Zone_4_Haunted",
+	["Frostbite Caverns"] = "Zone_5_Tech",
+	["Sunken Spirit Reef"] = "Zone_6_Reef",
+	["Clocktower District"] = "Zone_7_Clock",
+	["Astral Observatory"] = "Zone_8_Astral",
+	["Phantom Fortress"] = "Zone_9_Phantom",
+	["The Rift"] = "Zone_10_Rift",
+	["Eternity Nexus"] = "Zone_11_Eternity",
+}
+
 function GhostSpawner:new()
 	local self = setmetatable({}, GhostSpawner)
 	self.activeGhosts = {} -- Track active ghost instances
@@ -66,9 +81,16 @@ function GhostSpawner:spawnGhostInZone(zoneName)
 		return nil
 	end
 
-	local zoneFolder = zoneContainer:FindFirstChild(zoneName)
+	-- Map ZoneData key to actual folder name in ZoneContainer
+	local zoneFolderName = ZONE_FOLDER_MAPPING[zoneName]
+	if not zoneFolderName then
+		warn("[GhostSpawner] No folder mapping found for zone: " .. zoneName)
+		return nil
+	end
+
+	local zoneFolder = zoneContainer:FindFirstChild(zoneFolderName)
 	if not zoneFolder then
-		warn("[GhostSpawner] Zone not found: " .. zoneName)
+		warn("[GhostSpawner] Zone folder not found: " .. zoneFolderName .. " (ZoneData key: " .. zoneName .. ")")
 		return nil
 	end
 
