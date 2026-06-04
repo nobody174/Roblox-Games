@@ -6,8 +6,8 @@
 
 # @watcher Task Queue
 
-**Last Updated:** 2026-06-04  
-**Current Phase:** Phase 4.1 — UI Polish & Data Sync  
+**Last Updated:** 2026-06-04 (Updated for Phase 4.2)  
+**Current Phase:** Phase 4.2 — UI Polish & Data Sync Fixes  
 **Agent:** @watcher (Ghost Catcher Tycoon Watcher)
 
 ---
@@ -70,6 +70,29 @@
 - `place.rbxl` — Studio game file
 
 **Escalation:** If you hit a blocker that requires human decision (e.g., "should we change the UI layout?"), log it in WATCHER_LOG.md with the question and wait for feedback.
+
+---
+
+## Phase 4.2: UI Polish & Data Sync Fixes
+
+**Context:** Phase 4.1 systems complete. Three cosmetic/UX issues remain (see PHASE_4_2_POLISH.md for details).
+
+### Issue 1: Zone Button Not Updating to "Visit" After Unlock
+- [ ] TODO: Trace zone unlock data flow — verify UnlockedZones broadcast payload includes all zones (MainServer_Phase4_Extended.lua line 511)
+- [ ] TODO: Verify client updateUIFromData() stores UnlockedZones in gameState (GameClient.lua line ~1345)
+- [ ] TODO: Confirm isUnlocked check reads from self.gameState.unlockedZones (GameClient.lua line ~840)
+- [ ] TODO: Test unlock sequence: unlock zone → verify button changes to "Visit" within 1 second
+
+### Issue 2: Coins Disappearing After Admin Commands
+- [ ] TODO: Verify AdminCommands full broadcast payload includes all fields (VacuumCharge, Rooms, etc.) — lines 104, 118, 138
+- [ ] TODO: Test `/coin` command → coins persist across 1-second server broadcast cycle
+- [ ] TODO: Verify shared playerData reference (_G.GhostCatcherPlayerData) is working between MainServer and AdminCommands
+- [ ] TODO: Test admin `/energy` and `/ghost` commands for persistence
+
+### Issue 3: Unlock Button Overlaps with Charge/Catch Buttons
+- [ ] TODO: Reposition zone card unlock button or add padding to Zones tab (GameClient.lua line ~800-890)
+- [ ] TODO: Test with multiple zone cards visible — verify no overlap with bottom action buttons
+- [ ] TODO: Verify all zone buttons are fully clickable
 
 ---
 

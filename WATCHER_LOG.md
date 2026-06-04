@@ -400,3 +400,101 @@ Tests 1-5 require Roblox Studio environment:
 
 Next: Execute WATCHER_TASKS.md tests in Roblox Studio to verify UI/handler integration
 
+---
+
+# Phase 4.2: UI Polish & Data Sync Fixes — 2026-06-04
+
+## Phase 4.2 Overview
+
+Phase 4.1 delivered fully functional core gameplay:
+- ✅ Ghost catching & coin rewards
+- ✅ Room upgrades with exponential costs
+- ✅ Ghost training with rarity scaling
+- ✅ Egg hatching (gacha system)
+- ✅ Zone unlocking with costs
+- ✅ Admin commands (/coin, /energy, /ghost)
+
+Three **cosmetic/UX issues** remain (non-blocking, gameplay works):
+
+1. **Zone Button Not Updating** — After unlock, button stays "Unlock" instead of changing to "Visit"
+2. **Coins Disappearing** — Admin `/coin` command shows briefly then resets on next broadcast
+3. **Button Overlap** — Unlock button hidden behind charge/catch buttons
+
+## MainServer_Phase4_Extended.lua Improvements (Noted in System Reminder)
+
+Comparing my original implementation to the updated version:
+
+### New in Current Version:
+- ✅ Line 42: `createRemote(Constants.Remotes.BringGhostsHome)` added
+- ✅ Lines 44-47: AdminCommand RemoteFunction creation
+- ✅ Line 200: `_G.GhostCatcherPlayerData = playerData` — global player data reference for admin access
+- ✅ Lines 451-463: Inline admin command handler (duplicate of AdminCommands.lua, but main server has it too)
+- ✅ Lines 453-465: Immediate broadcast after zone unlock (fixes Issue 1 partially)
+
+These are solid improvements. The global playerData exposure enables AdminCommands to modify the same reference.
+
+## Analysis of the 3 Issues
+
+### Issue 1: Zone Button Not Updating to "Visit"
+
+**Code Flow:**
+1. Server: Player calls UnlockZone remote
+2. Server: Zone is unlocked, added to `data.unlockedZones[zoneName] = true`
+3. Server: UpdateUI broadcast fires with UnlockedZones payload (line 511)
+4. Client: UpdateUI event received, `updateUIFromData()` called
+5. Client: `self.gameState.unlockedZones = data.UnlockedZones`
+6. Client: When repopulating Zones tab, `isUnlocked` check reads `self.gameState.unlockedZones[zoneName]`
+7. Client: If true, button shows "Visit", else shows "Unlock"
+
+**Potential Breaks:**
+- Server might not broadcast UnlockedZones (check line 511 payload)
+- Client might store it differently than expected (check line 1345)
+- `isUnlocked` check might read wrong variable (check line 840)
+- Tab population might cache old state instead of re-reading
+
+**Fix Approach:** Add debug logging to trace each step. Server logs when it broadcasts, client logs when it receives and updates gameState, then logs the isUnlocked check result.
+
+### Issue 2: Coins Disappearing After Admin Commands
+
+**Code Flow:**
+1. Client calls AdminCommand remote with "/coin"
+2. Server AdminCommands.lua receives (line 92)
+3. AdminCommands modifies shared playerData: `data.coins = data.coins + 1000` (line 103)
+4. AdminCommands broadcasts UpdateUI with coins (line 107-112)
+5. Client receives, updates coins display
+6. 1 second later, MainServer broadcast loop fires (line 508-517)
+7. MainServer sends full playerData state
+8. If MainServer's playerData wasn't updated, it overwrites with old coins value
+
+**Root Cause:** MainServer and AdminCommands must share EXACT same playerData reference (`_G.GhostCatcherPlayerData`). If they don't, AdminCommands updates its own copy, MainServer doesn't see it, broadcasts overwrites.
+
+**Current Status:** Both scripts use `_G.GhostCatcherPlayerData`, so they should be synchronized. But AdminCommands' broadcast (line 107) only includes partial data (Energy, GhostCount, GhostInventory, UnlockedZones). It's missing VacuumCharge and Rooms. When MainServer broadcasts 1 second later with full data, if it has old state, client might get confused.
+
+**Fix:** Ensure AdminCommands broadcasts FULL payload matching MainServer (lines 107, 120, 140 need VacuumCharge + Rooms).
+
+### Issue 3: Unlock Button Overlaps with Charge/Catch Buttons
+
+**Layout Issue:** Zone cards positioned at Y ~(1, -260) or thereabouts. Charge/Catch buttons in center-bottom. When multiple zone cards scroll, unlock buttons can get hidden behind action buttons.
+
+**Fix:** Either reposition unlock button within zone card (move left), or add bottom padding to Zones tab scrollable area so cards don't scroll into action buttons.
+
+## Implementation Plan
+
+**Step 1: Verify Issue 1 (Data Flow)**
+- [ ] Read MainServer broadcast code (line 511) — confirm UnlockedZones is in payload
+- [ ] Read GameClient updateUIFromData (line ~1345) — confirm it stores UnlockedZones
+- [ ] Read GameClient isUnlocked check (line ~840) — confirm it reads from gameState
+- [ ] If all correct, add trace logging to debug actual data values
+
+**Step 2: Fix Issue 2 (Admin Broadcast)**
+- [ ] Add VacuumCharge + Rooms to AdminCommands broadcast payloads (lines 107, 120, 140)
+- [ ] Test `/coin` → verify coins persist across MainServer's 1-sec broadcast
+
+**Step 3: Fix Issue 3 (UI Positioning)**
+- [ ] Adjust zone card layout to prevent overlap
+- [ ] Test with 5+ zone cards visible
+
+## Next Action
+
+Start with Issue 1 (data flow verification) since it has the most complexity and requires understanding the client/server sync logic. Issues 2 and 3 are simpler fixes once Issue 1 is understood.
+
