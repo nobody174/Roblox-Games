@@ -233,6 +233,9 @@ local function setupCatchRemote()
 		-- Track quest progress for catching ghosts
 		questSystem:updateQuestProgress(player, "CatchGhosts", 1)
 
+		-- Update leaderboard stats
+		leaderboardSystem:updatePlayerStat(player, "GhostsCaught", ghostSystem:getPlayerGhostCount(player))
+
 		-- Notify player
 		Constants.Remotes.ShowNotification:FireClient(player, "✨ Caught " .. ghostName .. "! +" .. coins .. " coins", Color3.fromRGB(100, 255, 100))
 
@@ -461,6 +464,33 @@ local function setupQuestRemote()
 	print("[Ghost Catcher Tycoon] Quest remote setup complete")
 end
 
+-- Setup leaderboard remote
+local function setupLeaderboardRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local remotesFolder = rs:FindFirstChild("Remotes")
+
+	-- Create or find GetLeaderboard remote
+	local leaderboardRemote = remotesFolder:FindFirstChild("GetLeaderboard")
+	if not leaderboardRemote then
+		leaderboardRemote = Instance.new("RemoteFunction")
+		leaderboardRemote.Name = "GetLeaderboard"
+		leaderboardRemote.Parent = remotesFolder
+	end
+
+	leaderboardRemote.OnServerInvoke = function(player, category)
+		-- Return the leaderboard for the requested category
+		local leaderboard = leaderboardSystem:getLeaderboard(category or "TotalEnergyEarned")
+		local playerRank = leaderboardSystem:getPlayerRank(player, category or "TotalEnergyEarned")
+
+		return {
+			Leaderboard = leaderboard,
+			PlayerRank = playerRank or "Unranked",
+		}
+	end
+
+	print("[Ghost Catcher Tycoon] Leaderboard remote setup complete")
+end
+
 -- Setup production loop
 local function setupProductionLoop()
 	while true do
@@ -484,6 +514,9 @@ local function setupProductionLoop()
 				end
 			end
 
+			-- Update leaderboard energy stat
+			leaderboardSystem:updatePlayerStat(player, "TotalEnergyEarned", currencySystem:getEnergy(player))
+
 			-- Send updated UI data
 			local updateRemote = Constants.Paths.ReplicatedStorage:FindFirstChild("Remotes"):FindFirstChild(Constants.Remotes.UpdateUI)
 			if updateRemote then
@@ -491,6 +524,7 @@ local function setupProductionLoop()
 				local canPrestige, _ = prestigeSystem:canPrestige(player)
 				local dailyQuests = questSystem:getQuests(player, "Daily")
 				local weeklyQuests = questSystem:getQuests(player, "Weekly")
+				local leaderboardRank = leaderboardSystem:getPlayerRank(player, "TotalEnergyEarned")
 				local uiData = {
 					Energy = currencySystem:getEnergy(player),
 					VacuumCharge = vacuumSystem:getCharge(player),
@@ -506,6 +540,7 @@ local function setupProductionLoop()
 					DailyQuests = dailyQuests,
 					WeeklyQuests = weeklyQuests,
 					HasClaimableRewards = questSystem:hasClaimableRewards(player),
+					LeaderboardRank = leaderboardRank or "Unranked",
 				}
 				updateRemote:FireClient(player, uiData)
 			end
@@ -581,6 +616,9 @@ local function initialize()
 
 	local okQuest, errQuest = pcall(setupQuestRemote)
 	if not okQuest then print("[Error] Quest remote setup failed: " .. tostring(errQuest)) end
+
+	local okLeaderboard, errLeaderboard = pcall(setupLeaderboardRemote)
+	if not okLeaderboard then print("[Error] Leaderboard remote setup failed: " .. tostring(errLeaderboard)) end
 
 	print("[CHECKPOINT] All remotes complete")
 
