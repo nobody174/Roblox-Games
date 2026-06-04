@@ -176,6 +176,9 @@ function QuestSystem:updateQuestProgress(player, questType, amount)
 			end
 		end
 	end
+
+	-- Persist quest changes to DataStore
+	self:_persistQuests(player)
 end
 
 function QuestSystem:claimReward(player, frequency, questIndex)
@@ -198,6 +201,7 @@ function QuestSystem:claimReward(player, frequency, questIndex)
 	end
 
 	quest.Claimed = true
+	self:_persistQuests(player)
 	return true, quest.Rewards
 end
 

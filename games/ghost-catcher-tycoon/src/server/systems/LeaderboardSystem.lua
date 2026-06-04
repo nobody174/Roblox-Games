@@ -62,6 +62,9 @@ function LeaderboardSystem:updatePlayerStat(player, statName, value)
 		end
 	end
 
+	-- Persist stats to DataStore
+	self.dataManager:updatePlayerData(player, { LeaderboardStats = self.playerStats[userId] })
+
 	self:_updateLeaderboards()
 end
 

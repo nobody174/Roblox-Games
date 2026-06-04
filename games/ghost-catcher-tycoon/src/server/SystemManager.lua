@@ -198,10 +198,11 @@ function SystemManager:linkDependencies()
 	eggSystem:setCurrencySystem(currencySystem)
 	eggSystem:setGhostSystem(ghostSystem)
 
-	-- Boss → Currency, Ghost, Zone
+	-- Boss → Currency, Ghost, Zone, Data
 	bossSystem:setCurrencySystem(currencySystem)
 	bossSystem:setGhostSystem(ghostSystem)
 	bossSystem:setZoneSystem(zoneSystem)
+	bossSystem:setDataManager(dataManager)
 
 	print("[SystemManager] ✓ All dependencies linked")
 	return true

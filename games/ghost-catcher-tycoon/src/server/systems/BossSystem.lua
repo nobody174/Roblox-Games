@@ -24,6 +24,7 @@ function BossSystem:new()
 	self.currencySystem = nil
 	self.ghostSystem = nil
 	self.zoneSystem = nil
+	self.dataManager = nil
 	return self
 end
 
@@ -37,6 +38,10 @@ end
 
 function BossSystem:setZoneSystem(zoneSystem)
 	self.zoneSystem = zoneSystem
+end
+
+function BossSystem:setDataManager(dataManager)
+	self.dataManager = dataManager
 end
 
 local function getBossForZone(zoneId)
@@ -183,6 +188,19 @@ function BossSystem:onBossDefeated(bossModel, player)
 	if self.currencySystem then
 		self.currencySystem:addCurrency(player, config.EnergyReward)
 		print("[BossSystem] " .. player.Name .. " defeated " .. bossName .. " and earned " .. config.EnergyReward .. " energy")
+	end
+
+	-- Track boss kill in DataStore
+	if self.dataManager then
+		local playerData = self.dataManager:getPlayerData(player)
+		if not playerData.BossKills then
+			playerData.BossKills = {}
+		end
+		if not playerData.BossKills[bossName] then
+			playerData.BossKills[bossName] = 0
+		end
+		playerData.BossKills[bossName] = playerData.BossKills[bossName] + 1
+		self.dataManager:updatePlayerData(player, { BossKills = playerData.BossKills })
 	end
 
 	bossModel:Destroy()
