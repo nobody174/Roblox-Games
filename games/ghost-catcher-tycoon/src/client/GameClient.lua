@@ -15,7 +15,14 @@ local TweenService = game:GetService("TweenService")
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
 local GhostCardBuilder = require(script.Parent:WaitForChild("modules"):WaitForChild("GhostCardBuilder"))
-local ChatUI = require(script.Parent:WaitForChild("modules"):WaitForChild("ChatUI"))
+
+local ChatUI
+local ChatUIModule = script.Parent:FindFirstChild("modules"):FindFirstChild("ChatUI")
+if ChatUIModule then
+	ChatUI = require(ChatUIModule)
+else
+	ChatUI = nil
+end
 
 local GameClient = {}
 GameClient.__index = GameClient
@@ -45,8 +52,13 @@ function GameClient:initialize()
 end
 
 function GameClient:initializeChatUI()
-	local chatUI = ChatUI:new()
-	chatUI:initialize(self, self.ui.screenGui)
+	if ChatUI then
+		local chatUI = ChatUI:new()
+		chatUI:initialize(self, self.ui.screenGui)
+		print("[ChatUI] Initialized successfully")
+	else
+		print("[ChatUI] Module not found - chat system disabled")
+	end
 end
 
 function GameClient:waitForRemotes()
