@@ -230,6 +230,9 @@ local function setupCatchRemote()
 		-- Remove ghost from world
 		ghostSpawner:removeGhost(closestGhost)
 
+		-- Track quest progress for catching ghosts
+		questSystem:updateQuestProgress(player, "CatchGhosts", 1)
+
 		-- Notify player
 		Constants.Remotes.ShowNotification:FireClient(player, "✨ Caught " .. ghostName .. "! +" .. coins .. " coins", Color3.fromRGB(100, 255, 100))
 
@@ -425,6 +428,39 @@ local function setupPrestigeRemote()
 	print("[Ghost Catcher Tycoon] Prestige remote setup complete")
 end
 
+-- Setup quest claim remote
+local function setupQuestRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local remotesFolder = rs:FindFirstChild("Remotes")
+
+	-- Create or find Quest claim remote
+	local questRemote = remotesFolder:FindFirstChild("ClaimQuestReward")
+	if not questRemote then
+		questRemote = Instance.new("RemoteEvent")
+		questRemote.Name = "ClaimQuestReward"
+		questRemote.Parent = remotesFolder
+	end
+
+	questRemote.OnServerEvent:Connect(function(player, frequency, questIndex)
+		local success, result = questSystem:claimReward(player, frequency, questIndex)
+		if success then
+			local rewards = result
+			-- Apply rewards to player
+			if rewards.Energy then
+				currencySystem:addEnergy(player, rewards.Energy, "quest_reward")
+			end
+			local message = "🎁 Quest completed! +" .. (rewards.Energy or 0) .. " energy"
+			Constants.Remotes.ShowNotification:FireClient(player, message, Color3.fromRGB(100, 200, 100))
+			print("[QuestSystem] " .. player.Name .. " claimed quest reward: " .. (rewards.Energy or 0) .. " energy")
+		else
+			local message = "❌ Quest claim failed: " .. result
+			Constants.Remotes.ShowNotification:FireClient(player, message, Color3.fromRGB(255, 100, 100))
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Quest remote setup complete")
+end
+
 -- Setup production loop
 local function setupProductionLoop()
 	while true do
@@ -453,6 +489,8 @@ local function setupProductionLoop()
 			if updateRemote then
 				local prestigeLevel = prestigeSystem:getPrestigeLevel(player)
 				local canPrestige, _ = prestigeSystem:canPrestige(player)
+				local dailyQuests = questSystem:getQuests(player, "Daily")
+				local weeklyQuests = questSystem:getQuests(player, "Weekly")
 				local uiData = {
 					Energy = currencySystem:getEnergy(player),
 					VacuumCharge = vacuumSystem:getCharge(player),
@@ -465,6 +503,9 @@ local function setupProductionLoop()
 					PrestigeLevel = prestigeLevel,
 					CanPrestige = canPrestige,
 					PrestigeBonuses = prestigeSystem:getPrestigeBonuses(player),
+					DailyQuests = dailyQuests,
+					WeeklyQuests = weeklyQuests,
+					HasClaimableRewards = questSystem:hasClaimableRewards(player),
 				}
 				updateRemote:FireClient(player, uiData)
 			end
@@ -537,6 +578,9 @@ local function initialize()
 
 	local okPrestige, errPrestige = pcall(setupPrestigeRemote)
 	if not okPrestige then print("[Error] Prestige remote setup failed: " .. tostring(errPrestige)) end
+
+	local okQuest, errQuest = pcall(setupQuestRemote)
+	if not okQuest then print("[Error] Quest remote setup failed: " .. tostring(errQuest)) end
 
 	print("[CHECKPOINT] All remotes complete")
 
