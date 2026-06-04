@@ -3,90 +3,147 @@
   Automatically scanned by @watcher agent
   Format: [ ] TODO | [x] IN PROGRESS | [✅] DONE
   
-  ⚠️ IMPORTANT: Phase 4.2 tasks are now available!
-  If you see this file has been updated with Phase 4.2 content,
-  read PHASE_4_2_POLISH.md for full context, then proceed with the tasks below.
+  ⚠️ IMPORTANT: Phase 5-6 System Integration Tasks Now Available!
+  Read TODO-LIST.md for complete project analysis and system inventory.
+  This file assigns phase 5-6 integration work to @watcher.
 -->
 
-# @watcher Task Queue
+# @watcher Task Queue - Phase 5-6 System Integration
 
-**Last Updated:** 2026-06-04 (Watcher Check #3)  
-**Current Phases:** Phase 4 (COMPLETE) + Phase 5 (CODE COMPLETE, STUDIO TESTING IN PROGRESS)  
+**Last Updated:** 2026-06-04 (Watcher Check #4)  
+**Current Phases:** Phase 4 (COMPLETE, LIVE TESTING) + Phase 5-6 (SYSTEM INTEGRATION)  
 **Agent:** @watcher (Ghost Catcher Tycoon Watcher)  
-**Status:** All code ready. User is now entering Studio for live testing.
+**Status:** Phase 4 live testing complete. Phase 5-6 system modules ready for integration.
 
-🚀 **STATUS:** Phase 4 & Phase 5 code complete! Pre-studio code review finished with 2 critical bugs fixed.
-All remaining TODO tasks require **Roblox Studio** for live testing - user is about to begin.
-Use `FINAL_CHECKLIST.md` and `STUDIO_TEST_BRIEFING.md` as guides.
+🚀 **NEW ASSIGNMENT:** Phase 5-6 System Integration via SystemManager Pattern
+Claude is fixing critical blockers (ghost spawning, DataStore, admin visibility).
+You will integrate 20 scaffold system modules into MainServer using clean SystemManager pattern.
+See TODO-LIST.md for full system inventory and implementation order.
 
 ---
 
-## Phase 5: Chat Commands & Advanced Admin Tools (NEWLY COMPLETE - TESTING NEEDED)
+## Phase 5-6: System Integration via SystemManager Pattern
 
-**IMPLEMENTATION STATUS:** ✅ COMPLETE  
-**Implementation Date:** 2026-06-04  
-**Files Created/Modified:**
-- ✅ src/client/modules/ChatUI.lua (NEW)
-- ✅ src/client/GameClient.lua (MODIFIED - ChatUI integration)
-- ✅ src/server/AdminCommands.lua (MODIFIED - 5 new command handlers)
+**ASSIGNMENT:** Integrate 20 scaffold system modules into MainServer  
+**Architecture:** SystemManager pattern (clean separation, easy to enable/disable)  
+**Target Date:** Complete by 2026-06-11  
+**Files to Create:** `src/server/SystemManager.lua` + updated `MainServer.lua`
 
-### Pre-Studio Code Review Tasks ✅ COMPLETE
+### System Integration Tasks (Priority Order)
 
-- [✅] DONE: Comprehensive Code Review & Bug Fixes
-  - ✅ Code Review: All 4 core files reviewed (GameClient, MainServer_Phase4_Extended, AdminCommands, ChatUI)
-  - ✅ Critical Fix #1: UnlockZone broadcast payload - Added missing 4 fields (VacuumCharge, GhostCount, GhostInventory, Rooms)
-  - ✅ Critical Fix #2: unlockedZones data structure - Changed AdminCommands from array to dictionary format to match MainServer
-  - ✅ Validation: All remotes connected, all handlers implemented, all payloads complete, zero syntax errors
-  - ✅ Documentation: Created FINAL_CHECKLIST.md, TESTING_SUMMARY.md, READY_FOR_STUDIO.md, PRE_STUDIO_TESTING_REPORT.md
-  - ✅ Git: Committed 3 times (fixes + documentation)
-  - See WATCHER_LOG.md and PRE_STUDIO_TESTING_REPORT.md for full review results
+#### CRITICAL (Complete first week)
+- [✅] DONE: Create SystemManager.lua
+  - Purpose: Load and initialize all system modules
+  - Pattern: Singleton that manages 21 systems
+  - Features:
+    - `SystemManager:initialize()` — Load all systems once
+    - `SystemManager:linkDependencies()` — Wire system dependencies
+    - `SystemManager:getSystem(name)` — Access individual systems
+    - `SystemManager:initializePlayer(player)` — Init player in all systems
+    - `SystemManager:enableSystem(name)` — Turn on system (future)
+    - `SystemManager:disableSystem(name)` — Turn off system (future)
+  - File location: `src/server/SystemManager.lua` ✅
+  - MainServer refactor: Reduced from 576 → 490 lines (86-line reduction)
+  - Result: Clean initialization, easy maintenance, single system manager
 
-### Studio Testing Tasks (Require Roblox Studio) - PENDING
+- [ ] TODO: Integrate BossSystem (193 lines)
+  - Read: `src/server/systems/BossSystem.lua`
+  - Wire into: SystemManager + MainServer
+  - Test: Bosses spawn in zones 3, 5, 7, 9, 10
+  - Verify: Boss data from BossData.lua loads correctly
+  - Check: Loot tables work (ghosts drop on defeat)
+  - Studio test: Fight each boss, verify rewards
 
-- [ ] TODO: Test ChatUI Module Functionality (Studio Required)
-  - File: src/client/modules/ChatUI.lua
-  - ✓ Check: Input box appears top-left below stat panel (300px wide × 40px tall)
-  - ✓ Check: Can type text and press Enter to submit command
-  - ✓ Check: Command feedback appears in history panel with color coding (green/red/yellow)
-  - ✓ Check: Chat button in TabBar toggles history visibility
-  - ✓ Check: History displays up to 20 messages (older ones scroll off)
-  - ✓ Check: History panel scrolls automatically to show newest messages
-  - Log all results in WATCHER_LOG.md
+- [ ] TODO: Integrate PrestigeSystem (132 lines)
+  - Read: `src/server/systems/PrestigeSystem.lua`
+  - Wire into: SystemManager + MainServer
+  - Features: Level tracking, permanent bonuses, UI
+  - Test: Prestige at 1M energy, verify bonuses apply
+  - Studio test: Prestige multiple times, verify stacking
 
-- [ ] TODO: Test New Admin Commands - Part 1 (Healing & Teleport)
-  - `/heal` - Add 1000 coins to admin's wallet (Test: coins increase by 1000)
-  - `/heal max` - Restore admin's coins to maximum 9999 (Test: coins = 9999)
-  - `/heal @player` - Add 1000 coins to target player (Test: target's coins +1000)
-  - `/tp @player ISLAND_NAME` - Teleport player to island (Test islands: Whisper Woods, Foggy Fields, Gloomy Graveyard, Electro Alley, Frostbite Caverns)
-  - `/tp @player @player2` - Teleport player1 to player2's location (requires 2+ players)
-  - Log each test result: PASS/FAIL with notes
+- [ ] TODO: Integrate QuestSystem (229 lines)
+  - Read: `src/server/systems/QuestSystem.lua`
+  - Wire into: SystemManager + MainServer
+  - Features: Daily/weekly quests, progress tracking, rewards
+  - Test: 3 daily quests generate on join
+  - Studio test: Complete quest, claim reward
 
-- [ ] TODO: Test New Admin Commands - Part 2 (Moderation)
-  - `/mute @player` - Mute a player (Test: muted player can see chat but not send - verify in code)
-  - `/unmute @player` - Unmute player (Test: feedback confirms success)
-  - `/kick @player` - Kick player from game (Test: target player disconnects, if 2+ players in game)
-  - `/help` - Display all available commands (Test: chat shows all commands listed)
-  - Log each test result: PASS/FAIL with notes
+#### HIGH (Complete second week)
+- [ ] TODO: Integrate LeaderboardSystem (160 lines)
+  - Read: `src/server/systems/LeaderboardSystem.lua`
+  - Categories: TotalEnergyEarned, GhostsCaught, PrestigeLevel, HighestZone
+  - Test: Rank calculation accuracy
+  - Studio test: Multi-player leaderboard display
 
-- [ ] TODO: Integration Test - Full Phase 5 Workflow
-  - Execute 10+ commands in sequence
-  - Verify: Command feedback appears immediately in history
-  - Verify: UI updates in real-time after each command (coins, energy, etc.)
-  - Verify: Chat history persists and scrolls correctly
-  - Verify: Non-admin typing command gets "not admin" permission error
-  - Verify: Invalid commands get error feedback
-  - Log complete test results in WATCHER_LOG.md
+- [ ] TODO: Integrate GhostSystem (186 lines)
+  - Consolidate with current ghost handling
+  - May overlap with MainServer ghost code
+  - Verify no conflicts
 
-- [ ] TODO: Phase 5 Completion Checklist
-  - [ ] ChatUI module loads without errors
-  - [ ] All 9 commands execute successfully (/heal, /heal max, /mute, /unmute, /kick, /tp, /tp @, /help, existing commands)
-  - [ ] Existing Phase 4 commands still work (/coin, /energy, /ghost, /admin, /unadmin)
-  - [ ] Chat history displays correctly (last 20 messages, auto-scroll)
-  - [ ] Permission checks work (admins only, non-admins blocked)
-  - [ ] Full broadcast payload sent after each command (Energy, Coins, GhostCount, etc.)
-  - [ ] Zero console errors during testing
-  - [ ] All test results logged in WATCHER_LOG.md
-  - Mark Phase 5 COMPLETE when all verified ✅
+- [ ] TODO: Integrate TrainingSystem (224 lines)
+  - May overlap with MainServer training code
+  - Verify no conflicts
+
+- [ ] TODO: Integrate ZoneSystem (191 lines)
+  - May overlap with MainServer zone unlock code
+  - Verify no conflicts
+
+#### MEDIUM (Complete week 3)
+- [ ] TODO: Integrate PvPSystem (182 lines)
+- [ ] TODO: Integrate MonetizationSystem (208 lines)
+- [ ] TODO: Integrate CosmeticsSystem (132 lines)
+- [ ] TODO: Integrate EventSystem (62 lines)
+- [ ] TODO: Integrate AutoCatchSystem (150 lines)
+- [ ] TODO: Integrate AutoTrainSystem (194 lines)
+
+### SystemManager Code Template
+
+```lua
+-- src/server/SystemManager.lua
+local SystemManager = {}
+SystemManager.__index = SystemManager
+local systems = {}
+
+function SystemManager:initialize()
+    -- Load all 20 systems
+    local systemNames = {
+        "BossSystem", "PrestigeSystem", "QuestSystem", 
+        "LeaderboardSystem", "GhostSystem", "TrainingSystem",
+        -- ... etc
+    }
+    
+    for _, name in ipairs(systemNames) do
+        local systemModule = require(game:GetService("ReplicatedStorage"):WaitForChild("server"):WaitForChild("systems"):WaitForChild(name))
+        systems[name] = systemModule:new()
+    end
+end
+
+function SystemManager:getSystem(name)
+    return systems[name]
+end
+
+return SystemManager
+```
+
+### Integration Checklist for Each System
+
+- [ ] System module loads without errors
+- [ ] All dependencies available (Config, Constants, Data files)
+- [ ] No conflicts with existing MainServer code
+- [ ] RemoteEvents wired correctly
+- [ ] Player data structure compatible
+- [ ] Broadcasting works (UI updates in real-time)
+- [ ] Studio testing complete (no console errors)
+- [ ] Documented in code comments
+
+### Testing Requirements
+
+For each system:
+1. Load test (no errors on startup)
+2. Functional test (feature works end-to-end)
+3. Integration test (doesn't break other systems)
+4. Studio test (verify in running game)
+5. Log results in WATCHER_LOG.md
 
 ---
 
