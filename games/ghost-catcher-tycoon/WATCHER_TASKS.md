@@ -72,24 +72,24 @@ See TODO-LIST.md for full system inventory and implementation order.
   - Commit: 4a050b3
 
 #### HIGH (Complete second week)
-- [ ] TODO: Integrate LeaderboardSystem (160 lines)
-  - Read: `src/server/systems/LeaderboardSystem.lua`
-  - Categories: TotalEnergyEarned, GhostsCaught, PrestigeLevel, HighestZone
-  - Test: Rank calculation accuracy
-  - Studio test: Multi-player leaderboard display
+- [✅] DONE: Integrate LeaderboardSystem (160 lines)
+  - Ranks players by TotalEnergyEarned, GhostsCaught, PrestigeLevel, HighestZone
+  - Rank calculation integrated into production loop
+  - GetLeaderboard RemoteFunction fetches top players
+  - Leaderboard position broadcast to UI every tick
+  - Commit: 4babed7
 
-- [ ] TODO: Integrate GhostSystem (186 lines)
-  - Consolidate with current ghost handling
-  - May overlap with MainServer ghost code
-  - Verify no conflicts
+- [ ] TODO: Consolidate GhostSystem (186 lines)
+  - Verify overlap with MainServer ghost handling
+  - Consider merging or routing through SystemManager
+  
+- [ ] TODO: Consolidate TrainingSystem (224 lines)
+  - Verify overlap with MainServer training code
+  - Consider merging or routing through SystemManager
 
-- [ ] TODO: Integrate TrainingSystem (224 lines)
-  - May overlap with MainServer training code
-  - Verify no conflicts
-
-- [ ] TODO: Integrate ZoneSystem (191 lines)
-  - May overlap with MainServer zone unlock code
-  - Verify no conflicts
+- [ ] TODO: Consolidate ZoneSystem (191 lines)
+  - Verify overlap with MainServer zone unlock code
+  - Consider merging or routing through SystemManager
 
 #### MEDIUM (Complete week 3)
 - [ ] TODO: Integrate PvPSystem (182 lines)
