@@ -7,6 +7,12 @@
 --
 -- Client-side UI management: screen layout, button handlers, tab system, and real-time game state updates.
 --
+pcall(function() print("[GameClient] Script loaded!") end)
+
+-- Prevent re-initialization on character respawn
+if _G.GameClientInitialized then return end
+_G.GameClientInitialized = true
+
 print("[Ghost Catcher Tycoon] GameClient script starting...")
 
 local Players = game:GetService("Players")
@@ -24,10 +30,12 @@ print("[Ghost Catcher Tycoon] Player found: " .. player.Name)
 
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
-local GhostCardBuilder = require(script.Parent:WaitForChild("modules"):WaitForChild("GhostCardBuilder"))
+
+-- Load modules from StarterPlayerScripts
+local GhostCardBuilder = require(game.StarterPlayer.StarterPlayerScripts.modules.GhostCardBuilder)
 
 local ChatUI
-local modulesFolder = script.Parent:FindFirstChild("modules")
+local modulesFolder = game.StarterPlayer.StarterPlayerScripts:FindFirstChild("modules")
 if modulesFolder then
 	local ChatUIModule = modulesFolder:FindFirstChild("ChatUI")
 	if ChatUIModule then
@@ -36,7 +44,7 @@ if modulesFolder then
 		ChatUI = nil
 	end
 else
-	print("[Ghost Catcher Tycoon] WARNING: modules folder not found in parent")
+	print("[Ghost Catcher Tycoon] WARNING: modules folder not found in StarterPlayerScripts")
 	ChatUI = nil
 end
 
