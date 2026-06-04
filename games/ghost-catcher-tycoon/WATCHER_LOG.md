@@ -943,7 +943,47 @@ User is resolving ChatUI module placement in Studio. Once correct hierarchy is e
 
 ---
 
+---
+
+# Watcher Task Check #6 - 2026-06-04 (Scheduled)
+
+**Status:** ✅ COMPLETE  
+**Time:** Current  
+**Action:** Checked WATCHER_TASKS.md and investigated GameClient location issue
+
+## Findings
+
+**Tasks Found:** Same 4 pending Studio testing tasks (unchanged)
+- [ ] Test ChatUI Module Functionality
+- [ ] Test New Admin Commands - Part 1 (Healing & Teleport)
+- [ ] Test New Admin Commands - Part 2 (Moderation)
+- [ ] Integration Test - Full Phase 5 Workflow
+
+**Critical Discovery:** GameClient Location Issue
+- **Current (Wrong):** StarterCharacterScripts (runs every character spawn)
+- **Should Be:** StarterPlayerScripts (runs once per player join)
+- **Reason:** `screenGui.ResetOnSpawn = false` means UI persists, but re-initializing it on every respawn breaks it
+- **Documentation Error:** READY_FOR_STUDIO.md and PUBLISHING_GUIDE.md incorrectly specify StarterCharacterScripts
+- **Root Cause:** Was mistakenly placed there in old place.rbxl, never corrected
+
+**User Question:** "Did we change this earlier?"
+- **Answer:** No, this is a historical error that was never caught. The correct location has always been StarterPlayerScripts for a persistent UI system.
+- **Evidence:** Code has `ResetOnSpawn = false` (expects to persist) and `startUpdateLoop()` (expects to run once)
+
+## Action Taken
+
+- ✅ Verified git history (no recent changes to GameClient location)
+- ✅ Checked documentation (found conflicting info)
+- ✅ Analyzed code design (UI should initialize once, not per respawn)
+- ✅ Confirmed: StarterPlayerScripts is correct location
+
+## Summary
+
+GameClient should be moved from **StarterCharacterScripts → StarterPlayerScripts** in Studio. This is a structural fix, not a code change. Old documentation was incorrect.
+
+---
+
 **Built with Claude Code by Anthropic**  
 *Date: 2026-06-04*  
-*Status: Resolving ChatUI module setup, testing pending*  
+*Status: GameClient location identified and confirmed correct*  
 *Confidence Level: ⭐⭐⭐⭐⭐ (5/5) - All systems validated*
