@@ -38,8 +38,16 @@ createRemote(Constants.Remotes.ShowNotification, "RemoteEvent")
 createRemote(Constants.Remotes.GetGameState, "RemoteFunction")
 createRemote(Constants.Remotes.UpgradeRoom, "RemoteEvent")
 createRemote(Constants.Remotes.TrainGhost, "RemoteEvent")
-createRemote(Constants.Remotes.HatchEgg, "RemoteEvent")
+createRemote(Constants.Remotes.GachaPull, "RemoteEvent")
 createRemote(Constants.Remotes.UnlockZone, "RemoteEvent")
+createRemote(Constants.Remotes.BringGhostsHome, "RemoteEvent")
+
+-- Create admin command remote immediately
+if not remotesFolder:FindFirstChild("AdminCommand") then
+	local adminRemote = Instance.new("RemoteFunction")
+	adminRemote.Name = "AdminCommand"
+	adminRemote.Parent = remotesFolder
+end
 
 print("[PHASE 4] Remotes created (including optional handlers)")
 
@@ -176,6 +184,9 @@ print("[PHASE 4] Ghost spawning started")
 
 local playerData = {}
 
+-- Expose playerData globally so admin commands can access it
+_G.GhostCatcherPlayerData = playerData
+
 local function initPlayerData(userId)
 	if not playerData[userId] then
 		playerData[userId] = {
@@ -190,7 +201,7 @@ local function initPlayerData(userId)
 				ResearchLab = { level = 0 },
 				BossArena = { level = 0 },
 			},
-			unlockedZones = { "Whisper Woods" },
+			unlockedZones = { ["Whisper Woods"] = true },
 		}
 	end
 	return playerData[userId]
@@ -365,7 +376,7 @@ if trainGhostRemote then
 end
 
 -- HatchEgg remote handler (gacha)
-local hatchEggRemote = remotesFolder:FindFirstChild(Constants.Remotes.HatchEgg)
+local hatchEggRemote = remotesFolder:FindFirstChild(Constants.Remotes.GachaPull)
 if hatchEggRemote then
 	hatchEggRemote.OnServerEvent:Connect(function(player, eggName)
 		local data = initPlayerData(player.UserId)
@@ -401,7 +412,7 @@ if hatchEggRemote then
 
 		print("[PHASE 4] " .. player.Name .. " hatched " .. eggName .. " and received " .. hatchedName .. " (" .. rarity .. ")!")
 	end)
-	print("[PHASE 4] HatchEgg handler connected")
+	print("[PHASE 4] GachaPull handler connected")
 end
 
 -- UnlockZone remote handler
@@ -418,14 +429,8 @@ if unlockZoneRemote then
 
 		local zoneData = zoneConfig[zoneName]
 
-		-- Check if already unlocked
-		local isUnlocked = false
-		for _, unlocked in ipairs(data.unlockedZones) do
-			if unlocked == zoneName then
-				isUnlocked = true
-				break
-			end
-		end
+		-- Check if already unlocked (unlockedZones is a dictionary)
+		local isUnlocked = data.unlockedZones[zoneName] == true
 
 		if isUnlocked then
 			print("[PHASE 4] " .. player.Name .. " tried to unlock already-unlocked zone: " .. zoneName)
@@ -440,11 +445,58 @@ if unlockZoneRemote then
 
 		-- Deduct coins and unlock
 		data.coins = data.coins - zoneData.cost
-		table.insert(data.unlockedZones, zoneName)
+		data.unlockedZones[zoneName] = true
 
 		print("[PHASE 4] " .. player.Name .. " unlocked " .. zoneName .. " for " .. zoneData.cost .. " coins!")
+
+		-- Send immediate broadcast to update client UI
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				Energy = data.coins,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
 	end)
 	print("[PHASE 4] UnlockZone handler connected")
+end
+
+-- ==================== ADMIN COMMANDS ====================
+
+-- Server-side admin command handler
+local function processAdminCommand(player, command, arg)
+	local data = initPlayerData(player.UserId)
+	if not data then return end
+
+	if command == "coin" or command == "gold" then
+		data.coins = data.coins + 1000
+		print("[ADMIN] " .. player.Name .. " gained 1000 coins (total: " .. data.coins .. ")")
+		return true
+	elseif command == "energy" then
+		data.coins = data.coins + 1000
+		print("[ADMIN] " .. player.Name .. " gained 1000 energy (total: " .. data.coins .. ")")
+		return true
+	elseif command == "ghost" then
+		local ghostName = arg or "Wraith"
+		local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
+		data.ghostInventory[inventoryKey] = {
+			name = ghostName,
+			rarity = "Rare",
+			level = 1
+		}
+		data.ghosts = data.ghosts + 1
+		print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName)
+		return true
+	end
+end
+
+-- Connect admin command remote
+local adminRemote = remotesFolder:FindFirstChild("AdminCommand")
+if adminRemote then
+	adminRemote.OnServerInvoke = function(player, command, arg)
+		return processAdminCommand(player, command, arg)
+	end
+	print("[PHASE 4] Admin command system ready (/coin, /energy, /ghost)")
 end
 
 -- ==================== UI BROADCAST ====================
@@ -463,6 +515,7 @@ task.spawn(function()
 						VacuumCharge = data.charge,
 						Energy = data.coins,
 						GhostCount = data.ghosts,
+						GhostInventory = data.ghostInventory,
 						Rooms = data.rooms,
 						UnlockedZones = data.unlockedZones,
 					})

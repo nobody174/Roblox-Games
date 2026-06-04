@@ -57,6 +57,7 @@ function GameClient:waitForRemotes()
 	self.remotes.UnlockZone = remotesFolder:FindFirstChild(Constants.Remotes.UnlockZone)
 	self.remotes.TrainGhost = remotesFolder:FindFirstChild(Constants.Remotes.TrainGhost)
 	self.remotes.GachaPull = remotesFolder:FindFirstChild(Constants.Remotes.GachaPull)
+	self.remotes.AdminCommand = remotesFolder:FindFirstChild("AdminCommand")
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -761,7 +762,7 @@ function GameClient:populateZonesTab()
 		end
 	end
 
-	zonesTabContent.CanvasSize = UDim2.new(1, 0, 0, 1100)
+	zonesTabContent.CanvasSize = UDim2.new(1, 0, 0, 1200)  -- Extra padding at bottom to prevent overlap with action buttons
 
 	local zoneListLayout = Instance.new("UIListLayout")
 	zoneListLayout.FillDirection = Enum.FillDirection.Vertical
@@ -827,6 +828,9 @@ function GameClient:populateZonesTab()
 		descLabel.Text = zoneData.description
 		descLabel.Parent = zoneCard
 
+		-- Check if zone is unlocked
+		local isUnlocked = zoneData.cost == 0 or (self.gameState.unlockedZones and self.gameState.unlockedZones[zoneData.name])
+
 		-- Cost/Unlocked label
 		local costLabel = Instance.new("TextLabel")
 		costLabel.Name = "CostLabel"
@@ -837,7 +841,7 @@ function GameClient:populateZonesTab()
 		costLabel.TextSize = 12
 		costLabel.Font = Enum.Font.GothamBold
 		costLabel.TextXAlignment = Enum.TextXAlignment.Right
-		if zoneData.cost == 0 then
+		if isUnlocked then
 			costLabel.Text = "Unlocked"
 			costLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
 		else
@@ -854,7 +858,7 @@ function GameClient:populateZonesTab()
 		unlockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 		unlockButton.TextSize = 12
 		unlockButton.Font = Enum.Font.GothamBold
-		unlockButton.Text = zoneData.cost == 0 and "Visit" or "Unlock"
+		unlockButton.Text = isUnlocked and "Visit" or "Unlock"
 		unlockButton.Parent = zoneCard
 
 		local unlockCorner = Instance.new("UICorner")
@@ -1019,7 +1023,7 @@ function GameClient:populateShopTab()
 		local eggName = eggData.name
 		hatchButton.MouseButton1Click:Connect(function()
 			print("[Ghost Catcher Tycoon] Hatch button clicked for " .. eggName)
-			self.remotes.HatchEgg:FireServer(eggName)
+			self.remotes.GachaPull:FireServer(eggName)
 			self:showButtonFeedback(hatchButton)
 		end)
 
@@ -1301,6 +1305,26 @@ function GameClient:updateUIFromData(data)
 					end
 				end
 			end
+		end
+	end
+
+	-- Update ghost inventory from broadcast data
+	if data.GhostInventory then
+		self.gameState.ghostInventory = data.GhostInventory
+		-- Refresh ghost tab if it's currently visible
+		local ghostContent = self.ui.tabContents["Ghost"]
+		if ghostContent and ghostContent.Visible then
+			self:populateGhostTab()
+		end
+	end
+
+	-- Update unlocked zones from broadcast data
+	if data.UnlockedZones then
+		self.gameState.unlockedZones = data.UnlockedZones
+		-- Refresh zones tab if it's currently visible
+		local zonesContent = self.ui.tabContents["Zones"]
+		if zonesContent and zonesContent.Visible then
+			self:populateZonesTab()
 		end
 	end
 end
