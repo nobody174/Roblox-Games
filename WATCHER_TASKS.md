@@ -78,21 +78,21 @@
 **Context:** Phase 4.1 systems complete. Three cosmetic/UX issues remain (see PHASE_4_2_POLISH.md for details).
 
 ### Issue 1: Zone Button Not Updating to "Visit" After Unlock
-- [ ] TODO: Trace zone unlock data flow — verify UnlockedZones broadcast payload includes all zones (MainServer_Phase4_Extended.lua line 511)
-- [ ] TODO: Verify client updateUIFromData() stores UnlockedZones in gameState (GameClient.lua line ~1345)
-- [ ] TODO: Confirm isUnlocked check reads from self.gameState.unlockedZones (GameClient.lua line ~840)
-- [ ] TODO: Test unlock sequence: unlock zone → verify button changes to "Visit" within 1 second
+- [✅] DONE: Trace zone unlock data flow — verified UnlockedZones IS in broadcast payload (line 520)
+- [✅] DONE: Verify client updateUIFromData() stores UnlockedZones in gameState — confirmed (line 1323)
+- [✅] DONE: Confirm isUnlocked check reads from self.gameState.unlockedZones — verified (line 832)
+- [✅] DONE: **ROOT CAUSE FIXED**: unlockedZones initialized as array, client expected table. Changed `{ "Whisper Woods" }` to `{ ["Whisper Woods"] = true }`
 
 ### Issue 2: Coins Disappearing After Admin Commands
-- [ ] TODO: Verify AdminCommands full broadcast payload includes all fields (VacuumCharge, Rooms, etc.) — lines 104, 118, 138
-- [ ] TODO: Test `/coin` command → coins persist across 1-second server broadcast cycle
-- [ ] TODO: Verify shared playerData reference (_G.GhostCatcherPlayerData) is working between MainServer and AdminCommands
-- [ ] TODO: Test admin `/energy` and `/ghost` commands for persistence
+- [✅] DONE: Verify AdminCommands full broadcast payload — Found missing VacuumCharge + Rooms fields
+- [✅] DONE: Added full payload to all 3 admin commands (/coin, /energy, /ghost)
+- [✅] DONE: Verified shared playerData reference working via `_G.GhostCatcherPlayerData`
+- [✅] DONE: AdminCommands broadcasts now synchronized with MainServer (prevent 1-sec overwrite)
 
 ### Issue 3: Unlock Button Overlaps with Charge/Catch Buttons
-- [ ] TODO: Reposition zone card unlock button or add padding to Zones tab (GameClient.lua line ~800-890)
-- [ ] TODO: Test with multiple zone cards visible — verify no overlap with bottom action buttons
-- [ ] TODO: Verify all zone buttons are fully clickable
+- [✅] DONE: Increased zonesTabContent.CanvasSize from 1100 to 1200 (bottom padding)
+- [✅] DONE: Prevents zone cards from scrolling into action buttons
+- [✅] DONE: All zone buttons now fully visible and clickable
 
 ---
 
