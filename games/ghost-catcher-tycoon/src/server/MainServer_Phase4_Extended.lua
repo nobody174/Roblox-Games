@@ -449,11 +449,15 @@ if unlockZoneRemote then
 
 		print("[PHASE 4] " .. player.Name .. " unlocked " .. zoneName .. " for " .. zoneData.cost .. " coins!")
 
-		-- Send immediate broadcast to update client UI
+		-- Send immediate broadcast to update client UI with full payload
 		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
 		if updateRemote then
 			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
 				Energy = data.coins,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
 				UnlockedZones = data.unlockedZones,
 			})
 		end

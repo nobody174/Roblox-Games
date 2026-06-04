@@ -16,8 +16,11 @@ local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("sha
 local Enums = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("enums"))
 
 -- Load systems
+print("[DEBUG] Loading systems...")
 local DataManager = require(script.Parent:WaitForChild("data"):WaitForChild("DataManager"))
+print("[DEBUG] Loaded DataManager")
 local CurrencySystem = require(script.Parent:WaitForChild("systems"):WaitForChild("CurrencySystem"))
+print("[DEBUG] Loaded CurrencySystem")
 local VacuumSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("VacuumSystem"))
 local GhostSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("GhostSystem"))
 local ProductionSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("ProductionSystem"))
@@ -38,6 +41,7 @@ local EggSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("Eg
 local BossSystem = require(script.Parent:WaitForChild("systems"):WaitForChild("BossSystem"))
 local GhostService = require(script.Parent:WaitForChild("systems"):WaitForChild("GhostService"))
 local GhostSpawner = require(script.Parent:WaitForChild("systems"):WaitForChild("GhostSpawner"))
+print("[DEBUG] All systems loaded")
 
 -- Initialize systems
 local dataManager = DataManager:new()
@@ -115,16 +119,24 @@ print("[Ghost Catcher Tycoon] Server started")
 
 -- Setup RemoteEvents in ReplicatedStorage
 local function setupRemotes()
+	print("[DEBUG] setupRemotes() starting...")
 	local rs = game:GetService("ReplicatedStorage")
+	print("[DEBUG] Got ReplicatedStorage")
 
 	-- Create folders if they don't exist
 	if not rs:FindFirstChild("Remotes") then
 		local remotesFolder = Instance.new("Folder")
 		remotesFolder.Name = "Remotes"
 		remotesFolder.Parent = rs
+		print("[DEBUG] Created Remotes folder")
 	end
 
 	local remotesFolder = rs:FindFirstChild("Remotes")
+	if not remotesFolder then
+		error("[ERROR] Remotes folder not found after creation!")
+		return
+	end
+	print("[DEBUG] Found/created Remotes folder")
 
 	-- Create RemoteEvents
 	local function createRemote(name, className)
@@ -132,6 +144,7 @@ local function setupRemotes()
 			local remote = Instance.new(className)
 			remote.Name = name
 			remote.Parent = remotesFolder
+			print("[DEBUG] Created remote: " .. name)
 			return remote
 		end
 		return remotesFolder:FindFirstChild(name)

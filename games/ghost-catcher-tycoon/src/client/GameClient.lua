@@ -15,6 +15,7 @@ local TweenService = game:GetService("TweenService")
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
 local GhostCardBuilder = require(script.Parent:WaitForChild("modules"):WaitForChild("GhostCardBuilder"))
+local ChatUI = require(script.Parent:WaitForChild("modules"):WaitForChild("ChatUI"))
 
 local GameClient = {}
 GameClient.__index = GameClient
@@ -36,10 +37,16 @@ function GameClient:initialize()
 
 	self:waitForRemotes()
 	self:setupUI()
+	self:initializeChatUI()
 	self:setupInputHandlers()
 	self:startUpdateLoop()
 
 	print("[Ghost Catcher Tycoon] Client initialized!")
+end
+
+function GameClient:initializeChatUI()
+	local chatUI = ChatUI:new()
+	chatUI:initialize(self, self.ui.screenGui)
 end
 
 function GameClient:waitForRemotes()
