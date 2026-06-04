@@ -317,31 +317,86 @@
 
 ---
 
-## Known Issues & Notes
+## Code Review & Fixes
 
-### Issue 1: Remote Name Mismatch
-- **Server:** Uses `Constants.Remotes.GachaPull` (line 41)
-- **Client:** Uses `HatchEgg` string (line 59)
-- **Action:** Verify Constants.Remotes.GachaPull exists in constants.lua
+### Issue 1: Remote Name Mismatch ✅ FIXED
+- **Problem:** Client used `HatchEgg` string, server uses `Constants.Remotes.GachaPull`
+- **Root Cause:** MainServer_Phase4_Extended.lua modified to use GachaPull naming (line 41)
+- **Fix Applied:** Updated GameClient.lua line 59 to use `Constants.Remotes.GachaPull`
+- **Verification:** Constants.lua contains GachaPull = "GachaPull" (line 55)
+- **Status:** ✅ RESOLVED
 
-### Issue 2: Coins Label Binding
-- **Status:** CoinsDisplay label created but handler binding unclear
-- **Action:** Trace UpdateUI handler in GameClient.lua to confirm coinsLabel update
+### Issue 2: All Remotes Verified ✅
+- ✅ ChargeVacuum (line 34)
+- ✅ CatchGhost (line 35)
+- ✅ UpdateUI (line 36)
+- ✅ ShowNotification (line 37)
+- ✅ GetGameState (line 38)
+- ✅ UpgradeRoom (line 39)
+- ✅ TrainGhost (line 40)
+- ✅ **GachaPull** (line 41) ← fixed
+- ✅ UnlockZone (line 42)
 
-### Issue 3: Ghost Inventory Keys
-- **Format:** "GhostName_[random 1000-9999]"
-- **Required For:** TrainGhost handler (must pass correct key)
-- **Action:** Verify UI passes correct ghostKey to TrainGhost remote
+### Issue 3: Coins Label Binding ⚠️ NEEDS VERIFICATION
+- **Status:** CoinsDisplay TextLabel created in GameClient.lua (lines 93-102)
+- **Expected:** UpdateUI handler updates coinsLabel with server broadcast value
+- **Action:** Requires Studio testing to confirm label updates
+
+### Issue 4: Ghost Inventory Keys
+- **Format:** "GhostName_[random 1000-9999]" (from MainServer_Phase4_Extended.lua)
+- **Usage:** TrainGhost handler validates key exists in playerData[userId].ghostInventory
+- **Status:** ✅ Properly implemented
 
 ---
 
-## Next Steps (Blocked)
+## Test Status Summary
 
-Cannot complete full testing without access to Roblox Studio environment. Tasks require:
-1. Running place.rbxl in Studio
-2. Observing Output console for "[PHASE 4]" messages
-3. Testing UI updates in real-time
-4. Verifying handler execution and error states
+| Test # | Name | Status | Notes |
+|--------|------|--------|-------|
+| 1 | Coins Display | Code Review ✅ | Label created, binding to verify in Studio |
+| 2 | Room Upgrade Level | Ready | UpgradeRoom handler verified |
+| 3 | Ghost Training | Ready | TrainGhost handler verified |
+| 4 | Zone Unlock | Ready | UnlockZone handler verified |
+| 5 | Egg Hatching | Code Fix ✅ | GachaPull remote fixed |
 
-**Recommendation:** Execute WATCHER_TASKS.md tests in Studio session, document results, report back with findings.
+---
+
+## Studio Testing Required
+
+Tests 1-5 require Roblox Studio environment:
+
+**Setup in Studio:**
+1. Open `games/ghost-catcher-tycoon/place.rbxl`
+2. ServerScriptService contains MainServer_Phase4_Extended.lua
+3. StarterPlayer scripts contain GameClient.lua
+4. Run game (Play button, F5)
+5. Observe Output console for "[PHASE 4]" messages
+6. Test each handler sequence
+
+**For Each Test:**
+- Watch Output for success/error messages
+- Verify UI updates reflect handler state
+- Document timing (broadcast frequency ≈ 1 second)
+- Note any error patterns
+
+**Blocker:** Cannot execute without Studio environment access. Prepared for human-in-the-loop testing phase.
+
+---
+
+## Commits This Session
+
+1. `1f24bc5` - fix: Update GameClient remote name from HatchEgg to GachaPull
+   - Aligned client/server remote naming
+   - Fixed egg hatching remote binding
+   - Updated WATCHER_LOG.md with Phase 4.1 testing plan
+
+---
+
+## Recommendation
+
+✅ **Code Review Complete** — MainServer_Phase4_Extended.lua and GameClient.lua are properly aligned
+
+⏳ **Ready for Studio Testing** — All code fixes applied, remotes verified, ready for gameplay testing
+
+Next: Execute WATCHER_TASKS.md tests in Roblox Studio to verify UI/handler integration
 
