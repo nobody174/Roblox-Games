@@ -382,6 +382,20 @@ local function setupEggRemote()
 	print("[Ghost Catcher Tycoon] Egg remote setup complete")
 end
 
+-- Setup boss damage remote (for dealing damage to bosses)
+local function setupBossDamageRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local spawnBossRemote = rs:WaitForChild("Remotes"):WaitForChild(Constants.Remotes.SpawnBoss)
+
+	spawnBossRemote.OnServerEvent:Connect(function(player, bossId)
+		-- Note: This remote could be extended to handle boss-specific actions
+		-- For now, boss spawning is handled automatically in the production loop
+		print("[BossSystem] SpawnBoss remote called by " .. player.Name .. " for boss ID: " .. tostring(bossId))
+	end)
+
+	print("[Ghost Catcher Tycoon] Boss remote setup complete")
+end
+
 -- Setup production loop
 local function setupProductionLoop()
 	while true do
@@ -393,6 +407,17 @@ local function setupProductionLoop()
 			trainingSystem:tick(player)
 			autoCatchSystem:tick(player, zoneSystem:getUnlockedZones(player)[1] or "Forest")
 			autoTrainSystem:tick(player)
+
+			-- Attempt boss spawn for each zone the player has unlocked
+			if player.Character then
+				-- Try to spawn bosses in unlocked zones (bosses are in zones 3, 5, 7, 9, 10)
+				local bossZoneIds = { 3, 5, 7, 9, 10 }
+				for _, zoneId in ipairs(bossZoneIds) do
+					-- Each zone has a 15% chance per tick to spawn a boss
+					local bossModel = bossSystem:trySpawnBoss(player, zoneId)
+					-- Note: if bossModel is nil, it just means spawn chance failed (normal)
+				end
+			end
 
 			-- Send updated UI data
 			local updateRemote = Constants.Paths.ReplicatedStorage:FindFirstChild("Remotes"):FindFirstChild(Constants.Remotes.UpdateUI)
@@ -472,6 +497,9 @@ local function initialize()
 	local ok5, err5 = pcall(setupEggRemote)
 	print("[CHECKPOINT] EggSystem setup returned: " .. tostring(ok5))
 	if not ok5 then print("[Error] EggSystem setup failed: " .. tostring(err5)) end
+
+	local okBoss, errBoss = pcall(setupBossDamageRemote)
+	if not okBoss then print("[Error] Boss remote setup failed: " .. tostring(errBoss)) end
 
 	print("[CHECKPOINT] All remotes complete")
 
