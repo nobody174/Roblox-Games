@@ -7,20 +7,36 @@
 --
 -- Client-side UI management: screen layout, button handlers, tab system, and real-time game state updates.
 --
+print("[Ghost Catcher Tycoon] GameClient script starting...")
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+
+-- Wait for player to be available
+local player = Players.LocalPlayer
+if not player then
+	print("[Ghost Catcher Tycoon] Waiting for LocalPlayer...")
+	player = Players:WaitForChild("LocalPlayer")
+end
+print("[Ghost Catcher Tycoon] Player found: " .. player.Name)
 
 local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
 local GhostCardBuilder = require(script.Parent:WaitForChild("modules"):WaitForChild("GhostCardBuilder"))
 
 local ChatUI
-local ChatUIModule = script.Parent:FindFirstChild("modules"):FindFirstChild("ChatUI")
-if ChatUIModule then
-	ChatUI = require(ChatUIModule)
+local modulesFolder = script.Parent:FindFirstChild("modules")
+if modulesFolder then
+	local ChatUIModule = modulesFolder:FindFirstChild("ChatUI")
+	if ChatUIModule then
+		ChatUI = require(ChatUIModule)
+	else
+		ChatUI = nil
+	end
 else
+	print("[Ghost Catcher Tycoon] WARNING: modules folder not found in parent")
 	ChatUI = nil
 end
 
@@ -29,7 +45,7 @@ GameClient.__index = GameClient
 
 function GameClient:new()
 	local self = setmetatable({}, GameClient)
-	self.player = Players.LocalPlayer
+	self.player = player
 	self.remotes = {}
 	self.gameState = {}
 	self.ui = {}
