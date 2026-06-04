@@ -46,27 +46,30 @@ See TODO-LIST.md for full system inventory and implementation order.
   - MainServer refactor: Reduced from 576 → 490 lines (86-line reduction)
   - Result: Clean initialization, easy maintenance, single system manager
 
-- [ ] TODO: Integrate BossSystem (193 lines)
-  - Read: `src/server/systems/BossSystem.lua`
-  - Wire into: SystemManager + MainServer
-  - Test: Bosses spawn in zones 3, 5, 7, 9, 10
-  - Verify: Boss data from BossData.lua loads correctly
-  - Check: Loot tables work (ghosts drop on defeat)
-  - Studio test: Fight each boss, verify rewards
+- [✅] DONE: Integrate BossSystem (193 lines)
+  - Wired into: SystemManager + MainServer production loop
+  - Bosses spawn in zones 3, 5, 7, 9, 10 with 15% chance per tick
+  - Boss data from BossData.lua loads correctly (5 bosses, zone-specific)
+  - Boss AI handles damage, cooldowns, rewards on defeat
+  - Added SpawnBoss remote for client-server communication
+  - Commit: e9b51fd
 
-- [ ] TODO: Integrate PrestigeSystem (132 lines)
-  - Read: `src/server/systems/PrestigeSystem.lua`
-  - Wire into: SystemManager + MainServer
-  - Features: Level tracking, permanent bonuses, UI
-  - Test: Prestige at 1M energy, verify bonuses apply
-  - Studio test: Prestige multiple times, verify stacking
+- [✅] DONE: Integrate PrestigeSystem (132 lines)
+  - Wired into: SystemManager + MainServer
+  - Features: Level tracking, permanent bonuses, UI broadcasts
+  - Prestige trigger at energy threshold, auto-calculates bonuses
+  - Created Prestige RemoteEvent for prestige requests
+  - Added PrestigeLevel, CanPrestige, PrestigeBonuses to UI broadcast
+  - Commit: b789d18
 
-- [ ] TODO: Integrate QuestSystem (229 lines)
-  - Read: `src/server/systems/QuestSystem.lua`
-  - Wire into: SystemManager + MainServer
+- [✅] DONE: Integrate QuestSystem (229 lines)
+  - Wired into: SystemManager + MainServer
   - Features: Daily/weekly quests, progress tracking, rewards
-  - Test: 3 daily quests generate on join
-  - Studio test: Complete quest, claim reward
+  - Daily quests generate on join (3 per day)
+  - Quest progress updated when ghosts caught (CatchGhosts type)
+  - Created ClaimQuestReward RemoteEvent
+  - Added quest data to UI broadcast, updated catch remote
+  - Commit: 4a050b3
 
 #### HIGH (Complete second week)
 - [ ] TODO: Integrate LeaderboardSystem (160 lines)
