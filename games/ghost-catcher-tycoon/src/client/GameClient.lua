@@ -32,19 +32,15 @@ local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
 
 -- Load modules from StarterPlayerScripts
-local GhostCardBuilder = require(game.StarterPlayer.StarterPlayerScripts.modules.GhostCardBuilder)
+local modulesFolder = game.StarterPlayer:WaitForChild("StarterPlayerScripts"):WaitForChild("modules")
+local GhostCardBuilder = require(modulesFolder:WaitForChild("GhostCardBuilder"))
 
 local ChatUI
-local modulesFolder = game.StarterPlayer.StarterPlayerScripts:FindFirstChild("modules")
-if modulesFolder then
-	local ChatUIModule = modulesFolder:FindFirstChild("ChatUI")
-	if ChatUIModule then
-		ChatUI = require(ChatUIModule)
-	else
-		ChatUI = nil
-	end
+local ChatUIModule = modulesFolder:FindFirstChild("ChatUI")
+if ChatUIModule then
+	ChatUI = require(ChatUIModule)
 else
-	print("[Ghost Catcher Tycoon] WARNING: modules folder not found in StarterPlayerScripts")
+	print("[Ghost Catcher Tycoon] WARNING: ChatUI module not found")
 	ChatUI = nil
 end
 
