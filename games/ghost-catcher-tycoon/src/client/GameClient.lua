@@ -53,10 +53,10 @@ function GameClient:waitForRemotes()
 	self.remotes.UpdateUI = remotesFolder:WaitForChild(Constants.Remotes.UpdateUI)
 	self.remotes.GetGameState = remotesFolder:WaitForChild(Constants.Remotes.GetGameState)
 	self.remotes.ShowNotification = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
-	self.remotes.UpgradeRoom = remotesFolder:WaitForChild(Constants.Remotes.UpgradeRoom)
-	self.remotes.UnlockZone = remotesFolder:WaitForChild(Constants.Remotes.UnlockZone)
-	self.remotes.TrainGhost = remotesFolder:WaitForChild(Constants.Remotes.TrainGhost)
-	self.remotes.HatchEgg = remotesFolder:FindFirstChild("HatchEgg")
+	self.remotes.UpgradeRoom = remotesFolder:FindFirstChild(Constants.Remotes.UpgradeRoom)
+	self.remotes.UnlockZone = remotesFolder:FindFirstChild(Constants.Remotes.UnlockZone)
+	self.remotes.TrainGhost = remotesFolder:FindFirstChild(Constants.Remotes.TrainGhost)
+	self.remotes.GachaPull = remotesFolder:FindFirstChild(Constants.Remotes.GachaPull)
 
 	print("[Ghost Catcher Tycoon] Remotes connected")
 end
@@ -88,6 +88,18 @@ function GameClient:setupUI()
 	energyLabel.Font = Enum.Font.GothamBold
 	energyLabel.TextXAlignment = Enum.TextXAlignment.Left
 	energyLabel.Parent = topPanel
+
+	-- Coins display (new label, left side row 1, after energy)
+	local coinsLabel = Instance.new("TextLabel")
+	coinsLabel.Name = "CoinsDisplay"
+	coinsLabel.Size = UDim2.new(0, 200, 0, 35)
+	coinsLabel.Position = UDim2.new(0, 300, 0, 5)
+	coinsLabel.BackgroundTransparency = 1
+	coinsLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+	coinsLabel.TextSize = 20
+	coinsLabel.Font = Enum.Font.GothamBold
+	coinsLabel.TextXAlignment = Enum.TextXAlignment.Left
+	coinsLabel.Parent = topPanel
 
 	-- Ghost count display (right side, row 1)
 	local ghostLabel = Instance.new("TextLabel")
@@ -383,6 +395,7 @@ function GameClient:setupUI()
 	self.ui.slidePanel = slidePanel
 	self.ui.tabBar = tabBar
 	self.ui.energyLabel = energyLabel
+	self.ui.coinsLabel = coinsLabel
 	self.ui.ghostLabel = ghostLabel
 	self.ui.productionLabel = productionLabel
 	self.ui.zoneLabel = zoneLabel
@@ -427,10 +440,12 @@ function GameClient:setupInputHandlers()
 		self:showButtonFeedback(self.ui.bringButton)
 	end)
 
-	-- Update UI when server sends updates
-	self.remotes.UpdateUI.OnClientEvent:Connect(function(data)
-		self:updateUIFromData(data)
-	end)
+	-- Update UI when server sends updates (listen to broadcast)
+	if self.remotes.UpdateUI then
+		self.remotes.UpdateUI.OnClientEvent:Connect(function(data)
+			self:updateUIFromData(data)
+		end)
+	end
 
 	-- Server notifications
 	if self.remotes.ShowNotification then
@@ -452,6 +467,9 @@ function GameClient:populateGhostTab()
 			child:Destroy()
 		end
 		if child:IsA("UIGridLayout") then
+			child:Destroy()
+		end
+		if child:IsA("TextLabel") and child.Name == "EmptyMessage" then
 			child:Destroy()
 		end
 	end
@@ -479,15 +497,35 @@ function GameClient:populateGhostTab()
 		Corrupted = Color3.fromRGB(139, 0, 139),
 	}
 
-	-- Test ghosts (in real implementation, would fetch from server)
-	local testGhosts = {
-		{ id = 1, name = "Specter", rarity = "Common", level = 5, energyPerSec = 1 },
-		{ id = 2, name = "Phantom", rarity = "Uncommon", level = 8, energyPerSec = 2 },
-		{ id = 3, name = "Wraith", rarity = "Rare", level = 12, energyPerSec = 5 },
-		{ id = 4, name = "Banshee", rarity = "Epic", level = 15, energyPerSec = 10 },
-	}
+	-- Fetch ghost inventory from game state
+	local ghostsToDisplay = {}
+	if self.gameState.ghostInventory then
+		for inventoryKey, ghostData in pairs(self.gameState.ghostInventory) do
+			table.insert(ghostsToDisplay, {
+				inventoryKey = inventoryKey,
+				name = ghostData.name,
+				rarity = ghostData.rarity,
+				level = ghostData.level,
+				energyPerSec = 1 * ghostData.level
+			})
+		end
+	end
 
-	for _, ghostData in ipairs(testGhosts) do
+	-- If no ghosts in inventory, show message
+	if #ghostsToDisplay == 0 then
+		local emptyLabel = Instance.new("TextLabel")
+		emptyLabel.Name = "EmptyMessage"
+		emptyLabel.Size = UDim2.new(1, 0, 1, 0)
+		emptyLabel.BackgroundTransparency = 1
+		emptyLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		emptyLabel.TextSize = 14
+		emptyLabel.Font = Enum.Font.Gotham
+		emptyLabel.Text = "No ghosts caught yet!\nCatch some ghosts to see them here."
+		emptyLabel.Parent = ghostTabContent
+		return
+	end
+
+	for _, ghostData in ipairs(ghostsToDisplay) do
 		-- Create ghost card frame
 		local ghostCard = Instance.new("Frame")
 		ghostCard.Name = "GhostCard_" .. ghostData.name
@@ -568,12 +606,12 @@ function GameClient:populateGhostTab()
 		trainCorner.CornerRadius = UDim.new(0, 6)
 		trainCorner.Parent = trainButton
 
-		-- Button click handler
-		local ghostId = ghostData.id
+		-- Button click handler with correct inventory key
+		local inventoryKey = ghostData.inventoryKey
 		local ghostName = ghostData.name
 		trainButton.MouseButton1Click:Connect(function()
-			print("[Ghost Catcher Tycoon] Train button clicked for " .. ghostName)
-			self.remotes.TrainGhost:FireServer(ghostId, ghostData.level + 1)
+			print("[Ghost Catcher Tycoon] Train button clicked for " .. ghostName .. " (key: " .. inventoryKey .. ")")
+			self.remotes.TrainGhost:FireServer(inventoryKey)
 			self:showButtonFeedback(trainButton)
 		end)
 
@@ -1220,6 +1258,12 @@ function GameClient:updateUIFromData(data)
 		self.ui.energyLabel.Text = "⚡ Energy: " .. self:formatNumber(data.Energy)
 	end
 
+	-- Update coins display from broadcast (using Energy value which represents coins)
+	if data.Energy then
+		self.gameState.coins = data.Energy
+		self.ui.coinsLabel.Text = "💰 Coins: " .. self:formatNumber(data.Energy)
+	end
+
 	if data.VacuumCharge then
 		self.gameState.vacuumCharge = data.VacuumCharge
 		local fillRatio = math.clamp(data.VacuumCharge / 100, 0, 1)
@@ -1240,6 +1284,24 @@ function GameClient:updateUIFromData(data)
 	if data.CurrentZone then
 		self.gameState.currentZone = data.CurrentZone
 		self.ui.zoneLabel.Text = "🗺 " .. data.CurrentZone
+	end
+
+	-- Update room levels from broadcast data
+	if data.Rooms then
+		self.gameState.rooms = data.Rooms
+		-- Update all visible room cards
+		for roomName, roomData in pairs(data.Rooms) do
+			local hqContent = self.ui.tabContents["HQ"]
+			if hqContent then
+				local roomCard = hqContent:FindFirstChild("RoomCard_" .. roomName)
+				if roomCard then
+					local levelLabel = roomCard:FindFirstChild("LevelLabel")
+					if levelLabel then
+						levelLabel.Text = "Level: " .. roomData.level .. " (Max 10)"
+					end
+				end
+			end
+		end
 	end
 end
 

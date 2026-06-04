@@ -206,3 +206,142 @@
 - Deploy to Roblox within 1-2 days
 - Monitor GitHub Actions after each commit to ensure CI/CD passes
 
+---
+
+# Phase 4.1: UI Polish & Data Sync Testing — 2026-06-04
+
+## Session Overview
+
+**Date:** 2026-06-04  
+**Agent:** @watcher (Ghost Catcher Tycoon Watcher)  
+**Task Mode:** Automated task queue (WATCHER_TASKS.md)  
+**Phase:** 4.1 — UI Polish & Data Sync  
+**Server:** MainServer_Phase4_Extended.lua (modified 2026-06-04 10:25)  
+**Client:** GameClient.lua (3 fixes applied)  
+
+## Current Modifications
+
+### MainServer_Phase4_Extended.lua Changes
+- Line 41: Remote name changed from `HatchEgg` → `GachaPull`
+- Reason: Standardized remote naming convention (fetch → gacha terminology)
+- Impact: Client must use `GachaPull` remote name for egg hatching
+
+### GameClient.lua Changes  
+- Line 59: Remote cache updated to use `HatchEgg` (may need `GachaPull`)
+- Coins display (CoinsDisplay label) added at line 93-102
+- Handler wiring for optional remotes (TrainGhost, UpgradeRoom, UnlockZone)
+
+## Phase 4.1 Test Log
+
+### Test 1: Coins Display Update (IN PROGRESS)
+
+**Objective:** Verify "💰 Coins: XXX" displays in top-left and updates every 1 second
+
+**Expected Behavior:**
+- CoinsDisplay label visible in top-left of screen
+- Updates reflect server broadcast (playerData[userId].coins)
+- Visible when catching ghosts
+- Matches with economy: 1 coin (Common) → 75 coins (Corrupted)
+
+**Test Approach:**
+1. Review GameClient.lua coins label setup (lines 93-102)
+2. Check UpdateUI handler binding (should update coinsLabel)
+3. Verify coins increment on catch (Charge → Catch sequence)
+4. Confirm update frequency (broadcast every 1 second from server)
+
+**Code Review Findings:**
+- ✅ CoinsDisplay TextLabel created with gold color (255, 215, 0)
+- ✅ Size: 200×35, positioned at (300, 5) in topPanel
+- ✅ Font: GothamBold, size 20
+- ✅ Location: Left side of top panel, after EnergyDisplay
+- ⚠️ Need to verify UpdateUI handler connects coinsLabel
+- ⚠️ Need to verify server broadcasts updated coins value
+
+**Status:** Analysis complete, awaiting Studio test
+
+---
+
+### Test 2: Room Upgrade Level Sync (QUEUED)
+
+**Objective:** Verify room level display changes when upgraded
+
+**Expected Behavior:**
+- HQ tab displays room levels (GhostChamber Level: 1/10)
+- Upgrade request deducts coins
+- Level increments in real-time
+- Display updates via server broadcast
+
+**Files to Check:**
+- MainServer_Phase4_Extended.lua: UpgradeRoom handler (lines 257-291)
+- GameClient.lua: HQ tab population logic
+- playerData[userId].rooms tracking
+
+---
+
+### Test 3: Ghost Training (QUEUED)
+
+**Objective:** Test training with correct inventory keys, no "non-existent ghost" errors
+
+**Expected Behavior:**
+- Train ghost increases level by 1
+- Costs deducted correctly (50 × rarity × level)
+- No "tried to train non-existent ghost" errors
+- Ghost inventory key format: "GhostName_1234"
+
+---
+
+### Test 4: Zone Unlock (QUEUED)
+
+**Objective:** Unlock "Foggy Fields" for 1500 coins
+
+**Expected Behavior:**
+- Zone requires 1,500 coins (from zoneConfig)
+- Coins deducted after unlock
+- Zone appears in unlockedZones list
+- Success message in Output: "[PHASE 4] unlocked Foggy Fields"
+
+---
+
+### Test 5: Egg Hatching (QUEUED)
+
+**Objective:** Hatch Common Egg for 250 coins
+
+**Expected Behavior:**
+- Egg costs 250 coins
+- Random ghost returned (Common rarity)
+- Ghost added to ghostInventory
+- Ghost count increments
+- Success message in Output
+
+**Note:** Remote name may be `GachaPull` (not `HatchEgg`) based on MainServer modifications
+
+---
+
+## Known Issues & Notes
+
+### Issue 1: Remote Name Mismatch
+- **Server:** Uses `Constants.Remotes.GachaPull` (line 41)
+- **Client:** Uses `HatchEgg` string (line 59)
+- **Action:** Verify Constants.Remotes.GachaPull exists in constants.lua
+
+### Issue 2: Coins Label Binding
+- **Status:** CoinsDisplay label created but handler binding unclear
+- **Action:** Trace UpdateUI handler in GameClient.lua to confirm coinsLabel update
+
+### Issue 3: Ghost Inventory Keys
+- **Format:** "GhostName_[random 1000-9999]"
+- **Required For:** TrainGhost handler (must pass correct key)
+- **Action:** Verify UI passes correct ghostKey to TrainGhost remote
+
+---
+
+## Next Steps (Blocked)
+
+Cannot complete full testing without access to Roblox Studio environment. Tasks require:
+1. Running place.rbxl in Studio
+2. Observing Output console for "[PHASE 4]" messages
+3. Testing UI updates in real-time
+4. Verifying handler execution and error states
+
+**Recommendation:** Execute WATCHER_TASKS.md tests in Studio session, document results, report back with findings.
+

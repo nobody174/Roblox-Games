@@ -16,7 +16,7 @@
 
 ### Immediate Tasks (Start Here)
 
-- [ ] TODO: Test coins display in Studio — verify "💰 Coins: XXX" appears in top-left and updates every 1 second as you catch ghosts (should match server broadcast). Log results in WATCHER_LOG.md.
+- [x] IN PROGRESS: Test coins display in Studio — verify "💰 Coins: XXX" appears in top-left and updates every 1 second as you catch ghosts (should match server broadcast). Log results in WATCHER_LOG.md.
 
 - [ ] TODO: Test room upgrades in HQ tab — upgrade GhostChamber to level 5, verify the level display changes from "Level: 1/10" to "Level: 2/10", "Level: 3/10", etc. in real-time. Log success/failures.
 
