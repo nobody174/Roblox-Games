@@ -396,6 +396,35 @@ local function setupBossDamageRemote()
 	print("[Ghost Catcher Tycoon] Boss remote setup complete")
 end
 
+-- Setup prestige remote
+local function setupPrestigeRemote()
+	local rs = Constants.Paths.ReplicatedStorage
+	local remotesFolder = rs:FindFirstChild("Remotes")
+
+	-- Create or find Prestige remote
+	local prestigeRemote = remotesFolder:FindFirstChild("Prestige")
+	if not prestigeRemote then
+		prestigeRemote = Instance.new("RemoteEvent")
+		prestigeRemote.Name = "Prestige"
+		prestigeRemote.Parent = remotesFolder
+	end
+
+	prestigeRemote.OnServerEvent:Connect(function(player)
+		local success, result = prestigeSystem:performPrestige(player)
+		if success then
+			local message = "✨ Prestiged to level " .. result.newLevel .. "!"
+			Constants.Remotes.ShowNotification:FireClient(player, message, Color3.fromRGB(100, 100, 255))
+			print("[PrestigeSystem] " .. player.Name .. " prestiged to level " .. result.newLevel)
+		else
+			local message = "❌ Prestige failed: " .. result
+			Constants.Remotes.ShowNotification:FireClient(player, message, Color3.fromRGB(255, 100, 100))
+			print("[Error] Prestige failed for " .. player.Name .. ": " .. result)
+		end
+	end)
+
+	print("[Ghost Catcher Tycoon] Prestige remote setup complete")
+end
+
 -- Setup production loop
 local function setupProductionLoop()
 	while true do
@@ -422,6 +451,8 @@ local function setupProductionLoop()
 			-- Send updated UI data
 			local updateRemote = Constants.Paths.ReplicatedStorage:FindFirstChild("Remotes"):FindFirstChild(Constants.Remotes.UpdateUI)
 			if updateRemote then
+				local prestigeLevel = prestigeSystem:getPrestigeLevel(player)
+				local canPrestige, _ = prestigeSystem:canPrestige(player)
 				local uiData = {
 					Energy = currencySystem:getEnergy(player),
 					VacuumCharge = vacuumSystem:getCharge(player),
@@ -431,6 +462,9 @@ local function setupProductionLoop()
 					MonetizationData = monetizationSystem:getPlayerMonetizationData(player),
 					AutoCatchEnabled = autoCatchSystem:isAutoCatchEnabled(player),
 					AutoTrainQueue = autoTrainSystem:getAutoTrainQueue(player),
+					PrestigeLevel = prestigeLevel,
+					CanPrestige = canPrestige,
+					PrestigeBonuses = prestigeSystem:getPrestigeBonuses(player),
 				}
 				updateRemote:FireClient(player, uiData)
 			end
@@ -500,6 +534,9 @@ local function initialize()
 
 	local okBoss, errBoss = pcall(setupBossDamageRemote)
 	if not okBoss then print("[Error] Boss remote setup failed: " .. tostring(errBoss)) end
+
+	local okPrestige, errPrestige = pcall(setupPrestigeRemote)
+	if not okPrestige then print("[Error] Prestige remote setup failed: " .. tostring(errPrestige)) end
 
 	print("[CHECKPOINT] All remotes complete")
 
