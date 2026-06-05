@@ -38,7 +38,15 @@
 	local GhostCardBuilder = require(modulesFolder:WaitForChild("GhostCardBuilder"))
 
 	local ChatUI = nil
-	print("[Ghost Catcher Tycoon] ChatUI system disabled - using built-in Roblox chat")
+	local success, chatModule = pcall(function()
+		return require(modulesFolder:WaitForChild("ChatUI"))
+	end)
+	if success and chatModule then
+		ChatUI = chatModule
+		print("[Ghost Catcher Tycoon] ChatUI loaded successfully")
+	else
+		print("[Ghost Catcher Tycoon] ChatUI not found - system disabled")
+	end
 
 	local GameClient = {}
 	GameClient.__index = GameClient
