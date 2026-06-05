@@ -21,7 +21,25 @@ function ChatUI:initialize(gameClient, screenGui, chatTabContent)
 		gameClient:showNotification(msg, color)
 	end
 
-	-- Create input box (always visible at top-left, below stat panel)
+	-- Check if player is admin by attempting a dummy command
+	-- Admin input box only appears for admins
+	local isAdmin = false
+	if self.adminRemote then
+		local success = pcall(function()
+			self.adminRemote:InvokeServer("help", "")
+		end)
+		-- If help command succeeds, player is admin
+		if success then
+			isAdmin = true
+		end
+	end
+
+	if not isAdmin then
+		print("[ChatUI] Player is not admin - input box disabled")
+		return
+	end
+
+	-- Create input box (only for admins, visible at top-left, below stat panel)
 	local inputBox = Instance.new("TextBox")
 	inputBox.Name = "ChatInputBox"
 	inputBox.Size = UDim2.new(0, 300, 0, 35)
