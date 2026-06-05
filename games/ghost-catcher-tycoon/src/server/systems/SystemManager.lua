@@ -62,34 +62,52 @@ function SystemManager:initialize()
 
 	print("[SystemManager] Initializing " .. #systemNames .. " systems...")
 
-	local serverFolder = script.Parent
-	local systemsFolder = serverFolder:WaitForChild("systems")
-	local dataFolder = serverFolder:WaitForChild("data")
+	local serverFolder = script.Parent.Parent
+	local systemsFolder = serverFolder:FindFirstChild("systems")
+	local dataFolder = serverFolder:FindFirstChild("data")
+
+	if not systemsFolder then
+		warn("[SystemManager] systems folder not found in ServerScriptService")
+		return false
+	end
 
 	-- Load all system modules
 	for _, name in ipairs(systemNames) do
 		local folder = systemsFolder
 		if name == "DataManager" then
 			folder = dataFolder
+			if not folder then
+				warn("[SystemManager] data folder not found, skipping DataManager")
+			else
+				local systemModule = folder:FindFirstChild(name)
+				if systemModule then
+					local loadedModule = require(systemModule)
+					systems[name] = loadedModule
+					print("[SystemManager] Loaded " .. name)
+				else
+					warn("[SystemManager] Failed to find DataManager module")
+				end
+			end
+		else
+			local systemModule = folder:FindFirstChild(name)
+			if systemModule then
+				local loadedModule = require(systemModule)
+				systems[name] = loadedModule
+				print("[SystemManager] Loaded " .. name)
+			else
+				warn("[SystemManager] Failed to find " .. name .. " module")
+			end
 		end
-
-		local systemModule = folder:WaitForChild(name)
-		if not systemModule then
-			error("[SystemManager] Failed to find " .. name .. " module")
-			return false
-		end
-
-		local loadedModule = require(systemModule)
-		systems[name] = loadedModule
-		print("[SystemManager] Loaded " .. name)
 	end
 
 	print("[SystemManager] All systems loaded. Creating instances...")
 
 	-- Instantiate all systems
 	for name, moduleClass in pairs(systems) do
-		systems[name] = moduleClass:new()
-		print("[SystemManager] Instantiated " .. name)
+		if moduleClass and moduleClass.new then
+			systems[name] = moduleClass:new()
+			print("[SystemManager] Instantiated " .. name)
+		end
 	end
 
 	systemsInitialized = true
@@ -132,77 +150,109 @@ function SystemManager:linkDependencies()
 	local bossSystem = systems["BossSystem"]
 
 	-- Currency → Data
-	currencySystem:setDataManager(dataManager)
+	if currencySystem and currencySystem.setDataManager then
+		currencySystem:setDataManager(dataManager)
+	end
 
 	-- Production → Currency, Ghost, HQ, Event, Prestige
-	productionSystem:setCurrencySystem(currencySystem)
-	productionSystem:setGhostSystem(ghostSystem)
-	productionSystem:setHQSystem(hqSystem)
-	productionSystem:setEventSystem(eventSystem)
-	productionSystem:setPrestigeSystem(prestigeSystem)
+	if productionSystem then
+		if productionSystem.setCurrencySystem then productionSystem:setCurrencySystem(currencySystem) end
+		if productionSystem.setGhostSystem then productionSystem:setGhostSystem(ghostSystem) end
+		if productionSystem.setHQSystem then productionSystem:setHQSystem(hqSystem) end
+		if productionSystem.setEventSystem then productionSystem:setEventSystem(eventSystem) end
+		if productionSystem.setPrestigeSystem then productionSystem:setPrestigeSystem(prestigeSystem) end
+	end
 
 	-- HQ → Currency
-	hqSystem:setCurrencySystem(currencySystem)
+	if hqSystem and hqSystem.setCurrencySystem then
+		hqSystem:setCurrencySystem(currencySystem)
+	end
 
 	-- Training → Currency, Ghost
-	trainingSystem:setCurrencySystem(currencySystem)
-	trainingSystem:setGhostSystem(ghostSystem)
+	if trainingSystem then
+		if trainingSystem.setCurrencySystem then trainingSystem:setCurrencySystem(currencySystem) end
+		if trainingSystem.setGhostSystem then trainingSystem:setGhostSystem(ghostSystem) end
+	end
 
 	-- Zone → Currency, Ghost
-	zoneSystem:setCurrencySystem(currencySystem)
-	zoneSystem:setGhostSystem(ghostSystem)
+	if zoneSystem then
+		if zoneSystem.setCurrencySystem then zoneSystem:setCurrencySystem(currencySystem) end
+		if zoneSystem.setGhostSystem then zoneSystem:setGhostSystem(ghostSystem) end
+	end
 
 	-- Monetization → Currency, Ghost
-	monetizationSystem:setCurrencySystem(currencySystem)
-	monetizationSystem:setGhostSystem(ghostSystem)
+	if monetizationSystem then
+		if monetizationSystem.setCurrencySystem then monetizationSystem:setCurrencySystem(currencySystem) end
+		if monetizationSystem.setGhostSystem then monetizationSystem:setGhostSystem(ghostSystem) end
+	end
 
 	-- AutoCatch → Ghost, Vacuum, Monetization
-	autoCatchSystem:setGhostSystem(ghostSystem)
-	autoCatchSystem:setVacuumSystem(vacuumSystem)
-	autoCatchSystem:setMonetizationSystem(monetizationSystem)
+	if autoCatchSystem then
+		if autoCatchSystem.setGhostSystem then autoCatchSystem:setGhostSystem(ghostSystem) end
+		if autoCatchSystem.setVacuumSystem then autoCatchSystem:setVacuumSystem(vacuumSystem) end
+		if autoCatchSystem.setMonetizationSystem then autoCatchSystem:setMonetizationSystem(monetizationSystem) end
+	end
 
 	-- AutoTrain → Training, Ghost, Monetization, Currency
-	autoTrainSystem:setTrainingSystem(trainingSystem)
-	autoTrainSystem:setGhostSystem(ghostSystem)
-	autoTrainSystem:setMonetizationSystem(monetizationSystem)
-	autoTrainSystem:setCurrencySystem(currencySystem)
+	if autoTrainSystem then
+		if autoTrainSystem.setTrainingSystem then autoTrainSystem:setTrainingSystem(trainingSystem) end
+		if autoTrainSystem.setGhostSystem then autoTrainSystem:setGhostSystem(ghostSystem) end
+		if autoTrainSystem.setMonetizationSystem then autoTrainSystem:setMonetizationSystem(monetizationSystem) end
+		if autoTrainSystem.setCurrencySystem then autoTrainSystem:setCurrencySystem(currencySystem) end
+	end
 
 	-- Quest → Data
-	questSystem:setDataManager(dataManager)
+	if questSystem and questSystem.setDataManager then
+		questSystem:setDataManager(dataManager)
+	end
 
 	-- Leaderboard → Data
-	leaderboardSystem:setDataManager(dataManager)
+	if leaderboardSystem and leaderboardSystem.setDataManager then
+		leaderboardSystem:setDataManager(dataManager)
+	end
 
 	-- Gacha → Ghost, Currency, Data
-	gachaSystem:setGhostSystem(ghostSystem)
-	gachaSystem:setCurrencySystem(currencySystem)
-	gachaSystem:setDataManager(dataManager)
+	if gachaSystem then
+		if gachaSystem.setGhostSystem then gachaSystem:setGhostSystem(ghostSystem) end
+		if gachaSystem.setCurrencySystem then gachaSystem:setCurrencySystem(currencySystem) end
+		if gachaSystem.setDataManager then gachaSystem:setDataManager(dataManager) end
+	end
 
 	-- Cosmetics → Currency, Data
-	cosmeticsSystem:setCurrencySystem(currencySystem)
-	cosmeticsSystem:setDataManager(dataManager)
+	if cosmeticsSystem then
+		if cosmeticsSystem.setCurrencySystem then cosmeticsSystem:setCurrencySystem(currencySystem) end
+		if cosmeticsSystem.setDataManager then cosmeticsSystem:setDataManager(dataManager) end
+	end
 
 	-- PvP → Ghost, Currency, Data
-	pvpSystem:setGhostSystem(ghostSystem)
-	pvpSystem:setCurrencySystem(currencySystem)
-	pvpSystem:setDataManager(dataManager)
+	if pvpSystem then
+		if pvpSystem.setGhostSystem then pvpSystem:setGhostSystem(ghostSystem) end
+		if pvpSystem.setCurrencySystem then pvpSystem:setCurrencySystem(currencySystem) end
+		if pvpSystem.setDataManager then pvpSystem:setDataManager(dataManager) end
+	end
 
 	-- Prestige → Currency, Ghost, HQ, Zone, Data
-	prestigeSystem:setCurrencySystem(currencySystem)
-	prestigeSystem:setGhostSystem(ghostSystem)
-	prestigeSystem:setHQSystem(hqSystem)
-	prestigeSystem:setZoneSystem(zoneSystem)
-	prestigeSystem:setDataManager(dataManager)
+	if prestigeSystem then
+		if prestigeSystem.setCurrencySystem then prestigeSystem:setCurrencySystem(currencySystem) end
+		if prestigeSystem.setGhostSystem then prestigeSystem:setGhostSystem(ghostSystem) end
+		if prestigeSystem.setHQSystem then prestigeSystem:setHQSystem(hqSystem) end
+		if prestigeSystem.setZoneSystem then prestigeSystem:setZoneSystem(zoneSystem) end
+		if prestigeSystem.setDataManager then prestigeSystem:setDataManager(dataManager) end
+	end
 
 	-- Egg → Currency, Ghost
-	eggSystem:setCurrencySystem(currencySystem)
-	eggSystem:setGhostSystem(ghostSystem)
+	if eggSystem then
+		if eggSystem.setCurrencySystem then eggSystem:setCurrencySystem(currencySystem) end
+		if eggSystem.setGhostSystem then eggSystem:setGhostSystem(ghostSystem) end
+	end
 
 	-- Boss → Currency, Ghost, Zone, Data
-	bossSystem:setCurrencySystem(currencySystem)
-	bossSystem:setGhostSystem(ghostSystem)
-	bossSystem:setZoneSystem(zoneSystem)
-	bossSystem:setDataManager(dataManager)
+	if bossSystem then
+		if bossSystem.setCurrencySystem then bossSystem:setCurrencySystem(currencySystem) end
+		if bossSystem.setGhostSystem then bossSystem:setGhostSystem(ghostSystem) end
+		if bossSystem.setZoneSystem then bossSystem:setZoneSystem(zoneSystem) end
+		if bossSystem.setDataManager then bossSystem:setDataManager(dataManager) end
+	end
 
 	print("[SystemManager] ✓ All dependencies linked")
 	return true
@@ -257,7 +307,7 @@ end
 ]]
 function SystemManager:initializePlayer(player)
 	for name, system in pairs(systems) do
-		if system.initializePlayer then
+		if system and system.initializePlayer then
 			system:initializePlayer(player)
 		end
 	end

@@ -23,13 +23,24 @@ end
 
 function QuestSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
-	local quests = data.Quests or {
+	if not self.questData then
+		self.questData = {}
+	end
+
+	local quests = {
 		Daily = {},
 		Weekly = {},
 		LastDailyReset = 0,
 		LastWeeklyReset = 0,
 	}
+
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data and data.Quests then
+			quests = data.Quests
+		end
+	end
+
 	self.questData[userId] = quests
 	self:_resetQuestsIfNeeded(player)
 end

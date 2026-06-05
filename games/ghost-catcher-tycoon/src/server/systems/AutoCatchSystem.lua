@@ -34,6 +34,9 @@ end
 
 function AutoCatchSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.autoCatchActive then
+		self.autoCatchActive = {}
+	end
 	self.autoCatchActive[userId] = {
 		active = false,
 		lastCatchTime = 0,

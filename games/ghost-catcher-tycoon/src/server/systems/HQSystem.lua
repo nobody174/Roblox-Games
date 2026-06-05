@@ -24,15 +24,20 @@ end
 
 function HQSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.playerRooms then
+		self.playerRooms = {}
+	end
 	self.playerRooms[userId] = {}
 
 	-- Initialize all rooms at level 1
-	for roomName, roomConfig in pairs(Config.Rooms) do
-		self.playerRooms[userId][roomName] = {
-			level = 1,
-			upgraded = false,
-			timestamp = os.time(),
-		}
+	if Config and Config.Rooms then
+		for roomName, roomConfig in pairs(Config.Rooms) do
+			self.playerRooms[userId][roomName] = {
+				level = 1,
+				upgraded = false,
+				timestamp = os.time(),
+			}
+		end
 	end
 end
 

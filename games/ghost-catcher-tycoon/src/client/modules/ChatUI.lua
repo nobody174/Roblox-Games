@@ -20,26 +20,122 @@ function ChatUI:new()
 	return self
 end
 
-function ChatUI:initialize(gameClient, screenGui)
+function ChatUI:initialize(gameClient, screenGui, chatTabContent)
 	print("[ChatUI] Initializing...")
+	print("[ChatUI] Chat tab content frame: " .. tostring(chatTabContent))
 
 	self.remotes.AdminCommand = gameClient.remotes.AdminCommand
 	self.screenGui = screenGui
+	self.chatTabContent = chatTabContent
 
-	-- Create chat input box (top-left, below TopPanel)
-	self:createInputBox()
-
-	-- Create history panel (starts hidden)
-	self:createHistoryPanel()
-
-	-- Add Chat toggle button to TabBar
-	self:createChatButton()
+	if chatTabContent then
+		print("[ChatUI] Chat tab found, creating UI inside it...")
+		-- Create UI inside the Chat tab
+		self:createInputBoxInTab()
+		self:createHistoryPanelInTab()
+		print("[ChatUI] Using Chat tab for UI")
+	else
+		print("[ChatUI] Chat tab NOT found, using fallback top-left UI")
+		-- Fallback to top-left
+		self:createInputBox()
+		self:createHistoryPanel()
+	end
 
 	print("[ChatUI] Initialized!")
 end
 
+function ChatUI:createInputBoxInTab()
+	-- Input container inside Chat tab (fills top 50px)
+	local inputContainer = Instance.new("Frame")
+	inputContainer.Name = "ChatInputContainer"
+	inputContainer.Size = UDim2.new(1, 0, 0, 50)
+	inputContainer.Position = UDim2.new(0, 0, 0, 0)
+	inputContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+	inputContainer.BorderColor3 = Color3.fromRGB(100, 150, 255)
+	inputContainer.BorderSizePixel = 1
+	inputContainer.Parent = self.chatTabContent
+
+	-- Input box
+	local inputBox = Instance.new("TextBox")
+	inputBox.Name = "ChatInput"
+	inputBox.Size = UDim2.new(1, -60, 0, 40)
+	inputBox.Position = UDim2.new(0, 5, 0, 5)
+	inputBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+	inputBox.BorderSizePixel = 0
+	inputBox.TextColor3 = Color3.fromRGB(200, 200, 200)
+	inputBox.TextSize = 14
+	inputBox.Font = Enum.Font.GothamMono
+	inputBox.PlaceholderText = "/command (e.g., /coin, /help)"
+	inputBox.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+	inputBox.ClearTextOnFocus = false
+	inputBox.Parent = inputContainer
+
+	self.inputBox = inputBox
+
+	-- Submit button
+	local submitBtn = Instance.new("TextButton")
+	submitBtn.Name = "SubmitBtn"
+	submitBtn.Size = UDim2.new(0, 50, 0, 40)
+	submitBtn.Position = UDim2.new(1, -55, 0, 5)
+	submitBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+	submitBtn.BorderSizePixel = 0
+	submitBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	submitBtn.TextSize = 12
+	submitBtn.Font = Enum.Font.GothamBold
+	submitBtn.Text = "Send"
+	submitBtn.Parent = inputContainer
+
+	-- Input events
+	inputBox.FocusLost:Connect(function(enterPressed)
+		if enterPressed then
+			self:onInputSubmitted()
+		end
+	end)
+
+	submitBtn.MouseButton1Click:Connect(function()
+		self:onInputSubmitted()
+	end)
+
+	print("[ChatUI] Input box created in tab")
+end
+
+function ChatUI:createHistoryPanelInTab()
+	-- History container (fills remaining space in tab, below input)
+	local historyContainer = Instance.new("Frame")
+	historyContainer.Name = "ChatHistoryContainer"
+	historyContainer.Size = UDim2.new(1, 0, 1, -55)
+	historyContainer.Position = UDim2.new(0, 0, 0, 50)
+	historyContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+	historyContainer.BorderColor3 = Color3.fromRGB(80, 80, 90)
+	historyContainer.BorderSizePixel = 0
+	historyContainer.Parent = self.chatTabContent
+
+	-- Scrolling frame for messages
+	local scrollFrame = Instance.new("ScrollingFrame")
+	scrollFrame.Name = "MessageScroll"
+	scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+	scrollFrame.BackgroundTransparency = 1
+	scrollFrame.BorderSizePixel = 0
+	scrollFrame.ScrollBarThickness = 8
+	scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	scrollFrame.Parent = historyContainer
+
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.FillDirection = Enum.FillDirection.Vertical
+	listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+	listLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+	listLayout.Padding = UDim.new(0, 2)
+	listLayout.Parent = scrollFrame
+
+	self.historyPanel = historyContainer
+	self.scrollFrame = scrollFrame
+	self.listLayout = listLayout
+
+	print("[ChatUI] History panel created in tab")
+end
+
 function ChatUI:createInputBox()
-	-- Input container
+	-- Input container (top-left, below TopPanel - always accessible)
 	local inputContainer = Instance.new("Frame")
 	inputContainer.Name = "ChatInputContainer"
 	inputContainer.Size = UDim2.new(0, 320, 0, 50)
@@ -94,7 +190,7 @@ function ChatUI:createInputBox()
 end
 
 function ChatUI:createHistoryPanel()
-	-- History container (starts hidden)
+	-- History container (top-left, below input box)
 	local historyContainer = Instance.new("Frame")
 	historyContainer.Name = "ChatHistoryContainer"
 	historyContainer.Size = UDim2.new(0, 320, 0, 260)
@@ -102,7 +198,7 @@ function ChatUI:createHistoryPanel()
 	historyContainer.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 	historyContainer.BorderColor3 = Color3.fromRGB(80, 80, 90)
 	historyContainer.BorderSizePixel = 1
-	historyContainer.Visible = false
+	historyContainer.Visible = true
 	historyContainer.Parent = self.screenGui
 
 	-- Scrolling frame for messages
@@ -127,48 +223,6 @@ function ChatUI:createHistoryPanel()
 	self.listLayout = listLayout
 
 	print("[ChatUI] History panel created")
-end
-
-function ChatUI:createChatButton()
-	-- Find TabBar
-	local tabBar = self.screenGui:FindFirstChild("TabBar")
-	if not tabBar then
-		print("[ChatUI] ERROR: TabBar not found!")
-		return
-	end
-
-	-- Create Chat toggle button
-	local chatBtn = Instance.new("TextButton")
-	chatBtn.Name = "ChatTab"
-	chatBtn.Size = UDim2.new(0, 70, 0, 52)
-	chatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-	chatBtn.BorderSizePixel = 0
-	chatBtn.TextColor3 = Color3.fromRGB(150, 200, 255)
-	chatBtn.TextSize = 10
-	chatBtn.Font = Enum.Font.GothamBold
-	chatBtn.Text = "💬\nChat"
-	chatBtn.Parent = tabBar
-
-	chatBtn.MouseButton1Click:Connect(function()
-		self:toggleHistory()
-	end)
-
-	self.chatButton = chatBtn
-	print("[ChatUI] Chat button added to TabBar")
-end
-
-function ChatUI:toggleHistory()
-	self.isHistoryOpen = not self.isHistoryOpen
-	self.historyPanel.Visible = self.isHistoryOpen
-
-	if self.isHistoryOpen then
-		print("[ChatUI] History opened")
-		-- Auto-scroll to bottom
-		local scrollFrame = self.scrollFrame
-		scrollFrame.CanvasPosition = Vector2.new(0, scrollFrame.CanvasSize.Y.Offset)
-	else
-		print("[ChatUI] History closed")
-	end
 end
 
 function ChatUI:onInputSubmitted()
@@ -252,10 +306,8 @@ function ChatUI:displayMessage(text, color)
 	local contentSize = listLayout.AbsoluteContentSize.Y
 	self.scrollFrame.CanvasSize = UDim2.new(0, 0, 0, contentSize)
 
-	-- Auto-scroll to bottom if history is open
-	if self.isHistoryOpen then
-		self.scrollFrame.CanvasPosition = Vector2.new(0, self.scrollFrame.CanvasSize.Y.Offset)
-	end
+	-- Auto-scroll to bottom
+	self.scrollFrame.CanvasPosition = Vector2.new(0, self.scrollFrame.CanvasSize.Y.Offset)
 end
 
 return ChatUI

@@ -23,6 +23,12 @@ end
 
 function GhostSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.playerGhosts then
+		self.playerGhosts = {}
+	end
+	if not self.playerStorage then
+		self.playerStorage = {}
+	end
 	self.playerGhosts[userId] = {}
 	self.playerStorage[userId] = 0
 end

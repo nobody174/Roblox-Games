@@ -29,6 +29,9 @@ end
 
 function TrainingSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.trainingQueue then
+		self.trainingQueue = {}
+	end
 	self.trainingQueue[userId] = {}
 end
 

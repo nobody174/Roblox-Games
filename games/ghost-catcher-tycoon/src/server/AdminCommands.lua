@@ -133,7 +133,7 @@ if adminRemote then
 	adminRemote.OnServerInvoke = function(player, command, arg)
 		-- Check admin permission
 		if not isAdmin(player.Name) then
-			print("[ADMIN] " .. player.Name .. " is not an admin (cannot use /" .. command .. ")")
+			print("[ADMIN] " .. player.Name .. " is not an admin (cannot use !" .. command .. ")")
 			return false
 		end
 

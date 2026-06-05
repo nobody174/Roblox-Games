@@ -33,11 +33,22 @@ end
 
 function GachaSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
-	local gachaData = data.Gacha or {
+	if not self.gachaData then
+		self.gachaData = {}
+	end
+
+	local gachaData = {
 		StandardPity = 0,
 		PremiumPity = 0,
 	}
+
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data and data.Gacha then
+			gachaData = data.Gacha
+		end
+	end
+
 	self.gachaData[userId] = gachaData
 end
 

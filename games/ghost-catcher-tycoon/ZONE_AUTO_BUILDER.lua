@@ -496,6 +496,13 @@ local ZONES = {
 	{name = "Zone_3_Frost", position = Vector3.new(0, 10, 1000), biome = "frost", terrainMaterial = Enum.Material.Snow},
 	{name = "Zone_4_Haunted", position = Vector3.new(-500, 10, 0), biome = "haunted", terrainMaterial = Enum.Material.Grass},
 	{name = "Zone_5_Tech", position = Vector3.new(0, 10, 1500), biome = "tech", terrainMaterial = Enum.Material.Concrete},
+	-- Additional zones for full progression (ZoneData: Sunken Spirit Reef onwards)
+	{name = "Zone_6_Reef", position = Vector3.new(500, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Sand},
+	{name = "Zone_7_Clock", position = Vector3.new(0, 10, 2500), biome = "tech", terrainMaterial = Enum.Material.Concrete},
+	{name = "Zone_8_Astral", position = Vector3.new(-500, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Grass},
+	{name = "Zone_9_Phantom", position = Vector3.new(500, 10, 2500), biome = "haunted", terrainMaterial = Enum.Material.Grass},
+	{name = "Zone_10_Rift", position = Vector3.new(1000, 10, 1500), biome = "tech", terrainMaterial = Enum.Material.Neon},
+	{name = "Zone_11_Eternity", position = Vector3.new(1000, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Grass},
 }
 
 -- ============================================================================
@@ -516,7 +523,7 @@ createAllPortals()
 createBossArenas()
 
 print("[ZoneAutoBuilder] ✅ PHASE 1 COMPLETE!")
-print("[ZoneAutoBuilder] Zones: Hub + 5 Main + 5 Boss Arenas")
+print("[ZoneAutoBuilder] Zones: Hub + 11 Main + 5 Boss Arenas")
 print("[ZoneAutoBuilder] Bridges: 5 (connecting zones)")
 print("[ZoneAutoBuilder] Ladders: 4 per zone (recovery)")
 print("[ZoneAutoBuilder] Portals: 5 (zone progression)")

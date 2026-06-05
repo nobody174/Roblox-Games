@@ -30,17 +30,27 @@ end
 
 function MonetizationSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.playerGamePasses then
+		self.playerGamePasses = {}
+	end
+	if not self.playerProducts then
+		self.playerProducts = {}
+	end
 	self.playerGamePasses[userId] = {}
 	self.playerProducts[userId] = {}
 
 	-- Initialize GamePass flags
-	for passName, _ in pairs(Config.GamePasses) do
-		self.playerGamePasses[userId][passName] = false
+	if Config and Config.GamePasses then
+		for passName, _ in pairs(Config.GamePasses) do
+			self.playerGamePasses[userId][passName] = false
+		end
 	end
 
 	-- Initialize product counts
-	for productName, _ in pairs(Config.Products) do
-		self.playerProducts[userId][productName] = 0
+	if Config and Config.Products then
+		for productName, _ in pairs(Config.Products) do
+			self.playerProducts[userId][productName] = 0
+		end
 	end
 end
 

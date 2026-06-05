@@ -43,8 +43,19 @@ end
 
 function PrestigeSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
-	local prestigeData = data.Prestige or { Level = 0, TotalPrestiges = 0 }
+	if not self.prestigeData then
+		self.prestigeData = {}
+	end
+
+	local prestigeData = { Level = 0, TotalPrestiges = 0 }
+
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data and data.Prestige then
+			prestigeData = data.Prestige
+		end
+	end
+
 	self.prestigeData[userId] = prestigeData
 end
 

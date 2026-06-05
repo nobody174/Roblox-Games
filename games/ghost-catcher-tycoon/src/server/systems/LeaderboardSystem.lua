@@ -25,17 +25,30 @@ end
 
 function LeaderboardSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
+	if not self.playerStats then
+		self.playerStats = {}
+	end
 
-	self.playerStats[userId] = {
+	local stats = {
 		UserId = userId,
 		Username = player.Name,
-		TotalEnergyEarned = data.TotalEnergyEarned or 0,
-		GhostsCaught = data.GhostsCaught or 0,
-		PrestigeLevel = data.Prestige and data.Prestige.Level or 0,
-		HighestZone = data.HighestZone or "Forest",
+		TotalEnergyEarned = 0,
+		GhostsCaught = 0,
+		PrestigeLevel = 0,
+		HighestZone = "Forest",
 	}
 
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data then
+			stats.TotalEnergyEarned = data.TotalEnergyEarned or 0
+			stats.GhostsCaught = data.GhostsCaught or 0
+			stats.PrestigeLevel = (data.Prestige and data.Prestige.Level) or 0
+			stats.HighestZone = data.HighestZone or "Forest"
+		end
+	end
+
+	self.playerStats[userId] = stats
 	self:_updateLeaderboards()
 end
 

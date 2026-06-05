@@ -33,13 +33,24 @@ end
 
 function PvPSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
-	local pvpData = data.PvP or {
+	if not self.pvpData then
+		self.pvpData = {}
+	end
+
+	local pvpData = {
 		LastBattleTime = 0,
 		Wins = 0,
 		Losses = 0,
 		Rating = 1000,
 	}
+
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data and data.PvP then
+			pvpData = data.PvP
+		end
+	end
+
 	self.pvpData[userId] = pvpData
 end
 

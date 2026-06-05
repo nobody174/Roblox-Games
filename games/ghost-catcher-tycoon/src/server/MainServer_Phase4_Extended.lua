@@ -10,6 +10,41 @@ local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("sha
 
 print("[PHASE 4] Constants loaded")
 
+-- Load SystemManager to initialize all systems (Quests, Bosses, Leaderboard, Prestige, etc.)
+local serverScriptService = game:GetService("ServerScriptService")
+local systemsFolder = serverScriptService:FindFirstChild("systems")
+local SystemManager = nil
+
+if systemsFolder then
+	local systemManagerModule = systemsFolder:FindFirstChild("SystemManager")
+	if systemManagerModule and systemManagerModule:IsA("ModuleScript") then
+		SystemManager = require(systemManagerModule)
+	end
+end
+
+-- Initialize SystemManager in background (don't block MainServer)
+if SystemManager and SystemManager.initialize then
+	task.spawn(function()
+		SystemManager:initialize()
+		print("[PHASE 4] SystemManager initialized")
+	end)
+else
+	warn("[PHASE 4] SystemManager not found in systems folder or not a ModuleScript - systems disabled")
+end
+
+print("[PHASE 4] Proceeding with MainServer initialization...")
+
+-- Load DataManager for DataStore persistence (optional for Phase 4 testing)
+local dataManager = nil
+local dataManagerModule = game:GetService("ServerScriptService"):FindFirstChild("Data")
+if dataManagerModule then
+	local DataManager = require(dataManagerModule:FindFirstChild("DataManager"))
+	dataManager = DataManager:new()
+	print("[PHASE 4] DataManager loaded")
+else
+	print("[PHASE 4] DataManager not found - running in memory-only mode for testing")
+end
+
 -- Setup RemoteEvents
 local rs = game:GetService("ReplicatedStorage")
 
@@ -123,7 +158,7 @@ local function spawnGhost(zoneName)
 	ghost.Material = Enum.Material.Neon
 	ghost.TopSurface = Enum.SurfaceType.Smooth
 	ghost.BottomSurface = Enum.SurfaceType.Smooth
-	ghost.Position = Vector3.new(math.random(-200, 200), 20, math.random(-200, 200))
+	ghost.Position = Vector3.new(math.random(-100, 100), 25, math.random(-100, 100))
 	ghost.Parent = zoneFolder
 
 	-- Disable gravity so ghosts float
@@ -167,13 +202,35 @@ local function spawnGhost(zoneName)
 	return ghost
 end
 
--- Spawn ghosts every 3 seconds
+-- Spawn ghosts every 3 seconds in all zones (mapped from ZoneData)
 task.spawn(function()
+	local spawnCount = 0
 	while true do
 		task.wait(3)
-		local zones = { "Zone_1_Meadow", "Zone_2_Desert", "Zone_3_Frost", "Zone_4_Haunted", "Zone_5_Tech" }
-		for _, zoneName in ipairs(zones) do
-			spawnGhost(zoneName)
+		-- Map zone names to terrain zone folder names built by ZoneAutoBuilder
+		local zoneMapping = {
+			"Zone_1_Meadow",      -- Whisper Woods
+			"Zone_2_Desert",      -- Foggy Fields
+			"Zone_3_Frost",       -- Gloomy Graveyard
+			"Zone_4_Haunted",     -- Electro Alley
+			"Zone_5_Tech",        -- Frostbite Caverns
+			"Zone_6_Reef",        -- Sunken Spirit Reef (if built)
+			"Zone_7_Clock",       -- Clocktower District (if built)
+			"Zone_8_Astral",      -- Astral Observatory (if built)
+			"Zone_9_Phantom",     -- Phantom Fortress (if built)
+			"Zone_10_Rift",       -- The Rift (if built)
+			"Zone_11_Eternity",   -- Eternity Nexus (if built)
+		}
+
+		spawnCount = spawnCount + 1
+		local spawnedThisRound = 0
+		for _, zoneName in ipairs(zoneMapping) do
+			if spawnGhost(zoneName) then
+				spawnedThisRound = spawnedThisRound + 1
+			end
+		end
+		if spawnedThisRound > 0 then
+			print("[PHASE 4] Spawn cycle #" .. spawnCount .. ": Spawned " .. spawnedThisRound .. " ghosts")
 		end
 	end
 end)
@@ -206,6 +263,96 @@ local function initPlayerData(userId)
 	end
 	return playerData[userId]
 end
+
+-- ==================== DATASTORE INTEGRATION ====================
+
+-- Hook player join to load data from DataStore
+Players.PlayerAdded:Connect(function(player)
+	local userId = player.UserId
+
+	-- Load from DataStore if available (or create new)
+	local dmData = nil
+	if dataManager then
+		dmData = dataManager:loadPlayerData(player)
+	end
+
+	-- Initialize or load simple data structure for fast access
+	if dmData and dmData.Coins then
+		-- Restore from previous session
+		playerData[userId] = {
+			charge = 0, -- Charge always resets on join
+			coins = dmData.Coins or 0,
+			ghosts = (dmData.GhostCount or 0),
+			ghostInventory = dmData.GhostInventory or {},
+			rooms = dmData.Rooms or {
+				GhostChamber = { level = 1 },
+				TrainingFacility = { level = 1 },
+				EnergyReactor = { level = 1 },
+				ResearchLab = { level = 0 },
+				BossArena = { level = 0 },
+			},
+			unlockedZones = dmData.UnlockedZones or { ["Whisper Woods"] = true },
+		}
+		print("[PHASE 4] Loaded player data for " .. player.Name .. " from DataStore")
+	else
+		-- New player
+		initPlayerData(userId)
+		print("[PHASE 4] Created new player data for " .. player.Name)
+	end
+
+	-- Initialize player in SystemManager systems (for Quests, Bosses, etc.)
+	if SystemManager then
+		task.spawn(function()
+			SystemManager:initializePlayer(player)
+		end)
+	end
+end)
+
+-- Hook player leave to save data to DataStore
+Players.PlayerRemoving:Connect(function(player)
+	local userId = player.UserId
+	local data = playerData[userId]
+
+	if data then
+		-- Save to DataStore
+		local saveSuccess = dataManager:savePlayerData(player)
+		if saveSuccess then
+			print("[PHASE 4] Saved player data for " .. player.Name .. " to DataStore")
+		else
+			warn("[PHASE 4] Failed to save player data for " .. player.Name)
+		end
+
+		-- Clear from memory
+		playerData[userId] = nil
+	end
+end)
+
+-- Auto-save every 30 seconds (batched)
+task.spawn(function()
+	while true do
+		task.wait(30)
+		if dataManager then
+			for userId, data in pairs(playerData) do
+				local player = Players:FindFirstChild(tostring(userId))
+				if player then
+					-- Update DataStore with current in-memory data
+					dataManager:updatePlayerData(player, {
+						Coins = data.coins,
+						GhostCount = data.ghosts,
+						GhostInventory = data.ghostInventory,
+						Rooms = data.rooms,
+						UnlockedZones = data.unlockedZones,
+					})
+				end
+			end
+
+			-- Process save queue
+			dataManager:processSaveQueue()
+		end
+	end
+end)
+
+print("[PHASE 4] DataStore integration hooked")
 
 -- ==================== REMOTE HANDLERS ====================
 

@@ -22,6 +22,12 @@ end
 
 function VacuumSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.playerCharges then
+		self.playerCharges = {}
+	end
+	if not self.lastChargeTime then
+		self.lastChargeTime = {}
+	end
 	self.playerCharges[userId] = 0
 	self.lastChargeTime[userId] = 0
 end

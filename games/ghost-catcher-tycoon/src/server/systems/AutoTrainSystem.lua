@@ -8,8 +8,33 @@
 local AutoTrainSystem = {}
 AutoTrainSystem.__index = AutoTrainSystem
 
-local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
-local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
+local Config = nil
+local Constants = nil
+
+-- Safe require with fallback
+local function safeRequire(path)
+	local rs = game:GetService("ReplicatedStorage")
+	local parts = {}
+	for part in path:gmatch("[^:]+") do
+		table.insert(parts, part)
+	end
+
+	local obj = rs
+	for _, part in ipairs(parts) do
+		part = part:match("^%s*(.-)%s*$") -- trim
+		if obj then
+			obj = obj:FindFirstChild(part)
+		end
+	end
+
+	if obj then
+		return require(obj)
+	end
+	return nil
+end
+
+Config = safeRequire("shared:config") or { Training = { MaxGhostLevel = 10 } }
+Constants = safeRequire("shared:constants") or {}
 
 function AutoTrainSystem:new()
 	local self = setmetatable({}, AutoTrainSystem)
@@ -39,10 +64,13 @@ end
 
 function AutoTrainSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.autoTrainActive then
+		self.autoTrainActive = {}
+	end
 	self.autoTrainActive[userId] = {
 		active = false,
-		targetLevel = Config.Training.MaxGhostLevel or 10,
-		ghostsList = {},
+		targetLevel = (Config and Config.Training and Config.Training.MaxGhostLevel) or 10,
+		ghostsList = {}
 	}
 end
 

@@ -45,6 +45,12 @@ end
 
 function ProductionSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.lastProductionTick then
+		self.lastProductionTick = {}
+	end
+	if not self.accumulatedEnergy then
+		self.accumulatedEnergy = {}
+	end
 	self.lastProductionTick[userId] = os.clock()
 	self.accumulatedEnergy[userId] = 0
 end

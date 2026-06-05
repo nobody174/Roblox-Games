@@ -28,11 +28,22 @@ end
 
 function CosmeticsSystem:initializePlayer(player)
 	local userId = player.UserId
-	local data = self.dataManager:getPlayerData(player)
-	local cosmetics = data.Cosmetics or {
+	if not self.cosmeticsData then
+		self.cosmeticsData = {}
+	end
+
+	local cosmetics = {
 		OwnedSkins = { Default = true },
 		EquippedSkin = "Default",
 	}
+
+	if self.dataManager then
+		local data = self.dataManager:getPlayerData(player)
+		if data and data.Cosmetics then
+			cosmetics = data.Cosmetics
+		end
+	end
+
 	self.cosmeticsData[userId] = cosmetics
 end
 

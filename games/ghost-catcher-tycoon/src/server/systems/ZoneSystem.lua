@@ -31,15 +31,23 @@ end
 
 function ZoneSystem:initializePlayer(player)
 	local userId = player.UserId
+	if not self.unlockedZones then
+		self.unlockedZones = {}
+	end
+	if not self.bossActive then
+		self.bossActive = {}
+	end
 	self.unlockedZones[userId] = {}
 
 	-- Whisper Woods starts unlocked
 	self.unlockedZones[userId]["Whisper Woods"] = true
 
 	-- All others locked
-	for zoneName, _ in pairs(ZoneData) do
-		if zoneName ~= "Whisper Woods" then
-			self.unlockedZones[userId][zoneName] = false
+	if ZoneData then
+		for zoneName, _ in pairs(ZoneData) do
+			if zoneName ~= "Whisper Woods" then
+				self.unlockedZones[userId][zoneName] = false
+			end
 		end
 	end
 
