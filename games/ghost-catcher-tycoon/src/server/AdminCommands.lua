@@ -152,7 +152,7 @@ if adminRemote then
 			data.coins = data.coins + 1000
 			print("[ADMIN] " .. player.Name .. " gained 1000 coins (total: " .. data.coins .. ")")
 			if adminLogRemote then
-				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
 			end
 			-- Send immediate broadcast to update UI with full payload
 			if updateRemote then
@@ -171,7 +171,7 @@ if adminRemote then
 			data.coins = data.coins + 1000
 			print("[ADMIN] " .. player.Name .. " gained 1000 energy (total: " .. data.coins .. ")")
 			if adminLogRemote then
-				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
 			end
 			if updateRemote then
 				updateRemote:FireClient(player, {
@@ -196,7 +196,7 @@ if adminRemote then
 			data.ghosts = data.ghosts + 1
 			print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName)
 			if adminLogRemote then
-				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
 			end
 			if updateRemote then
 				updateRemote:FireClient(player, {
