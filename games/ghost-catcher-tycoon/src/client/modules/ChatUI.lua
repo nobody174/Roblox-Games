@@ -48,7 +48,7 @@ function ChatUI:initialize(gameClient, screenGui, chatTabContent)
 	inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 	inputBox.TextSize = 12
 	inputBox.Font = Enum.Font.Gotham
-	inputBox.PlaceholderText = "Type / commands here..."
+	inputBox.PlaceholderText = "Type ! commands here..."
 	inputBox.BorderSizePixel = 1
 	inputBox.BorderColor3 = Color3.fromRGB(100, 100, 100)
 	inputBox.Parent = screenGui
@@ -80,7 +80,7 @@ function ChatUI:executeCommand(commandText)
 		return
 	end
 
-	-- Parse command: "/coin" or "/coin arg"
+	-- Parse command: "!coin" or "!coin arg"
 	local parts = {}
 	for part in commandText:gmatch("%S+") do
 		table.insert(parts, part)
