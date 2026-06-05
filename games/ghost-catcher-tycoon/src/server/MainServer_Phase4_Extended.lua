@@ -454,6 +454,19 @@ if bringRemote then
 		data.coins = data.coins + bonusCoins
 
 		print("[PHASE 4] " .. player.Name .. " brought ghosts home! Earned " .. bonusCoins .. " bonus coins")
+
+		-- Send immediate broadcast to update UI
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
+				Energy = data.coins,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
 	end)
 	print("[PHASE 4] BringGhostsHome handler connected")
 end
