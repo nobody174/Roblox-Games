@@ -243,7 +243,6 @@
 			{ name = "Prestige", label = "⭐\nPrestige" },
 			{ name = "Shop", label = "🛍\nShop" },
 			{ name = "Info", label = "ℹ\nInfo" },
-			{ name = "Chat", label = "💬\nChat" },
 		}
 
 		local tabButtons = {}
