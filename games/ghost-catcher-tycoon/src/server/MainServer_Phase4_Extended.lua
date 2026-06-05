@@ -76,6 +76,9 @@ createRemote(Constants.Remotes.TrainGhost, "RemoteEvent")
 createRemote(Constants.Remotes.GachaPull, "RemoteEvent")
 createRemote(Constants.Remotes.UnlockZone, "RemoteEvent")
 createRemote(Constants.Remotes.BringGhostsHome, "RemoteEvent")
+createRemote(Constants.Remotes.ChallengePlayer, "RemoteFunction")
+createRemote(Constants.Remotes.RespondToChallenge, "RemoteFunction")
+createRemote(Constants.Remotes.BattleResult, "RemoteEvent")
 
 -- Create admin command remote immediately
 if not remotesFolder:FindFirstChild("AdminCommand") then
@@ -610,6 +613,69 @@ if unlockZoneRemote then
 		end
 	end)
 	print("[PHASE 4] UnlockZone handler connected")
+end
+
+-- ==================== PVP SYSTEM ====================
+
+-- Get PvP system from SystemManager (will be available after initialization)
+local function getPvPSystem()
+	if SystemManager then
+		return SystemManager:getSystem("PvPSystem")
+	end
+	return nil
+end
+
+-- Challenge another player
+local challengeRemote = remotesFolder:FindFirstChild(Constants.Remotes.ChallengePlayer)
+if challengeRemote then
+	challengeRemote.OnServerInvoke = function(attacker, defenderName)
+		local pvpSystem = getPvPSystem()
+		if not pvpSystem then
+			return false, "PvP system not initialized"
+		end
+
+		local defender = Players:FindFirstChild(defenderName)
+		if not defender then
+			return false, "Player not found"
+		end
+
+		if defender == attacker then
+			return false, "Cannot challenge yourself"
+		end
+
+		local success, result = pvpSystem:startBattle(attacker, defender)
+		if success then
+			-- Broadcast battle result to both players
+			local battleRemote = remotesFolder:FindFirstChild(Constants.Remotes.BattleResult)
+			if battleRemote then
+				battleRemote:FireClient(attacker, result)
+				battleRemote:FireClient(defender, result)
+			end
+			return true, result
+		else
+			return false, result
+		end
+	end
+	print("[PHASE 4] PvP Challenge handler connected")
+end
+
+-- Get PvP stats
+local respondRemote = remotesFolder:FindFirstChild(Constants.Remotes.RespondToChallenge)
+if respondRemote then
+	respondRemote.OnServerInvoke = function(player)
+		local pvpSystem = getPvPSystem()
+		if not pvpSystem then
+			return {}
+		end
+
+		return pvpSystem:getPlayerStats(player) or {
+			Wins = 0,
+			Losses = 0,
+			Rating = 1000,
+			LastBattleTime = 0
+		}
+	end
+	print("[PHASE 4] PvP Stats handler connected")
 end
 
 -- ==================== ADMIN COMMANDS ====================

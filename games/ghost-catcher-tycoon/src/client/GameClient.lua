@@ -228,6 +228,7 @@
 			{ name = "Ghost", label = "👻\nGhosts" },
 			{ name = "HQ", label = "🏠\nHQ" },
 			{ name = "Zones", label = "🗺\nZones" },
+			{ name = "PvP", label = "⚔\nPvP" },
 			{ name = "Quests", label = "📜\nQuests" },
 			{ name = "Bosses", label = "👹\nBosses" },
 			{ name = "Leaderboard", label = "🏆\nRanks" },
@@ -338,6 +339,12 @@
 						print("[Ghost Catcher Tycoon] Calling populatePrestigeTab...")
 						self:populatePrestigeTab()
 						self.populatedTabs["Prestige"] = true
+					end
+
+					if tabName == "PvP" and not self.populatedTabs["PvP"] then
+						print("[Ghost Catcher Tycoon] Calling populatePvPTab...")
+						self:populatePvPTab()
+						self.populatedTabs["PvP"] = true
 					end
 
 					if not self.tabExpanded then
@@ -1529,6 +1536,31 @@
 		infoLabel.Font = Enum.Font.Gotham
 		infoLabel.TextWrapped = true
 		infoLabel.Text = "Prestige system is loading...\n\nLevel up and reset to gain permanent bonuses!"
+		infoLabel.Parent = content
+	end
+
+	function GameClient:populatePvPTab()
+		local content = self.ui.tabContents["PvP"]
+		content:ClearAllChildren()
+		local textLabel = Instance.new("TextLabel")
+		textLabel.Size = UDim2.new(1, 0, 0, 40)
+		textLabel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+		textLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		textLabel.TextSize = 12
+		textLabel.Font = Enum.Font.GothamBold
+		textLabel.Text = "⚔ PvP Battles (Phase 3)"
+		textLabel.BorderSizePixel = 0
+		textLabel.Parent = content
+
+		local infoLabel = Instance.new("TextLabel")
+		infoLabel.Size = UDim2.new(1, -10, 0, 100)
+		infoLabel.Position = UDim2.new(0, 5, 0, 50)
+		infoLabel.BackgroundTransparency = 1
+		infoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+		infoLabel.TextSize = 11
+		infoLabel.Font = Enum.Font.Gotham
+		infoLabel.TextWrapped = true
+		infoLabel.Text = "PvP system is loading...\n\nChallenge other players and battle their ghosts!"
 		infoLabel.Parent = content
 	end
 
