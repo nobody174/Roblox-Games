@@ -79,7 +79,7 @@
 		if ChatUI then
 			local success, err = pcall(function()
 				local chatUI = ChatUI:new()
-				chatUI:initialize(self, self.ui.screenGui, self.ui.tabContents["Chat"])
+				chatUI:initialize(self, self.ui.screenGui)
 			end)
 			if success then
 				print("[ChatUI] Initialized successfully")

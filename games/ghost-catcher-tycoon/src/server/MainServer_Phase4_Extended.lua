@@ -443,6 +443,21 @@ if catchRemote then
 	print("[PHASE 4] Catch handler connected")
 end
 
+-- Bring Ghosts Home remote handler
+local bringRemote = remotesFolder:FindFirstChild(Constants.Remotes.BringGhostsHome)
+if bringRemote then
+	bringRemote.OnServerEvent:Connect(function(player)
+		local data = initPlayerData(player.UserId)
+
+		-- Award bonus coins (10% of ghosts * 10 coins per ghost)
+		local bonusCoins = math.ceil(data.ghosts * 10 * 0.1)
+		data.coins = data.coins + bonusCoins
+
+		print("[PHASE 4] " .. player.Name .. " brought ghosts home! Earned " .. bonusCoins .. " bonus coins")
+	end)
+	print("[PHASE 4] BringGhostsHome handler connected")
+end
+
 -- ==================== OPTIONAL HANDLERS ====================
 
 -- UpgradeRoom remote handler

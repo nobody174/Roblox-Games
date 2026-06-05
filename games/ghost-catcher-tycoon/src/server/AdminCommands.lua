@@ -43,6 +43,13 @@ if not remotesFolder:FindFirstChild("AdminCommand") then
 	adminRemote.Parent = remotesFolder
 end
 
+-- Create AdminLog remote if it doesn't exist (for logging commands to AdminLog UI)
+if not remotesFolder:FindFirstChild("AdminLog") then
+	local adminLogRemote = Instance.new("RemoteEvent")
+	adminLogRemote.Name = "AdminLog"
+	adminLogRemote.Parent = remotesFolder
+end
+
 -- Admin list
 local adminList = {
 	["nobodylearn174"] = true,  -- Default admin (change to your username)
@@ -139,10 +146,14 @@ if adminRemote then
 
 		local data = initPlayerData(player.UserId)
 		local updateRemote = remotesFolder:FindFirstChild("UpdateUI")
+		local adminLogRemote = remotesFolder:FindFirstChild("AdminLog")
 
 		if command == "coin" or command == "gold" then
 			data.coins = data.coins + 1000
 			print("[ADMIN] " .. player.Name .. " gained 1000 coins (total: " .. data.coins .. ")")
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+			end
 			-- Send immediate broadcast to update UI with full payload
 			if updateRemote then
 				updateRemote:FireClient(player, {
@@ -159,6 +170,9 @@ if adminRemote then
 		elseif command == "energy" or command == "eng" then
 			data.coins = data.coins + 1000
 			print("[ADMIN] " .. player.Name .. " gained 1000 energy (total: " .. data.coins .. ")")
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+			end
 			if updateRemote then
 				updateRemote:FireClient(player, {
 					VacuumCharge = data.charge,
@@ -181,6 +195,9 @@ if adminRemote then
 			}
 			data.ghosts = data.ghosts + 1
 			print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName)
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ " .. command .. " executed")
+			end
 			if updateRemote then
 				updateRemote:FireClient(player, {
 					VacuumCharge = data.charge,
@@ -345,6 +362,9 @@ if adminRemote then
 			print("  /tp @player [@player2|ISLAND] - Teleport to player or island")
 			print("  /admin @player - Make a player admin")
 			print("  /unadmin @player - Remove admin status")
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ help - Type /help in chat for full command list")
+			end
 			return true
 		end
 
