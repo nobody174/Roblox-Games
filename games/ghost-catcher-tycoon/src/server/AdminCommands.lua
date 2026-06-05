@@ -348,22 +348,24 @@ if adminRemote then
 			end
 
 		elseif command == "help" then
-			print("[ADMIN COMMANDS HELP]")
-			print("  /coin - Add 1000 coins to yourself")
-			print("  /energy - Add 1000 energy to yourself")
-			print("  /ghost [name] - Spawn a ghost in inventory")
-			print("  /heal - Add 1000 coins to yourself")
-			print("  /heal max - Restore coins to maximum (9999)")
-			print("  /heal @player - Add 1000 coins to a player")
-			print("  /heal @player max - Restore player's coins to max")
-			print("  /mute @player - Mute a player")
-			print("  /unmute @player - Unmute a player")
-			print("  /kick @player - Kick a player from the game")
-			print("  /tp @player [@player2|ISLAND] - Teleport to player or island")
-			print("  /admin @player - Make a player admin")
-			print("  /unadmin @player - Remove admin status")
+			-- Send all commands to AdminLog as separate messages for clarity
 			if adminLogRemote then
-				adminLogRemote:FireClient(player, "✓ help - Type /help in chat for full command list")
+				adminLogRemote:FireClient(player, "--- Admin Commands ---")
+				adminLogRemote:FireClient(player, "/coin - Add 1000 coins to yourself")
+				adminLogRemote:FireClient(player, "/energy - Add 1000 energy to yourself")
+				adminLogRemote:FireClient(player, "/ghost [name] - Spawn a ghost in inventory")
+				adminLogRemote:FireClient(player, "/heal - Restore 1000 coins")
+				adminLogRemote:FireClient(player, "/heal max - Restore coins to maximum (9999)")
+				adminLogRemote:FireClient(player, "/heal @player - Restore coins to a player")
+				adminLogRemote:FireClient(player, "/heal @player max - Restore player's coins to max")
+				adminLogRemote:FireClient(player, "/kick @player - Disconnect player from server")
+				adminLogRemote:FireClient(player, "/tp @player - Teleport to player")
+				adminLogRemote:FireClient(player, "/tp @player @island - Teleport player to island")
+				adminLogRemote:FireClient(player, "/mute @player - Mute a player")
+				adminLogRemote:FireClient(player, "/unmute @player - Unmute a player")
+				adminLogRemote:FireClient(player, "/admin @player - Make a player admin")
+				adminLogRemote:FireClient(player, "/unadmin @player - Remove admin status")
+				adminLogRemote:FireClient(player, "/help - Show this command list")
 			end
 			return true
 		end
