@@ -149,8 +149,8 @@ if adminRemote then
 		local adminLogRemote = remotesFolder:FindFirstChild("AdminLog")
 
 		if command == "coin" or command == "gold" then
-			data.coins = data.coins + 1000
-			print("[ADMIN] " .. player.Name .. " gained 1000 coins (total: " .. data.coins .. ")")
+			data.coins = data.coins + 10000
+			print("[ADMIN] " .. player.Name .. " gained 10000 coins (total: " .. data.coins .. ")")
 			if adminLogRemote then
 				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
 			end
@@ -168,10 +168,58 @@ if adminRemote then
 			return true
 
 		elseif command == "energy" or command == "eng" then
-			data.coins = data.coins + 1000
-			print("[ADMIN] " .. player.Name .. " gained 1000 energy (total: " .. data.coins .. ")")
+			data.energy = data.energy + 10000
+			print("[ADMIN] " .. player.Name .. " gained 10000 energy (total: " .. data.energy .. ")")
 			if adminLogRemote then
 				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
+			end
+			if updateRemote then
+				updateRemote:FireClient(player, {
+					VacuumCharge = data.charge,
+					Coins = data.coins,
+					Energy = data.energy,
+					GhostCount = data.ghosts,
+					GhostInventory = data.ghostInventory,
+					Rooms = data.rooms,
+					UnlockedZones = data.unlockedZones,
+				})
+			end
+			return true
+
+		elseif command == "test" then
+			data.coins = data.coins + 100000
+			data.energy = data.energy + 100000
+			print("[ADMIN] " .. player.Name .. " gained 100000 coins and 100000 energy (coins: " .. data.coins .. ", energy: " .. data.energy .. ")")
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ !test executed - gained 100K coins + 100K energy!")
+			end
+			if updateRemote then
+				updateRemote:FireClient(player, {
+					VacuumCharge = data.charge,
+					Coins = data.coins,
+					Energy = data.energy,
+					GhostCount = data.ghosts,
+					GhostInventory = data.ghostInventory,
+					Rooms = data.rooms,
+					UnlockedZones = data.unlockedZones,
+				})
+			end
+			return true
+
+		elseif command == "ghost" or command == "gh" then
+			local ghostName = arg or "Captain Wisp"
+			local GhostData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("GhostData"))
+			local rarity = GhostData.RarityMap[ghostName] or "Common"
+			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
+			data.ghostInventory[inventoryKey] = {
+				name = ghostName,
+				rarity = rarity,
+				level = 1
+			}
+			data.ghosts = data.ghosts + 1
+			print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName .. " (" .. rarity .. ")")
+			if adminLogRemote then
+				adminLogRemote:FireClient(player, "✓ Spawned " .. ghostName)
 			end
 			if updateRemote then
 				updateRemote:FireClient(player, {
@@ -185,28 +233,20 @@ if adminRemote then
 			end
 			return true
 
-		elseif command == "ghost" or command == "gh" then
-			local ghostName = arg or "Wraith"
-			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
-			data.ghostInventory[inventoryKey] = {
-				name = ghostName,
-				rarity = "Rare",
-				level = 1
-			}
-			data.ghosts = data.ghosts + 1
-			print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName)
-			if adminLogRemote then
-				adminLogRemote:FireClient(player, "✓ !" .. command .. " executed")
-			end
-			if updateRemote then
-				updateRemote:FireClient(player, {
-					VacuumCharge = data.charge,
-					Energy = data.coins,
-					GhostCount = data.ghosts,
-					GhostInventory = data.ghostInventory,
-					Rooms = data.rooms,
-					UnlockedZones = data.unlockedZones,
-				})
+		elseif command == "spawnworld" or command == "sw" then
+			-- Spawns a ghost in the world right in front of you to test the image
+			-- Use underscores for spaces: !sw Captain_Wisp
+			local ghostName = (arg or "Captain_Wisp"):gsub("_", " ")
+			-- Fire to MainServer's spawnworld handler
+			local mainRemote = remotesFolder:FindFirstChild("AdminCommand")
+			-- Call MainServer directly via _G
+			if _G.AdminSpawnWorld then
+				_G.AdminSpawnWorld(player, ghostName)
+				if adminLogRemote then
+					adminLogRemote:FireClient(player, "✓ Spawned " .. ghostName .. " in world")
+				end
+			else
+				print("[ADMIN] spawnworld: _G.AdminSpawnWorld not set up")
 			end
 			return true
 
@@ -375,3 +415,5 @@ if adminRemote then
 	print("[ADMIN COMMANDS] System ready!")
 	print("[ADMIN COMMANDS] Type /help in output for command list")
 end
+-- FULL SYNC TES2212T 2026-06-06
+-- one drive test

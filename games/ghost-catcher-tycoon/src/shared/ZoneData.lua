@@ -9,13 +9,31 @@
 --
 local ZoneData = {
 
+	["Starting Area"] = {
+		Id = 0,
+		UnlockCost = 0,
+		BaseEnergyMultiplier = 1.0,
+		MinRarity = "Common",
+		MaxRarity = "Uncommon",
+		Special = "Hub zone, no penalties.",
+		Spawns = {
+			{ Ghost = "Puffling",       Rarity = "Common",   Weight = 25 },
+			{ Ghost = "Wobbler",        Rarity = "Common",   Weight = 25 },
+			{ Ghost = "Peekaboo",       Rarity = "Common",   Weight = 20 },
+			{ Ghost = "Drifter",        Rarity = "Common",   Weight = 15 },
+			{ Ghost = "Smolspirit",     Rarity = "Common",   Weight = 15 },
+			{ Ghost = "Sparkling Sprite", Rarity = "Uncommon", Weight = 3 },
+			{ Ghost = "Shadowling",       Rarity = "Uncommon", Weight = 2 },
+		}
+	},
+
 	["Whisper Woods"] = {
 		Id = 1,
 		UnlockCost = 0,
 		BaseEnergyMultiplier = 1.0,
 		MinRarity = "Common",
 		MaxRarity = "Uncommon",
-		Special = "Starter zone, no penalties.",
+		Special = "First exploration zone, easy difficulty.",
 		Spawns = {
 			{ Ghost = "Puffling",       Rarity = "Common",   Weight = 25 },
 			{ Ghost = "Wobbler",        Rarity = "Common",   Weight = 25 },

@@ -106,6 +106,7 @@
 		self.remotes.UnlockZone = remotesFolder:FindFirstChild(Constants.Remotes.UnlockZone)
 		self.remotes.TrainGhost = remotesFolder:FindFirstChild(Constants.Remotes.TrainGhost)
 		self.remotes.GachaPull = remotesFolder:FindFirstChild(Constants.Remotes.GachaPull)
+		self.remotes.ReleaseGhost = remotesFolder:FindFirstChild("ReleaseGhost")
 		self.remotes.AdminCommand = remotesFolder:FindFirstChild("AdminCommand")
 
 		print("[Ghost Catcher Tycoon] Remotes connected")
@@ -179,18 +180,39 @@
 		productionLabel.Text = "🏭 +0/sec"
 		productionLabel.Parent = topPanel
 
-		-- Zone label (right side, row 2)
+		-- Zone container (right side, row 2)
+		local zoneContainer = Instance.new("Frame")
+		zoneContainer.Name = "ZoneContainer"
+		zoneContainer.Size = UDim2.new(0, 210, 0, 30)
+		zoneContainer.Position = UDim2.new(1, -210, 0, 45)
+		zoneContainer.BackgroundTransparency = 1
+		zoneContainer.Parent = topPanel
+
+		-- Zone name label
 		local zoneLabel = Instance.new("TextLabel")
 		zoneLabel.Name = "ZoneDisplay"
-		zoneLabel.Size = UDim2.new(0, 200, 0, 30)
-		zoneLabel.Position = UDim2.new(1, -210, 0, 45)
+		zoneLabel.Size = UDim2.new(1, 0, 0, 15)
+		zoneLabel.Position = UDim2.new(0, 0, 0, 0)
 		zoneLabel.BackgroundTransparency = 1
 		zoneLabel.TextColor3 = Color3.fromRGB(150, 150, 255)
 		zoneLabel.TextSize = 14
-		zoneLabel.Font = Enum.Font.Gotham
+		zoneLabel.Font = Enum.Font.GothamBold
 		zoneLabel.TextXAlignment = Enum.TextXAlignment.Left
 		zoneLabel.Text = "🗺 Whisper Woods"
-		zoneLabel.Parent = topPanel
+		zoneLabel.Parent = zoneContainer
+
+		-- Zone description label
+		local zoneDescLabel = Instance.new("TextLabel")
+		zoneDescLabel.Name = "ZoneDesc"
+		zoneDescLabel.Size = UDim2.new(1, 0, 0, 15)
+		zoneDescLabel.Position = UDim2.new(0, 0, 0, 15)
+		zoneDescLabel.BackgroundTransparency = 1
+		zoneDescLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
+		zoneDescLabel.TextSize = 11
+		zoneDescLabel.Font = Enum.Font.Gotham
+		zoneDescLabel.TextXAlignment = Enum.TextXAlignment.Left
+		zoneDescLabel.Text = "Starter zone"
+		zoneDescLabel.Parent = zoneContainer
 
 		-- ===== TAB BAR STRIP (52px, always visible at bottom) =====
 		local tabBar = Instance.new("Frame")
@@ -489,6 +511,7 @@
 		self.ui.ghostLabel = ghostLabel
 		self.ui.productionLabel = productionLabel
 		self.ui.zoneLabel = zoneLabel
+		self.ui.zoneDescLabel = zoneDescLabel
 		self.ui.chargeButton = chargeButton
 		self.ui.catchButton = catchButton
 		self.ui.bringButton = bringButton
@@ -547,6 +570,10 @@
 		print("[Ghost Catcher Tycoon] Input handlers connected")
 	end
 
+	function GameClient:getMaxGhostSlots(chamberLevel)
+		return 5 + (chamberLevel * 10)
+	end
+
 	function GameClient:populateGhostTab()
 		local ghostTabContent = self.ui.tabContents["Ghost"]
 		if not ghostTabContent then return end
@@ -559,12 +586,37 @@
 			if child:IsA("UIGridLayout") then
 				child:Destroy()
 			end
-			if child:IsA("TextLabel") and child.Name == "EmptyMessage" then
+			if child:IsA("TextLabel") and (child.Name == "EmptyMessage" or child.Name == "InventoryLimit") then
 				child:Destroy()
 			end
 		end
 
-		ghostTabContent.CanvasSize = UDim2.new(1, 0, 0, 600)
+		-- Calculate and display inventory limit
+		local chamberLevel = (self.gameState.rooms and self.gameState.rooms.GhostChamber and self.gameState.rooms.GhostChamber.level) or 0
+		local maxSlots = self:getMaxGhostSlots(chamberLevel)
+		local currentCount = 0
+		if self.gameState.ghostInventory then
+			for _ in pairs(self.gameState.ghostInventory) do
+				currentCount = currentCount + 1
+			end
+		end
+
+		-- Calculate canvas size dynamically (6 ghosts per row, 148px per row including padding)
+		local rowsNeeded = math.ceil(maxSlots / 6)
+		local canvasHeight = (rowsNeeded * 148) + 50
+		ghostTabContent.CanvasSize = UDim2.new(1, 0, 0, canvasHeight)
+
+		local limitLabel = Instance.new("TextLabel")
+		limitLabel.Name = "InventoryLimit"
+		limitLabel.Size = UDim2.new(1, 0, 0, 25)
+		limitLabel.Position = UDim2.new(0, 0, 0, 0)
+		limitLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+		limitLabel.TextColor3 = Color3.fromRGB(150, 200, 100)
+		limitLabel.TextSize = 12
+		limitLabel.Font = Enum.Font.GothamBold
+		limitLabel.TextXAlignment = Enum.TextXAlignment.Center
+		limitLabel.Text = "👻 Inventory: " .. currentCount .. " / " .. maxSlots
+		limitLabel.Parent = ghostTabContent
 
 		local ghostGridLayout = Instance.new("UIGridLayout")
 		ghostGridLayout.CellSize = UDim2.new(0, 230, 0, 140)
@@ -601,8 +653,26 @@
 			end
 		end
 
+		-- Sort by rarity (descending) then by name (ascending)
+		local rarityOrder = {
+			Legendary = 6,
+			Epic = 5,
+			Rare = 4,
+			Uncommon = 3,
+			Common = 2,
+			Corrupted = 7,
+		}
+		table.sort(ghostsToDisplay, function(a, b)
+			local rarityA = rarityOrder[a.rarity] or 0
+			local rarityB = rarityOrder[b.rarity] or 0
+			if rarityA ~= rarityB then
+				return rarityA > rarityB
+			end
+			return a.name < b.name
+		end)
+
 		-- If no ghosts in inventory, show message
-		if #ghostsToDisplay == 0 then
+		if next(self.gameState.ghostInventory or {}) == nil then
 			local emptyLabel = Instance.new("TextLabel")
 			emptyLabel.Name = "EmptyMessage"
 			emptyLabel.Size = UDim2.new(1, 0, 1, 0)
@@ -616,102 +686,21 @@
 		end
 
 		for _, ghostData in ipairs(ghostsToDisplay) do
-			-- Create ghost card frame
-			local ghostCard = Instance.new("Frame")
-			ghostCard.Name = "GhostCard_" .. ghostData.name
-			ghostCard.Size = UDim2.new(0, 230, 0, 140)
-			ghostCard.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-			ghostCard.BorderSizePixel = 0
-			ghostCard.Parent = ghostTabContent
-
-			local ghostCardCorner = Instance.new("UICorner")
-			ghostCardCorner.CornerRadius = UDim.new(0, 8)
-			ghostCardCorner.Parent = ghostCard
-
-			-- Ghost name label
-			local ghostNameLabel = Instance.new("TextLabel")
-			ghostNameLabel.Name = "GhostName"
-			ghostNameLabel.Size = UDim2.new(1, -10, 0, 30)
-			ghostNameLabel.Position = UDim2.new(0, 5, 0, 5)
-			ghostNameLabel.BackgroundTransparency = 1
-			ghostNameLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-			ghostNameLabel.TextSize = 16
-			ghostNameLabel.Font = Enum.Font.GothamBold
-			ghostNameLabel.TextXAlignment = Enum.TextXAlignment.Left
-			ghostNameLabel.Text = ghostData.name
-			ghostNameLabel.Parent = ghostCard
-
-			-- Rarity label
-			local rarityLabel = Instance.new("TextLabel")
-			rarityLabel.Name = "Rarity"
-			rarityLabel.Size = UDim2.new(1, -10, 0, 20)
-			rarityLabel.Position = UDim2.new(0, 5, 0, 33)
-			rarityLabel.BackgroundTransparency = 1
-			rarityLabel.TextColor3 = rarityColors[ghostData.rarity] or Color3.fromRGB(200, 200, 200)
-			rarityLabel.TextSize = 11
-			rarityLabel.Font = Enum.Font.GothamBold
-			rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
-			rarityLabel.Text = ghostData.rarity
-			rarityLabel.Parent = ghostCard
-
-			-- Level label
-			local levelLabel = Instance.new("TextLabel")
-			levelLabel.Name = "Level"
-			levelLabel.Size = UDim2.new(1, -10, 0, 20)
-			levelLabel.Position = UDim2.new(0, 5, 0, 53)
-			levelLabel.BackgroundTransparency = 1
-			levelLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-			levelLabel.TextSize = 11
-			levelLabel.Font = Enum.Font.Gotham
-			levelLabel.TextXAlignment = Enum.TextXAlignment.Left
-			levelLabel.Text = "Level: " .. ghostData.level .. " / 10"
-			levelLabel.Parent = ghostCard
-
-			-- Energy output label
-			local energyLabel = Instance.new("TextLabel")
-			energyLabel.Name = "Energy"
-			energyLabel.Size = UDim2.new(1, -10, 0, 20)
-			energyLabel.Position = UDim2.new(0, 5, 0, 73)
-			energyLabel.BackgroundTransparency = 1
-			energyLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
-			energyLabel.TextSize = 11
-			energyLabel.Font = Enum.Font.Gotham
-			energyLabel.TextXAlignment = Enum.TextXAlignment.Left
-			energyLabel.Text = "Energy: " .. ghostData.energyPerSec .. "/sec"
-			energyLabel.Parent = ghostCard
-
-			-- Train button
-			local trainButton = Instance.new("TextButton")
-			trainButton.Name = "TrainButton"
-			trainButton.Size = UDim2.new(1, -10, 0, 28)
-			trainButton.Position = UDim2.new(0, 5, 0, 105)
-			trainButton.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
-			trainButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-			trainButton.TextSize = 12
-			trainButton.Font = Enum.Font.GothamBold
-			trainButton.Text = "🎓 Train"
-			trainButton.Parent = ghostCard
-
-			local trainCorner = Instance.new("UICorner")
-			trainCorner.CornerRadius = UDim.new(0, 6)
-			trainCorner.Parent = trainButton
-
-			-- Button click handler with correct inventory key
-			local inventoryKey = ghostData.inventoryKey
-			local ghostName = ghostData.name
-			trainButton.MouseButton1Click:Connect(function()
-				print("[Ghost Catcher Tycoon] Train button clicked for " .. ghostName .. " (key: " .. inventoryKey .. ")")
-				self.remotes.TrainGhost:FireServer(inventoryKey)
-				self:showButtonFeedback(trainButton)
-			end)
-
-			-- Hover effects
-			trainButton.MouseEnter:Connect(function()
-				trainButton.BackgroundColor3 = Color3.fromRGB(140, 70, 220)
-			end)
-			trainButton.MouseLeave:Connect(function()
-				trainButton.BackgroundColor3 = Color3.fromRGB(120, 50, 200)
-			end)
+			local callbacks = {
+				onTrain = function()
+					print("[Ghost Catcher Tycoon] Train button clicked for " .. ghostData.name .. " (key: " .. ghostData.inventoryKey .. ")")
+					self.remotes.TrainGhost:FireServer(ghostData.inventoryKey)
+				end,
+				onRelease = function()
+					print("[Ghost Catcher Tycoon] Release button clicked for " .. ghostData.name .. " (key: " .. ghostData.inventoryKey .. ")")
+					if self.remotes.ReleaseGhost then
+						self.remotes.ReleaseGhost:FireServer(ghostData.inventoryKey)
+					else
+						print("[Ghost Catcher Tycoon] ReleaseGhost remote not found")
+					end
+				end
+			}
+			GhostCardBuilder:buildCard(ghostData, ghostTabContent, callbacks)
 		end
 	end
 
@@ -800,7 +789,7 @@
 			costLabel.TextSize = 12
 			costLabel.Font = Enum.Font.Gotham
 			costLabel.TextXAlignment = Enum.TextXAlignment.Left
-			costLabel.Text = "Cost: 100 energy"
+			costLabel.Text = "Cost: " .. self:formatNumber(math.floor(100 * (1 ^ 1.5))) .. " coins"
 			costLabel.Parent = roomCard
 
 			-- Upgrade button
@@ -1072,7 +1061,7 @@
 			priceLabel.Font = Enum.Font.GothamBold
 			priceLabel.TextXAlignment = Enum.TextXAlignment.Center
 			if eggData.price > 100 then
-				priceLabel.Text = self:formatNumber(eggData.price) .. " energy"
+				priceLabel.Text = self:formatNumber(eggData.price) .. " coins"
 			else
 				priceLabel.Text = eggData.price .. " Robux"
 			end
@@ -1351,10 +1340,9 @@
 			self.ui.energyLabel.Text = "⚡ Energy: " .. self:formatNumber(data.Energy)
 		end
 
-		-- Update coins display from broadcast (using Energy value which represents coins)
-		if data.Energy then
-			self.gameState.coins = data.Energy
-			self.ui.coinsLabel.Text = "💰 Coins: " .. self:formatNumber(data.Energy)
+		if data.Coins then
+			self.gameState.coins = data.Coins
+			self.ui.coinsLabel.Text = "💰 Coins: " .. self:formatNumber(data.Coins)
 		end
 
 		if data.VacuumCharge then
@@ -1379,8 +1367,19 @@
 			self.ui.zoneLabel.Text = "🗺 " .. data.CurrentZone
 		end
 
+		if data.CurrentZoneDescription then
+			self.ui.zoneDescLabel.Text = data.CurrentZoneDescription
+		end
+
 		-- Update room levels from broadcast data
 		if data.Rooms then
+			local ghostChamberLevelChanged = false
+			if self.gameState.rooms and self.gameState.rooms.GhostChamber and
+			   data.Rooms.GhostChamber and
+			   self.gameState.rooms.GhostChamber.level ~= data.Rooms.GhostChamber.level then
+				ghostChamberLevelChanged = true
+			end
+
 			self.gameState.rooms = data.Rooms
 			-- Update all visible room cards
 			for roomName, roomData in pairs(data.Rooms) do
@@ -1392,18 +1391,98 @@
 						if levelLabel then
 							levelLabel.Text = "Level: " .. roomData.level .. " (Max 10)"
 						end
+						-- Update cost based on new level
+						local costLabel = roomCard:FindFirstChild("CostLabel")
+						if costLabel then
+							if roomData.level >= 10 then
+								costLabel.Text = "Max level"
+							else
+								local nextLevel = roomData.level + 1
+								local upgradeCost = math.floor(100 * (nextLevel ^ 1.5))
+								costLabel.Text = "Cost: " .. self:formatNumber(upgradeCost) .. " coins"
+							end
+						end
 					end
+				end
+			end
+
+			-- If Ghost Chamber upgraded, refresh Ghost tab to update inventory limit display
+			if ghostChamberLevelChanged then
+				local ghostContent = self.ui.tabContents["Ghost"]
+				if ghostContent and ghostContent.Visible then
+					self:populateGhostTab()
+					self.populatedTabs["Ghost"] = true
+				else
+					-- Mark for refresh when tab is opened
+					self.populatedTabs["Ghost"] = nil
 				end
 			end
 		end
 
 		-- Update ghost inventory from broadcast data
 		if data.GhostInventory then
+			-- Track what actually changed
+			local inventoryChanged = false
+			local levelChanges = {}
+
+			if not self.gameState.ghostInventory then
+				inventoryChanged = true
+			else
+				-- Compare counts and keys to detect changes
+				local oldCount = 0
+				for _ in pairs(self.gameState.ghostInventory) do oldCount = oldCount + 1 end
+				local newCount = 0
+				for _ in pairs(data.GhostInventory) do newCount = newCount + 1 end
+				if oldCount ~= newCount then
+					inventoryChanged = true
+				else
+					-- Track level changes without full refresh
+					for key, ghost in pairs(data.GhostInventory) do
+						if self.gameState.ghostInventory[key] and self.gameState.ghostInventory[key].level ~= ghost.level then
+							levelChanges[key] = ghost.level
+						end
+					end
+				end
+			end
+
+			-- ALWAYS update game state (whether tab is visible or not)
 			self.gameState.ghostInventory = data.GhostInventory
-			-- Refresh ghost tab if it's currently visible
-			local ghostContent = self.ui.tabContents["Ghost"]
-			if ghostContent and ghostContent.Visible then
-				self:populateGhostTab()
+
+			-- If inventory changed (new ghost added), full refresh
+			if inventoryChanged then
+				self.populatedTabs["Ghost"] = nil
+				local ghostContent = self.ui.tabContents["Ghost"]
+				if ghostContent and ghostContent.Visible then
+					self:populateGhostTab()
+					self.populatedTabs["Ghost"] = true
+				end
+			elseif next(levelChanges) then
+				-- Level changes: update in place if tab is visible, otherwise just mark for refresh
+				if self.ui.tabContents["Ghost"].Visible then
+					local ghostContent = self.ui.tabContents["Ghost"]
+					for key, newLevel in pairs(levelChanges) do
+						local card = ghostContent:FindFirstChild("GhostCard_" .. key)
+						if card then
+							local levelLabel = card:FindFirstChild("LevelLabel")
+							if levelLabel then
+								levelLabel.Text = "Lv. " .. newLevel
+							end
+							local energyLabel = card:FindFirstChild("EnergyLabel")
+							if energyLabel then
+								energyLabel.Text = "⚡ +" .. math.floor(newLevel * 1) .. "/sec"
+							end
+							-- Update training cost
+							local costLabel = card:FindFirstChild("CostLabel")
+							if costLabel then
+								local newCost = math.floor(newLevel * 75)
+								costLabel.Text = "💰 " .. newCost
+							end
+						end
+					end
+				else
+					-- Tab not visible, mark for rebuild when reopened
+					self.populatedTabs["Ghost"] = nil
+				end
 			end
 		end
 

@@ -107,6 +107,29 @@ local function createNeonPad(position)
 	return pad
 end
 
+local function createWater(position, size)
+	local water = Instance.new("Part")
+	water.Name = "Water"
+	water.Size = Vector3.new(size or 30, 2, size or 30)
+	water.Color = Color3.fromRGB(0, 100, 200)
+	water.Material = Enum.Material.Water
+	water.CanCollide = true
+	water.Transparency = 0.3
+	water.Position = position
+	return water
+end
+
+local function createCliff(position, height)
+	local cliff = Instance.new("Part")
+	cliff.Name = "Cliff"
+	cliff.Size = Vector3.new(40, height or 50, 40)
+	cliff.Color = Color3.fromRGB(100, 100, 100)
+	cliff.Material = Enum.Material.Concrete
+	cliff.CanCollide = true
+	cliff.Position = position
+	return cliff
+end
+
 local function createBridge(startPos, endPos, width)
 	local distance = (endPos - startPos).Magnitude
 	local midpoint = (startPos + endPos) / 2
@@ -292,35 +315,83 @@ local function createZone(zoneData)
 	zoneFolder.Name = zoneData.name
 	zoneFolder.Parent = zoneContainer
 
-	createTerrainBase(zoneData.position, 350, zoneData.terrainMaterial, zoneData.name)
-	addTerrainVariation(zoneData.position, 350, zoneData.terrainMaterial)
+	-- Use zone size from data (easier zones smaller, harder zones larger)
+	local zoneSize = zoneData.size or 100
+	createTerrainBase(zoneData.position, zoneSize, zoneData.terrainMaterial, zoneData.name)
+	addTerrainVariation(zoneData.position, zoneSize, zoneData.terrainMaterial)
 
-	if zoneData.biome == "meadow" then
-		for i = 1, 5 do
-			local tree = createTree(zoneData.position + Vector3.new(math.random(-80, 80), 20, math.random(-80, 80)))
-			tree.Parent = zoneFolder
-		end
-	elseif zoneData.biome == "desert" then
-		for i = 1, 4 do
-			local cactus = createCactus(zoneData.position + Vector3.new(math.random(-80, 80), 20, math.random(-80, 80)))
-			cactus.Parent = zoneFolder
-		end
-	elseif zoneData.biome == "frost" then
-		for i = 1, 6 do
-			local ice = createIceBlock(zoneData.position + Vector3.new(math.random(-80, 80), 20, math.random(-80, 80)))
-			ice.Parent = zoneFolder
-		end
-	elseif zoneData.biome == "haunted" then
-		for i = 1, 5 do
-			local stone = createTombstone(zoneData.position + Vector3.new(math.random(-80, 80), 20, math.random(-80, 80)))
-			stone.Parent = zoneFolder
-		end
-	elseif zoneData.biome == "tech" then
-		for i = 1, 4 do
-			local pad = createNeonPad(zoneData.position + Vector3.new(math.random(-60, 60), 20, math.random(-60, 60)))
-			pad.Parent = zoneFolder
+	-- Create obstacles from the zone's obstacles list
+	if zoneData.obstacles then
+		for _, obstacleType in ipairs(zoneData.obstacles) do
+			local obstacleCount = math.ceil(zoneSize / 40)  -- Scale obstacle count with zone size
+
+			if obstacleType == "trees" then
+				for i = 1, obstacleCount do
+					local tree = createTree(zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2)))
+					tree.Parent = zoneFolder
+				end
+			elseif obstacleType == "cacti" then
+				for i = 1, obstacleCount do
+					local cactus = createCactus(zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2)))
+					cactus.Parent = zoneFolder
+				end
+			elseif obstacleType == "ice_blocks" then
+				for i = 1, obstacleCount do
+					local ice = createIceBlock(zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2)))
+					ice.Parent = zoneFolder
+				end
+			elseif obstacleType == "tombstones" then
+				for i = 1, obstacleCount do
+					local stone = createTombstone(zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2)))
+					stone.Parent = zoneFolder
+				end
+			elseif obstacleType == "neon_pads" then
+				for i = 1, obstacleCount do
+					local pad = createNeonPad(zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2)))
+					pad.Parent = zoneFolder
+				end
+			elseif obstacleType == "water" then
+				for i = 1, math.max(1, obstacleCount - 3) do
+					local water = createWater(zoneData.position + Vector3.new(math.random(-zoneSize/3, zoneSize/3), 20, math.random(-zoneSize/3, zoneSize/3)))
+					water.Parent = zoneFolder
+				end
+			elseif obstacleType == "cliffs" then
+				for i = 1, math.max(1, obstacleCount - 2) do
+					local cliff = createCliff(zoneData.position + Vector3.new(math.random(-zoneSize/3, zoneSize/3), 20, math.random(-zoneSize/3, zoneSize/3)), 60)
+					cliff.Parent = zoneFolder
+				end
+			elseif obstacleType == "rocks" then
+				for i = 1, obstacleCount do
+					local rock = Instance.new("Part")
+					rock.Name = "Rock"
+					rock.Shape = Enum.PartType.Ball
+					rock.Size = Vector3.new(math.random(5, 15), math.random(5, 15), math.random(5, 15))
+					rock.Color = Color3.fromRGB(120, 120, 120)
+					rock.Material = Enum.Material.Concrete
+					rock.CanCollide = true
+					rock.Position = zoneData.position + Vector3.new(math.random(-zoneSize/2, zoneSize/2), 20, math.random(-zoneSize/2, zoneSize/2))
+					rock.Parent = zoneFolder
+				end
+			end
 		end
 	end
+
+	-- Add visibility/lighting effects based on zone difficulty (position.Z indicates progression)
+	-- Easier zones: bright, clear; Harder zones: foggy, dark
+	local progressionValue = math.abs(zoneData.position.Z) / 100  -- 0 = easy, 25+ = hard
+	local fogDensity = math.min(0.3, progressionValue / 100)  -- Max 30% fog
+	local ambientBrightness = 1 - (progressionValue / 50) * 0.5  -- Dims as difficulty increases
+
+	if fogDensity > 0.05 then
+		-- Add atmospheric fog for harder zones
+		local atmosphere = Instance.new("Atmosphere")
+		atmosphere.Density = fogDensity
+		atmosphere.Parent = zoneFolder
+	end
+
+	-- Adjust zone's ambient light based on difficulty
+	local lightLevel = math.max(0.3, ambientBrightness)  -- Keep minimum light at 0.3
+	-- Note: Roblox ambient light is global, but zones with more fog feel darker
 
 	local ladderConfigs = {
 		-- North ladder
@@ -491,18 +562,17 @@ end
 -- ============================================================================
 
 local ZONES = {
-	{name = "Zone_1_Meadow", position = Vector3.new(500, 10, 0), biome = "meadow", terrainMaterial = Enum.Material.Grass},
-	{name = "Zone_2_Desert", position = Vector3.new(0, 10, 500), biome = "desert", terrainMaterial = Enum.Material.Sand},
-	{name = "Zone_3_Frost", position = Vector3.new(0, 10, 1000), biome = "frost", terrainMaterial = Enum.Material.Snow},
-	{name = "Zone_4_Haunted", position = Vector3.new(-500, 10, 0), biome = "haunted", terrainMaterial = Enum.Material.Grass},
-	{name = "Zone_5_Tech", position = Vector3.new(0, 10, 1500), biome = "tech", terrainMaterial = Enum.Material.Concrete},
-	-- Additional zones for full progression (ZoneData: Sunken Spirit Reef onwards)
-	{name = "Zone_6_Reef", position = Vector3.new(500, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Sand},
-	{name = "Zone_7_Clock", position = Vector3.new(0, 10, 2500), biome = "tech", terrainMaterial = Enum.Material.Concrete},
-	{name = "Zone_8_Astral", position = Vector3.new(-500, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Grass},
-	{name = "Zone_9_Phantom", position = Vector3.new(500, 10, 2500), biome = "haunted", terrainMaterial = Enum.Material.Grass},
-	{name = "Zone_10_Rift", position = Vector3.new(1000, 10, 1500), biome = "tech", terrainMaterial = Enum.Material.Neon},
-	{name = "Zone_11_Eternity", position = Vector3.new(1000, 10, 2000), biome = "meadow", terrainMaterial = Enum.Material.Grass},
+	{name = "Whisper Woods", position = Vector3.new(500, 10, 0), biome = "meadow", terrainMaterial = Enum.Material.Grass, size = 350, obstacles = {"trees"}},
+	{name = "Foggy Fields", position = Vector3.new(0, 10, 500), biome = "desert", terrainMaterial = Enum.Material.Sand, size = 350, obstacles = {"cacti"}},
+	{name = "Gloomy Graveyard", position = Vector3.new(0, 10, 1000), biome = "graveyard", terrainMaterial = Enum.Material.Slate, size = 350, obstacles = {"tombstones"}},
+	{name = "Electro Alley", position = Vector3.new(-500, 10, 0), biome = "tech", terrainMaterial = Enum.Material.Concrete, size = 350, obstacles = {"neon_pads"}},
+	{name = "Frostbite Caverns", position = Vector3.new(0, 10, 1500), biome = "ice", terrainMaterial = Enum.Material.Ice, size = 350, obstacles = {"water"}},
+	{name = "Sunken Spirit Reef", position = Vector3.new(500, 10, 2000), biome = "underwater", terrainMaterial = Enum.Material.Sand, size = 350, obstacles = {"water", "water", "water"}},
+	{name = "Clocktower District", position = Vector3.new(0, 10, 2500), biome = "urban", terrainMaterial = Enum.Material.Concrete, size = 350, obstacles = {"neon_pads"}},
+	{name = "Astral Observatory", position = Vector3.new(-500, 10, 2000), biome = "desert", terrainMaterial = Enum.Material.Sand, size = 350, obstacles = {"rocks"}},
+	{name = "Phantom Fortress", position = Vector3.new(500, 10, 2500), biome = "haunted", terrainMaterial = Enum.Material.Slate, size = 350, obstacles = {"tombstones"}},
+	{name = "The Rift", position = Vector3.new(1000, 10, 1500), biome = "glitch", terrainMaterial = Enum.Material.Slate, size = 350, obstacles = {"water", "ice_blocks"}},
+	{name = "Eternity Nexus", position = Vector3.new(1000, 10, 2000), biome = "crystal", terrainMaterial = Enum.Material.Ice, size = 350, obstacles = {"ice_blocks"}},
 }
 
 -- ============================================================================

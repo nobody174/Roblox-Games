@@ -7,8 +7,10 @@ local Players = game:GetService("Players")
 print("[PHASE 4] Starting Phase 4 extended testing server...")
 
 local Constants = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("constants"))
+local Config = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("config"))
 
 print("[PHASE 4] Constants loaded")
+print("[PHASE 4] Config loaded (spawn rate: " .. Config.GhostSpawnRate .. "s, catch distance: " .. Config.GhostCatchDistance .. " studs)")
 
 -- Load SystemManager to initialize all systems (Quests, Bosses, Leaderboard, Prestige, etc.)
 local serverScriptService = game:GetService("ServerScriptService")
@@ -33,8 +35,19 @@ else
 end
 
 print("[PHASE 4] Proceeding with MainServer initialization...")
+print("[PHASE 4] About to load ZoneManager...")
 
--- Load DataManager for DataStore persistence (optional for Phase 4 testing)
+-- Load ZoneManager for zone detection and barriers
+local zoneManager = nil
+local zoneManagerModule = game:GetService("ServerScriptService"):FindFirstChild("ZoneManager")
+if zoneManagerModule then
+	local ZoneManager = require(zoneManagerModule)
+	zoneManager = ZoneManager:new()
+	print("[PHASE 4] ZoneManager loaded")
+else
+	warn("[PHASE 4] ZoneManager not found in ServerScriptService - zone detection disabled")
+	warn("[PHASE 4] To enable: Create ModuleScript 'ZoneManager' in ServerScriptService and paste ZoneManager.lua code")
+end
 local dataManager = nil
 local dataManagerModule = game:GetService("ServerScriptService"):FindFirstChild("Data")
 if dataManagerModule then
@@ -79,6 +92,7 @@ createRemote(Constants.Remotes.BringGhostsHome, "RemoteEvent")
 createRemote(Constants.Remotes.ChallengePlayer, "RemoteFunction")
 createRemote(Constants.Remotes.RespondToChallenge, "RemoteFunction")
 createRemote(Constants.Remotes.BattleResult, "RemoteEvent")
+createRemote("ReleaseGhost", "RemoteEvent")
 
 -- Create admin command remote immediately
 if not remotesFolder:FindFirstChild("AdminCommand") then
@@ -91,10 +105,13 @@ print("[PHASE 4] Remotes created (including optional handlers)")
 
 -- ==================== GAME CONFIGURATION ====================
 
--- Simple ghost spawning (no dependencies)
+-- Load GhostData and ZoneData for spawning
+local GhostData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("GhostData"))
+local ZoneData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("ZoneData"))
+local GhostAI = require(game:GetService("ServerScriptService"):WaitForChild("GhostAI"))
+
+-- Ghost spawning setup
 local activeGhosts = {}
-local ghostNames = { "Specter", "Phantom", "Wraith", "Banshee", "Poltergeist", "Shade", "Apparition", "Spirit" }
-local rarities = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Corrupted" }
 local rarityColors = {
 	Common = Color3.fromRGB(200, 200, 200),
 	Uncommon = Color3.fromRGB(0, 255, 0),
@@ -142,101 +159,308 @@ local availableGhosts = {
 
 -- ==================== GHOST SPAWNING ====================
 
-local function spawnGhost(zoneName)
-	local zoneContainer = workspace:FindFirstChild("ZoneContainer")
-	if not zoneContainer then return nil end
+-- Modified spawnGhost to support both shared zones and phased zones
+local function spawnGhost(zoneName, targetFolder)
+	-- Use targetFolder if provided (for private phases), otherwise use shared ZoneContainer
+	local searchContainer = targetFolder or workspace:FindFirstChild("ZoneContainer")
+	if not searchContainer then return nil end
 
-	local zoneFolder = zoneContainer:FindFirstChild(zoneName)
+	local zoneFolder = searchContainer:FindFirstChild(zoneName)
 	if not zoneFolder then return nil end
 
-	local ghostName = ghostNames[math.random(1, #ghostNames)]
-	local rarity = rarities[math.random(1, #rarities)]
+	-- Get zone-specific spawn pool from ZoneData
+	local zoneInfo = ZoneData[zoneName]
+	if not zoneInfo or not zoneInfo.Spawns then
+		return nil -- Zone has no spawn data
+	end
 
-	local ghost = Instance.new("Part")
-	ghost.Name = ghostName
-	ghost.Shape = Enum.PartType.Ball
-	ghost.Size = Vector3.new(2, 2, 2)
-	ghost.CanCollide = false
-	ghost.Color = rarityColors[rarity] or Color3.fromRGB(200, 200, 200)
-	ghost.Material = Enum.Material.Neon
-	ghost.TopSurface = Enum.SurfaceType.Smooth
-	ghost.BottomSurface = Enum.SurfaceType.Smooth
-	ghost.Position = Vector3.new(math.random(-100, 100), 25, math.random(-100, 100))
-	ghost.Parent = zoneFolder
+	-- Select ghost using weighted random from zone's spawn pool
+	local totalWeight = 0
+	for _, spawnEntry in ipairs(zoneInfo.Spawns) do
+		totalWeight = totalWeight + spawnEntry.Weight
+	end
 
-	-- Disable gravity so ghosts float
+	local randomWeight = math.random(1, totalWeight)
+	local currentWeight = 0
+	local ghostName = "Puffling" -- Fallback
+	local rarity = "Common" -- Fallback
+
+	for _, spawnEntry in ipairs(zoneInfo.Spawns) do
+		currentWeight = currentWeight + spawnEntry.Weight
+		if randomWeight <= currentWeight then
+			ghostName = spawnEntry.Ghost
+			rarity = spawnEntry.Rarity or "Common"  -- Use rarity from spawn pool
+			break
+		end
+	end
+	local color = rarityColors[rarity] or Color3.fromRGB(200, 200, 200)
+
+	-- Find zone terrain to spawn near it
+	local terrainPart = nil
+	for _, child in ipairs(zoneFolder:GetChildren()) do
+		if child:IsA("BasePart") then
+			terrainPart = child
+			break
+		end
+	end
+
+	-- Spawn position relative to zone terrain
+	local zoneCenter = terrainPart and terrainPart.Position or Vector3.new(0, 25, 0)
+	local spawnPos = zoneCenter + Vector3.new(math.random(-50, 50), 15, math.random(-50, 50))
+
+	-- Build a ghost model: round head + glowing eyes (simplified)
+	local ghostModel = Instance.new("Model")
+	ghostModel.Name = ghostName
+	ghostModel.Parent = zoneFolder
+
+	-- Main head (round sphere)
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Shape = Enum.PartType.Ball
+	body.Size = Vector3.new(3, 3, 3)
+	body.CanCollide = false
+	body.Anchored = false
+	body.Color = color
+	body.Material = Enum.Material.SmoothPlastic
+	body.Transparency = 0.15
+	body.TopSurface = Enum.SurfaceType.Smooth
+	body.BottomSurface = Enum.SurfaceType.Smooth
+	body.CastShadow = false
+	body.Position = spawnPos
+	body.Parent = ghostModel
+	ghostModel.PrimaryPart = body
+
+	-- Left eye
+	local eyeL = Instance.new("Part")
+	eyeL.Name = "EyeL"
+	eyeL.Shape = Enum.PartType.Ball
+	eyeL.Size = Vector3.new(0.6, 0.6, 0.6)
+	eyeL.CanCollide = false
+	eyeL.Anchored = false
+	eyeL.Color = Color3.fromRGB(255, 255, 255)
+	eyeL.Material = Enum.Material.Neon
+	eyeL.CastShadow = false
+	eyeL.Position = spawnPos + Vector3.new(-0.6, 0.4, -1.3)
+	eyeL.Parent = ghostModel
+
+	local eyeLWeld = Instance.new("WeldConstraint")
+	eyeLWeld.Part0 = body
+	eyeLWeld.Part1 = eyeL
+	eyeLWeld.Parent = body
+
+	-- Right eye
+	local eyeR = eyeL:Clone()
+	eyeR.Name = "EyeR"
+	eyeR.Position = spawnPos + Vector3.new(0.6, 0.4, -1.3)
+	eyeR.Parent = ghostModel
+
+	local eyeRWeld = Instance.new("WeldConstraint")
+	eyeRWeld.Part0 = body
+	eyeRWeld.Part1 = eyeR
+	eyeRWeld.Parent = body
+
+
+	-- Glow light
+	local light = Instance.new("PointLight")
+	light.Brightness = 1.5
+	light.Range = 18
+	light.Color = color
+	light.Parent = body
+
+	-- Keep it floating (no gravity)
 	local bodyVelocity = Instance.new("BodyVelocity")
 	bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-	bodyVelocity.Parent = ghost
+	bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+	bodyVelocity.Parent = body
 
-	ghost:SetAttribute("GhostName", ghostName)
-	ghost:SetAttribute("Rarity", rarity)
+	-- Gentle bobbing animation
+	local baseY = spawnPos.Y
+	local bobTask = task.spawn(function()
+		local t = 0
+		while ghostModel.Parent do
+			t = t + 0.05
+			local newY = baseY + math.sin(t) * 0.8
+			bodyVelocity.Velocity = Vector3.new(0, (newY - body.Position.Y) * 5, 0)
+			task.wait(0.05)
+		end
+	end)
 
-	local light = Instance.new("PointLight")
-	light.Brightness = 2
-	light.Range = 15
-	light.Color = rarityColors[rarity]
-	light.Parent = ghost
-
+	-- Name/rarity billboard above ghost
 	local billboard = Instance.new("BillboardGui")
-	billboard.Size = UDim2.new(0, 100, 0, 40)
-	billboard.MaxDistance = 200
-	billboard.Parent = ghost
+	billboard.Size = UDim2.new(0, 120, 0, 45)
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.MaxDistance = 40
+	billboard.AlwaysOnTop = false
+	billboard.Parent = body
 
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 1, 0)
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.fromRGB(255, 255, 255)
-	label.TextSize = 12
-	label.Font = Enum.Font.GothamBold
-	label.Text = ghostName .. " (" .. rarity .. ")"
-	label.Parent = billboard
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, 0, 0.6, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	nameLabel.TextStrokeTransparency = 0
+	nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	nameLabel.TextSize = 13
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Text = ghostName
+	nameLabel.Parent = billboard
 
-	activeGhosts[ghost] = { name = ghostName, rarity = rarity }
+	local rarityLabel = Instance.new("TextLabel")
+	rarityLabel.Size = UDim2.new(1, 0, 0.4, 0)
+	rarityLabel.Position = UDim2.new(0, 0, 0.6, 0)
+	rarityLabel.BackgroundTransparency = 1
+	rarityLabel.TextColor3 = color
+	rarityLabel.TextStrokeTransparency = 0
+	rarityLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	rarityLabel.TextSize = 11
+	rarityLabel.Font = Enum.Font.Gotham
+	rarityLabel.Text = rarity
+	rarityLabel.Parent = billboard
+
+	-- Use body as the catch target, tag with attributes
+	body:SetAttribute("GhostName", ghostName)
+	body:SetAttribute("Rarity", rarity)
+	ghostModel:SetAttribute("GhostName", ghostName)
+	ghostModel:SetAttribute("Rarity", rarity)
+
+	-- Track by model (catch code checks Part, so also track body)
+	activeGhosts[body] = { name = ghostName, rarity = rarity }
+	local ghost = body  -- keep variable name for catch system compatibility
+
+	-- Initialize AI behavior based on rarity
+	GhostAI:initializeGhost(ghostModel, rarity)
 
 	-- Auto-despawn after 60 seconds
 	task.delay(60, function()
-		if ghost.Parent then
-			ghost:Destroy()
-			activeGhosts[ghost] = nil
+		if ghostModel.Parent then
+			activeGhosts[body] = nil
+			ghostModel:Destroy()
 		end
 	end)
 
 	return ghost
 end
 
--- Spawn ghosts every 3 seconds in all zones (mapped from ZoneData)
-task.spawn(function()
-	local spawnCount = 0
-	while true do
-		task.wait(3)
-		-- Map zone names to terrain zone folder names built by ZoneAutoBuilder
-		local zoneMapping = {
-			"Zone_1_Meadow",      -- Whisper Woods
-			"Zone_2_Desert",      -- Foggy Fields
-			"Zone_3_Frost",       -- Gloomy Graveyard
-			"Zone_4_Haunted",     -- Electro Alley
-			"Zone_5_Tech",        -- Frostbite Caverns
-			"Zone_6_Reef",        -- Sunken Spirit Reef (if built)
-			"Zone_7_Clock",       -- Clocktower District (if built)
-			"Zone_8_Astral",      -- Astral Observatory (if built)
-			"Zone_9_Phantom",     -- Phantom Fortress (if built)
-			"Zone_10_Rift",       -- The Rift (if built)
-			"Zone_11_Eternity",   -- Eternity Nexus (if built)
-		}
+-- Spawn ghosts every N seconds in all zones (mapped from ZoneData)
+-- Spawning will start after ZoneManager is initialized (to ensure PhaseManager is ready)
+local spawnLoopStarted = false
 
-		spawnCount = spawnCount + 1
-		local spawnedThisRound = 0
-		for _, zoneName in ipairs(zoneMapping) do
-			if spawnGhost(zoneName) then
-				spawnedThisRound = spawnedThisRound + 1
+local function startGhostSpawnLoop()
+	if spawnLoopStarted then return end
+	spawnLoopStarted = true
+
+	task.spawn(function()
+		local spawnCount = 0
+		while true do
+			task.wait(Config.GhostSpawnRate)
+			-- Zone names now match ZoneAutoBuilder output (theme names)
+			local zoneMapping = {
+				"Hub",  -- Starting Area
+				"Whisper Woods",
+				"Foggy Fields",
+				"Gloomy Graveyard",
+				"Electro Alley",
+				"Frostbite Caverns",
+				"Sunken Spirit Reef",
+				"Clocktower District",
+				"Astral Observatory",
+				"Phantom Fortress",
+				"The Rift",
+				"Eternity Nexus",
+			}
+
+			spawnCount = spawnCount + 1
+			local spawnedThisRound = 0
+			for _, zoneName in ipairs(zoneMapping) do
+				if spawnGhost(zoneName) then
+					spawnedThisRound = spawnedThisRound + 1
+				end
+			end
+
+			-- Don't spawn ghosts in Starting Area - it's a home/HQ zone
+			-- (PhaseManager still creates private phases, but they're ghost-free)
+
+			if spawnedThisRound > 0 then
+				print("[PHASE 4] Spawn cycle #" .. spawnCount .. ": Spawned " .. spawnedThisRound .. " ghosts")
 			end
 		end
-		if spawnedThisRound > 0 then
-			print("[PHASE 4] Spawn cycle #" .. spawnCount .. ": Spawned " .. spawnedThisRound .. " ghosts")
+	end)
+end
+
+-- Expose world-spawn for admin testing (used by !sw command)
+_G.AdminSpawnWorld = function(player, ghostName)
+	local character = player.Character
+	if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+	local pos = character.HumanoidRootPart.Position + Vector3.new(0, 5, -8)
+	local rarity = GhostData.RarityMap[ghostName] or "Common"
+	local color = rarityColors[rarity] or Color3.fromRGB(200, 200, 200)
+
+	local ghostModel = Instance.new("Model")
+	ghostModel.Name = ghostName
+	ghostModel.Parent = workspace
+
+	local body = Instance.new("Part")
+	body.Name = "Body"
+	body.Shape = Enum.PartType.Ball
+	body.Size = Vector3.new(3, 3, 3)
+	body.CanCollide = false
+	body.Color = color
+	body.Material = Enum.Material.SmoothPlastic
+	body.Transparency = 0.15
+	body.Position = pos
+	body.Parent = ghostModel
+	ghostModel.PrimaryPart = body
+
+
+	-- Keep floating
+	local bv = Instance.new("BodyVelocity")
+	bv.Velocity = Vector3.new(0, 0, 0)
+	bv.MaxForce = Vector3.new(0, math.huge, 0)
+	bv.Parent = body
+
+	-- Bobbing
+	local baseY = pos.Y
+	task.spawn(function()
+		local t = 0
+		while ghostModel.Parent do
+			t = t + 0.05
+			bv.Velocity = Vector3.new(0, (baseY + math.sin(t) * 0.8 - body.Position.Y) * 5, 0)
+			task.wait(0.05)
 		end
-	end
-end)
+	end)
+
+	local light = Instance.new("PointLight")
+	light.Brightness = 1.5
+	light.Range = 18
+	light.Color = color
+	light.Parent = body
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Size = UDim2.new(0, 140, 0, 45)
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.Parent = body
+	local lbl = Instance.new("TextLabel")
+	lbl.Size = UDim2.new(1, 0, 1, 0)
+	lbl.BackgroundTransparency = 1
+	lbl.TextColor3 = Color3.fromRGB(255, 255, 0)
+	lbl.TextStrokeTransparency = 0
+	lbl.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	lbl.TextSize = 13
+	lbl.Font = Enum.Font.GothamBold
+	lbl.Text = ghostName .. "\n[IMAGE TEST]"
+	lbl.Parent = billboard
+
+	body:SetAttribute("GhostName", ghostName)
+	body:SetAttribute("Rarity", rarity)
+	activeGhosts[body] = { name = ghostName, rarity = rarity }
+
+	task.delay(30, function()
+		if ghostModel.Parent then
+			activeGhosts[body] = nil
+			ghostModel:Destroy()
+		end
+	end)
+	print("[ADMIN] Spawned " .. ghostName .. " in world near " .. player.Name)
+end
 
 print("[PHASE 4] Ghost spawning started")
 
@@ -247,17 +471,22 @@ local playerData = {}
 -- Expose playerData globally so admin commands can access it
 _G.GhostCatcherPlayerData = playerData
 
+local function getMaxGhostSlots(chamberLevel)
+	return 5 + (chamberLevel * 10)
+end
+
 local function initPlayerData(userId)
 	if not playerData[userId] then
 		playerData[userId] = {
 			charge = 0,
 			coins = 0,
+			energy = 0,
 			ghosts = 0,
 			ghostInventory = {}, -- { ghostName: { level, rarity } }
 			rooms = {
-				GhostChamber = { level = 1 },
-				TrainingFacility = { level = 1 },
-				EnergyReactor = { level = 1 },
+				GhostChamber = { level = 0 },
+				TrainingFacility = { level = 0 },
+				EnergyReactor = { level = 0 },
 				ResearchLab = { level = 0 },
 				BossArena = { level = 0 },
 			},
@@ -288,9 +517,9 @@ Players.PlayerAdded:Connect(function(player)
 			ghosts = (dmData.GhostCount or 0),
 			ghostInventory = dmData.GhostInventory or {},
 			rooms = dmData.Rooms or {
-				GhostChamber = { level = 1 },
-				TrainingFacility = { level = 1 },
-				EnergyReactor = { level = 1 },
+				GhostChamber = { level = 0 },
+				TrainingFacility = { level = 0 },
+				EnergyReactor = { level = 0 },
 				ResearchLab = { level = 0 },
 				BossArena = { level = 0 },
 			},
@@ -308,6 +537,11 @@ Players.PlayerAdded:Connect(function(player)
 		task.spawn(function()
 			SystemManager:initializePlayer(player)
 		end)
+	end
+
+	-- Initialize zone detection for player
+	if zoneManager then
+		-- ZoneManager will handle this in startZoneDetection
 	end
 end)
 
@@ -393,7 +627,7 @@ if catchRemote then
 
 		playerPos = playerPos.Position
 		local closestGhost = nil
-		local closestDist = 100
+		local closestDist = Config.GhostCatchDistance
 
 		for ghostInstance, ghostData in pairs(activeGhosts) do
 			if ghostInstance and ghostInstance.Parent then
@@ -413,6 +647,22 @@ if catchRemote then
 		-- Get ghost data
 		local ghostName = closestGhost:GetAttribute("GhostName")
 		local rarity = closestGhost:GetAttribute("Rarity")
+
+		-- Check inventory limit
+		local maxSlots = getMaxGhostSlots(data.rooms.GhostChamber.level)
+		local currentCount = 0
+		for _ in pairs(data.ghostInventory) do
+			currentCount = currentCount + 1
+		end
+
+		if currentCount >= maxSlots then
+			print("[PHASE 4] " .. player.Name .. " tried to catch but inventory is full (" .. currentCount .. "/" .. maxSlots .. ")")
+			local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+			if notifyRemote then
+				notifyRemote:FireClient(player, "Inventory full! Release ghosts or upgrade Ghost Chamber", Color3.fromRGB(255, 100, 100))
+			end
+			return
+		end
 
 		-- Deduct charge
 		data.charge = math.max(data.charge - 10, 0)
@@ -434,8 +684,13 @@ if catchRemote then
 		local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
 		data.ghostInventory[inventoryKey] = { name = ghostName, level = 1, rarity = rarity }
 
-		-- Remove ghost from world
-		closestGhost:Destroy()
+		-- Remove ghost from world (destroy whole model if it exists)
+		local ghostParent = closestGhost.Parent
+		if ghostParent and ghostParent:IsA("Model") then
+			ghostParent:Destroy()
+		else
+			closestGhost:Destroy()
+		end
 		activeGhosts[closestGhost] = nil
 
 		print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. coins .. " coins!")
@@ -460,7 +715,8 @@ if bringRemote then
 		if updateRemote then
 			updateRemote:FireClient(player, {
 				VacuumCharge = data.charge,
-				Energy = data.coins,
+				Coins = data.coins,
+				Energy = data.energy,
 				GhostCount = data.ghosts,
 				GhostInventory = data.ghostInventory,
 				Rooms = data.rooms,
@@ -494,8 +750,9 @@ if upgradeRoomRemote then
 			return
 		end
 
-		-- Calculate cost (cost scales with level)
-		local cost = math.ceil(config.baseCost * (config.costMultiplier ^ (room.level - 1)))
+		-- Calculate cost (cost scales with level): 100 * (nextLevel ^ 1.5)
+		local nextLevel = room.level + 1
+		local cost = math.floor(100 * (nextLevel ^ 1.5))
 
 		-- Check coins
 		if data.coins < cost then
@@ -508,6 +765,20 @@ if upgradeRoomRemote then
 		room.level = room.level + 1
 
 		print("[PHASE 4] " .. player.Name .. " upgraded " .. roomName .. " to level " .. room.level .. " for " .. cost .. " coins!")
+
+		-- Send immediate broadcast to update client UI
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
+				Coins = data.coins,
+				Energy = data.energy,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
 	end)
 	print("[PHASE 4] UpgradeRoom handler connected")
 end
@@ -532,25 +803,72 @@ if trainGhostRemote then
 			return
 		end
 
-		-- Calculate cost (scales with ghost level and rarity)
-		local rarityMultiplier = { Common = 1, Uncommon = 1.5, Rare = 2, Epic = 3, Legendary = 5 }
-		local multiplier = rarityMultiplier[ghost.rarity] or 1
-		local baseCost = 50 * multiplier
-		local cost = math.ceil(baseCost * (ghost.level))
+		-- Calculate cost (scales with ghost level): level * 75
+		local cost = ghost.level * 75
 
-		-- Check coins
-		if data.coins < cost then
-			print("[PHASE 4] " .. player.Name .. " tried to train " .. ghost.name .. " but has insufficient coins (" .. data.coins .. " < " .. cost .. ")")
+		-- Check energy
+		if data.energy < cost then
+			print("[PHASE 4] " .. player.Name .. " tried to train " .. ghost.name .. " but has insufficient energy (" .. data.energy .. " < " .. cost .. ")")
 			return
 		end
 
-		-- Deduct coins and train
-		data.coins = data.coins - cost
+		-- Deduct energy and train
+		data.energy = data.energy - cost
 		ghost.level = ghost.level + 1
 
-		print("[PHASE 4] " .. player.Name .. " trained " .. ghost.name .. " to level " .. ghost.level .. " for " .. cost .. " coins!")
+		print("[PHASE 4] " .. player.Name .. " trained " .. ghost.name .. " to level " .. ghost.level .. " for " .. cost .. " energy!")
+
+		-- Send immediate broadcast to update client UI with full payload
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
+				Coins = data.coins,
+				Energy = data.energy,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
 	end)
 	print("[PHASE 4] TrainGhost handler connected")
+end
+
+-- ReleaseGhost remote handler
+local releaseGhostRemote = remotesFolder:FindFirstChild("ReleaseGhost")
+if releaseGhostRemote then
+	releaseGhostRemote.OnServerEvent:Connect(function(player, ghostKey)
+		local data = initPlayerData(player.UserId)
+
+		-- Validate ghost exists
+		if not data.ghostInventory[ghostKey] then
+			print("[PHASE 4] " .. player.Name .. " tried to release non-existent ghost: " .. ghostKey)
+			return
+		end
+
+		local ghost = data.ghostInventory[ghostKey]
+		print("[PHASE 4] " .. player.Name .. " released " .. ghost.name .. " (key: " .. ghostKey .. ")")
+
+		-- Remove ghost from inventory
+		data.ghostInventory[ghostKey] = nil
+		data.ghosts = math.max(0, data.ghosts - 1)
+
+		-- Broadcast updated state
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
+				Coins = data.coins,
+				Energy = data.energy,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
+	end)
+	print("[PHASE 4] ReleaseGhost handler connected")
 end
 
 -- HatchEgg remote handler (gacha)
@@ -573,6 +891,22 @@ if hatchEggRemote then
 			return
 		end
 
+		-- Check inventory limit
+		local maxSlots = getMaxGhostSlots(data.rooms.GhostChamber.level)
+		local currentCount = 0
+		for _ in pairs(data.ghostInventory) do
+			currentCount = currentCount + 1
+		end
+
+		if currentCount >= maxSlots then
+			print("[PHASE 4] " .. player.Name .. " tried to hatch but inventory is full (" .. currentCount .. "/" .. maxSlots .. ")")
+			local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+			if notifyRemote then
+				notifyRemote:FireClient(player, "Inventory full! Release ghosts or upgrade Ghost Chamber", Color3.fromRGB(255, 100, 100))
+			end
+			return
+		end
+
 		-- Deduct coins
 		data.coins = data.coins - eggData.cost
 
@@ -589,6 +923,20 @@ if hatchEggRemote then
 		data.ghosts = data.ghosts + 1
 
 		print("[PHASE 4] " .. player.Name .. " hatched " .. eggName .. " and received " .. hatchedName .. " (" .. rarity .. ")!")
+
+		-- Send immediate broadcast to update client UI
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				VacuumCharge = data.charge,
+				Coins = data.coins,
+				Energy = data.energy,
+				GhostCount = data.ghosts,
+				GhostInventory = data.ghostInventory,
+				Rooms = data.rooms,
+				UnlockedZones = data.unlockedZones,
+			})
+		end
 	end)
 	print("[PHASE 4] GachaPull handler connected")
 end
@@ -632,7 +980,8 @@ if unlockZoneRemote then
 		if updateRemote then
 			updateRemote:FireClient(player, {
 				VacuumCharge = data.charge,
-				Energy = data.coins,
+				Coins = data.coins,
+				Energy = data.energy,
 				GhostCount = data.ghosts,
 				GhostInventory = data.ghostInventory,
 				Rooms = data.rooms,
@@ -722,15 +1071,103 @@ local function processAdminCommand(player, command, arg)
 		print("[ADMIN] " .. player.Name .. " gained 1000 energy (total: " .. data.coins .. ")")
 		return true
 	elseif command == "ghost" then
-		local ghostName = arg or "Wraith"
+		local ghostName = arg or "Captain Wisp"
+		local rarity = GhostData.RarityMap[ghostName] or "Common"
 		local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
 		data.ghostInventory[inventoryKey] = {
 			name = ghostName,
-			rarity = "Rare",
+			rarity = rarity,
 			level = 1
 		}
 		data.ghosts = data.ghosts + 1
-		print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName)
+		print("[ADMIN] " .. player.Name .. " spawned ghost: " .. ghostName .. " (" .. rarity .. ")")
+		return true
+	elseif command == "spawnworld" then
+		-- Spawn a specific ghost in the world near the player so you can see the image on it
+		local ghostName = arg or "Captain Wisp"
+		local character = player.Character
+		if character and character:FindFirstChild("HumanoidRootPart") then
+			local pos = character.HumanoidRootPart.Position + Vector3.new(0, 5, -8)
+			local zoneContainer = workspace:FindFirstChild("ZoneContainer")
+			local targetFolder = zoneContainer and zoneContainer:FindFirstChild("Zone_1_Meadow") or workspace
+			-- Temporarily override spawn position by calling spawnGhost with fixed position
+			local rarity = GhostData.RarityMap[ghostName] or "Common"
+			local color = rarityColors[rarity] or Color3.fromRGB(200, 200, 200)
+
+			local ghostModel = Instance.new("Model")
+			ghostModel.Name = ghostName
+			ghostModel.Parent = targetFolder
+
+			local body = Instance.new("Part")
+			body.Shape = Enum.PartType.Ball
+			body.Size = Vector3.new(3, 3, 3)
+			body.CanCollide = false
+			body.Color = color
+			body.Material = Enum.Material.SmoothPlastic
+			body.Transparency = 0.15
+			body.Position = pos
+			body.Parent = ghostModel
+			ghostModel.PrimaryPart = body
+
+			local imageId = GhostData.GhostImages and GhostData.GhostImages[ghostName]
+			if imageId and imageId ~= 0 then
+				local face = Instance.new("Part")
+				face.Name = "Face"
+				face.Size = Vector3.new(2.5, 2.5, 0.05)
+				face.CanCollide = false
+				face.Anchored = false
+				face.Color = Color3.fromRGB(255, 255, 255)
+				face.Material = Enum.Material.SmoothPlastic
+				face.CastShadow = false
+				face.Position = pos + Vector3.new(0, 0.3, -1.55)
+				face.Parent = ghostModel
+
+				local faceWeld = Instance.new("WeldConstraint")
+				faceWeld.Part0 = body
+				faceWeld.Part1 = face
+				faceWeld.Parent = body
+
+				local decal = Instance.new("Decal")
+				decal.Texture = "rbxassetid://" .. imageId
+				decal.Face = Enum.NormalId.Front
+				decal.Parent = face
+			end
+
+			local light = Instance.new("PointLight")
+			light.Brightness = 1.5
+			light.Range = 18
+			light.Color = color
+			light.Parent = body
+
+			local billboard = Instance.new("BillboardGui")
+			billboard.Size = UDim2.new(0, 120, 0, 45)
+			billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+			billboard.Parent = body
+
+			local nameLabel = Instance.new("TextLabel")
+			nameLabel.Size = UDim2.new(1, 0, 1, 0)
+			nameLabel.BackgroundTransparency = 1
+			nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			nameLabel.TextStrokeTransparency = 0
+			nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+			nameLabel.TextSize = 13
+			nameLabel.Font = Enum.Font.GothamBold
+			nameLabel.Text = ghostName .. "\n[PREVIEW]"
+			nameLabel.Parent = billboard
+
+			body:SetAttribute("GhostName", ghostName)
+			body:SetAttribute("Rarity", rarity)
+			activeGhosts[body] = { name = ghostName, rarity = rarity }
+
+			task.delay(30, function()
+				if ghostModel.Parent then
+					activeGhosts[body] = nil
+					ghostModel:Destroy()
+				end
+			end)
+
+			print("[ADMIN] Spawned " .. ghostName .. " in world near " .. player.Name)
+		end
 		return true
 	end
 end
@@ -754,11 +1191,37 @@ task.spawn(function()
 		for _, player in pairs(Players:GetPlayers()) do
 			local data = playerData[player.UserId]
 			if data then
+				-- Calculate energy production from ghosts
+				local totalEnergyPerSec = 0
+				for _, ghost in pairs(data.ghostInventory) do
+					if ghost and ghost.level then
+						-- Base energy scales with ghost level
+						local baseEnergy = 0.7
+						-- Rarity multiplier (from GhostData)
+						local rarityMultipliers = {
+							Common = 1,
+							Uncommon = 1.5,
+							Rare = 2,
+							Epic = 3,
+							Legendary = 6,
+							Corrupted = 9
+						}
+						local rarityMult = rarityMultipliers[ghost.rarity] or 1
+						-- Total energy per second for this ghost
+						totalEnergyPerSec = totalEnergyPerSec + (baseEnergy * ghost.level * rarityMult)
+					end
+				end
+
+				-- Add energy production to energy pool
+				data.energy = data.energy + totalEnergyPerSec
+
+				-- Broadcast UI update
 				local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
 				if updateRemote then
 					updateRemote:FireClient(player, {
 						VacuumCharge = data.charge,
-						Energy = data.coins,
+						Coins = data.coins,
+						Energy = data.energy,
 						GhostCount = data.ghosts,
 						GhostInventory = data.ghostInventory,
 						Rooms = data.rooms,
@@ -772,8 +1235,16 @@ end)
 
 -- ==================== STARTUP ====================
 
+-- Initialize ZoneManager for zone detection and barriers
+if zoneManager and zoneManager.initialize then
+	zoneManager:initialize()
+	print("[PHASE 4] ZoneManager initialized, starting ghost spawn loop...")
+	startGhostSpawnLoop()
+end
+
 print("[PHASE 4] ✅ Phase 4 extended testing server ready!")
-print("[PHASE 4] Ghosts spawning every 3 seconds in all zones")
+print("[PHASE 4] Ghosts spawning every " .. Config.GhostSpawnRate .. " seconds in all zones")
+print("[PHASE 4] Catch distance: " .. Config.GhostCatchDistance .. " studs (must be within this range)")
 print("[PHASE 4] Click CHARGE to increase vacuum charge by 25%")
 print("[PHASE 4] Click CATCH to catch nearby ghosts and earn coins")
 print("[PHASE 4] Optional handlers ready:")

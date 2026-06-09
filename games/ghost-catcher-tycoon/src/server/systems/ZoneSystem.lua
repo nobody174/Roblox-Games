@@ -39,13 +39,14 @@ function ZoneSystem:initializePlayer(player)
 	end
 	self.unlockedZones[userId] = {}
 
-	-- Whisper Woods starts unlocked
+	-- Starting Area and Whisper Woods start unlocked
+	self.unlockedZones[userId]["Starting Area"] = true
 	self.unlockedZones[userId]["Whisper Woods"] = true
 
 	-- All others locked
 	if ZoneData then
 		for zoneName, _ in pairs(ZoneData) do
-			if zoneName ~= "Whisper Woods" then
+			if zoneName ~= "Starting Area" and zoneName ~= "Whisper Woods" then
 				self.unlockedZones[userId][zoneName] = false
 			end
 		end

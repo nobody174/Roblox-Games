@@ -29,8 +29,9 @@ Config.VacuumChargeCooldown = 0 -- no cooldown (players can spam charge)
 -- Ghost System
 Config.DefaultGhostStorage = 5
 Config.GhostStoragePerUpgrade = 5
-Config.GhostSpawnRate = 3 -- spawn 1 ghost every 3 seconds per zone (balanced for catching)
+Config.GhostSpawnRate = 12 -- spawn 1 ghost every 12 seconds per zone (reduced from 3 to prevent server lag)
 Config.GhostDespawnTime = 60 -- seconds before ghost leaves (players have 60s to catch)
+Config.GhostCatchDistance = 20 -- player must be within 20 studs to catch (reduced from 100 for more challenge)
 
 -- Ghost Rarities (Catch Chance, Energy Output)
 Config.Rarities = {

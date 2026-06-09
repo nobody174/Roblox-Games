@@ -1,11 +1,11 @@
-﻿--
+--
 -- Ghost Catcher Tycoon
 -- Author:  nobody174 (vartdal@gmail.com)
 -- Repo:    https://github.com/nobody174/roblox-games
 -- License: All rights reserved © 2025 nobody174
 -- "It's never too late to give up!"
 --
--- Ghost roster: 120 ghosts across 6 rarity tiers with stat ranges and personality types.
+-- Ghost roster: 120 ghosts from ghost_database.csv across 6 rarity tiers.
 --
 local GhostData = {
 
@@ -43,100 +43,225 @@ local GhostData = {
 	},
 
 	Personalities = {
-		"Shy",       -- harder to catch, more energy
-		"Angry",     -- faster catch speed
-		"Playful",   -- random boosts
-		"Lazy",      -- slow but cheap to train
-		"Hyper",     -- fast but unstable
+		"Shy",
+		"Angry",
+		"Playful",
+		"Lazy",
+		"Hyper",
 	},
 
 	Ghosts = {
-		-- COMMON (20)
-		"Puffling","Wobbler","Peekaboo","Drifter","Blinklet",
-		"Whispling","Bubblo","Snoozer","Flickerbit","Pufftail",
-		"Glowmite","Squeakshade","Mistyboo","Hushling","Flitter",
-		"Softshade","Pale Popper","Wanderwisp","Smolspirit","Faintling",
-
-		-- UNCOMMON (20)
-		"Sparkling Sprite","Shadowling","Giggler","Lantern Wisp","Dustwhirl",
-		"Foghopper","Glimmerbug","Chirpgeist","Murkling","Breezeboo",
-		"Twitchlet","Glowcap","Frostpuff","Zaplet","Leafwhirl",
-		"Pebblegeist","Sootshade","Bellowboo","Gustling","Shimmerpod",
-
+		-- COMMON (40)
+		"Captain Wisp","Jolly Specter","Treasure Puff","Plank Walker","Seafaring Glow",
+		"Arcane Puff","Mystic Whisper","Spellbound Spirit","Enchanted Drift","Potion Phantom",
+		"Royal Gleam","Regal Glow","Majestic Wisp","Noble Specter","Throne Spirit",
+		"Circuit Boo","Metal Phantom","Cyber Glow","Powered Wisp","Spark Spirit",
+		"Shadow Blade","Quickstep Puff","Silent Phantom","Swift Whisper","Stealthy Glow",
+		"Honorable Wisp","Blade Spirit","Warrior Phantom","Valor Glow","Steel Specter",
+		"Frost Flicker","Ice Whisper","Chill Spirit","Glacier Puff","Blizzard Glow",
+		"Candy Floof","Sweet Puff","Sugar Wisp","Lollipop Spirit","Gummy Phantom",
+		-- UNCOMMON (30)
+		"Storm Streak","Thunder Wisp","Cyclone Puff","Lightning Phantom","Tempest Spirit",
+		"Dragon Spirit","Dragon's Breath","Flame Drake","Ember Drake","Inferno Glow",
+		"Fire Wisp","Blaze Spirit","Spark Phantom","Spark Drift",
+		"Crystal Wink","Gem Spirit","Sparkle Phantom","Diamond Glow","Luminous Puff",
+		"Ocean Drift","Wave Whisper","Deep Phantom","Coral Spirit","Seafoam Glow",
+		"Jungle Drift","Vine Spirit","Tropical Puff","Forest Phantom","Emerald Glow",
+		"Steampunk Gear",
 		-- RARE (20)
-		"Voltgeist","Frostwhisper","Bloomshade","Geargrin","Tidebound",
-		"Cinderwisp","Stormpetal","Ironwraith","Crystalshade","Moonpuff",
-		"Rootgeist","Gloomtail","Slickshade","Brinewhisper","Glowvine",
-		"Fangfrost","Stormling","Quartzgeist","Hollowpetal","Riftling",
-
-		-- EPIC (20)
-		"Phantom Knight","Inferno Wraith","Astral Drifter","Cryo Reaper","Thunder Jester",
-		"Solar Herald","Frost Monarch","Storm Harbinger","Abyss Diver","Crystal Titan",
-		"Blazebound","Starweaver","Chrono Juggler","Fangshade","Gloom Reaver",
-		"Tempest Warden","Shard Serpent","Ember Phantom","Void Herald","Astral Knight",
-
-		-- LEGENDARY (20)
-		"Eclipse Seraph","Omega Polterlord","Chrono Spirit","Nebula Sovereign","Aurora Herald",
-		"Solar Emperor","Frost Tyrant","Rift Monarch","Abyss King","Starborn Leviathan",
-		"Eternal Warden","Cosmic Oracle","Glacier Archon","Thunder Emperor","Solaris Phantom",
-		"Astral Sovereign","Eon Serpent","Void Archangel","Timebreaker","Galactic Reaper",
-
-		-- CORRUPTED (20)
-		"Glitchspawn","Void Maw","Redacted","Error Phantom","Fractured Echo",
-		"404 Wraith","Null Serpent","Broken Herald","Corrupt Titan","Riftbreaker",
-		"Data Leech","Memory Eater","Packet Phantom","Lagspawn","Crashling",
-		"Hexshade","Corrupt Monarch","Glitch Tyrant","Null Archon","Forbidden Echo",
+		"Quantum Burst","Digital Phantom","Neon Wisp","Silicon Spirit","Hologram Glow",
+		"Star Spirit","Cosmic Phantom","Nebula Wisp","Galaxy Glow","Pulsar Puff",
+		"Aviator Ace","Space Explorer","Lunar Phantom","Starbound Spirit","Orbit Glow",
+		"Maestro Phantom","Melody Wisp","Harmony Spirit","Rhythm Glow","Symphony Puff",
+		-- EPIC (15)
+		"Crown Specter","Sovereign Phantom","Dynasty Spirit","Empress Wisp","Kingbright Glow",
+		"Celestial Phantom","Divine Spirit","Seraph Wisp","Halo Glow","Blessed Puff",
+		"Zenith Specter","Valiant Phantom","Crusade Spirit","Guardian Wisp","Armor Glow",
+		-- LEGENDARY (10)
+		"Eternal Phantom","Mythic Wisp","Transcendent Spirit","Omniscient Glow","Apex Phantom",
+		"Timeless Specter","Moonlit Echo","Starforge Wisp","Infinity Glow","Prism Phantom",
+		-- CORRUPTED (5)
+		"Infernal Crown","Void Phantom","Abyssal Spirit","Shadowed Wisp","Corrupted Glow",
 	},
 
+	-- Image asset IDs — uploaded via upload_ghosts.py
+	-- 0 = not yet uploaded, shows default fallback
+	GhostImages = {
+		-- Common (40)
+		["Captain Wisp"] = 113156350598911,
+		["Jolly Specter"] = 80070526429699,
+		["Treasure Puff"] = 72518648836631,
+		["Plank Walker"] = 122252943908211,
+		["Seafaring Glow"] = 79186635128554,
+		["Arcane Puff"] = 80614708019219,
+		["Mystic Whisper"] = 87895763851556,
+		["Spellbound Spirit"] = 105715970955534,
+		["Enchanted Drift"] = 110154627248465,
+		["Potion Phantom"] = 117348216251703,
+		["Royal Gleam"] = 106325850619291,
+		["Regal Glow"] = 127033418997027,
+		["Majestic Wisp"] = 133316123650364,
+		["Noble Specter"] = 112641170181877,
+		["Throne Spirit"] = 133078073128193,
+		["Circuit Boo"] = 129762832639183,
+		["Metal Phantom"] = 126166387118208,
+		["Cyber Glow"] = 82171493522999,
+		["Powered Wisp"] = 107719902242115,
+		["Spark Spirit"] = 90105521561782,
+		["Shadow Blade"] = 95946708408109,
+		["Quickstep Puff"] = 87533141039869,
+		["Silent Phantom"] = 77956140695644,
+		["Swift Whisper"] = 95955989403369,
+		["Stealthy Glow"] = 133184318342591,
+		["Honorable Wisp"] = 99658874433127,
+		["Blade Spirit"] = 94995992637044,
+		["Warrior Phantom"] = 100676997681070,
+		["Valor Glow"] = 77289955888982,
+		["Steel Specter"] = 89945591047583,
+		["Frost Flicker"] = 136588903131224,
+		["Ice Whisper"] = 83634251001270,
+		["Chill Spirit"] = 90538807390504,
+		["Glacier Puff"] = 72962723103245,
+		["Blizzard Glow"] = 83790810822164,
+		["Candy Floof"] = 107327515996489,
+		["Sweet Puff"] = 119847616306011,
+		["Sugar Wisp"] = 91569198300703,
+		["Lollipop Spirit"] = 71647969481387,
+		["Gummy Phantom"] = 118212649726592,
+		-- Uncommon (30)
+		["Storm Streak"] = 88926413291610,
+		["Thunder Wisp"] = 94696334737854,
+		["Cyclone Puff"] = 82246947151043,
+		["Lightning Phantom"] = 74625360562208,
+		["Tempest Spirit"] = 98524603576801,
+		["Dragon Spirit"] = 81044692564348,
+		["Dragon's Breath"] = 133159798154736,
+		["Flame Drake"] = 124745827854442,
+		["Ember Drake"] = 113540432929368,
+		["Inferno Glow"] = 131928786239208,
+		["Fire Wisp"] = 94864678974413,
+		["Blaze Spirit"] = 117209146209718,
+		["Spark Phantom"] = 103912175489554,
+		["Spark Drift"] = 107716643052321,
+		["Crystal Wink"] = 97035348389798,
+		["Gem Spirit"] = 118736053282474,
+		["Sparkle Phantom"] = 127886232478574,
+		["Diamond Glow"] = 127712667391201,
+		["Luminous Puff"] = 124214930709509,
+		["Ocean Drift"] = 125507010853399,
+		["Wave Whisper"] = 81497569552449,
+		["Deep Phantom"] = 119304990056127,
+		["Coral Spirit"] = 138918154243665,
+		["Seafoam Glow"] = 137012263261830,
+		["Jungle Drift"] = 108433017802230,
+		["Vine Spirit"] = 106935227242913,
+		["Tropical Puff"] = 136615531959259,
+		["Forest Phantom"] = 85580071633546,
+		["Emerald Glow"] = 123640044892768,
+		["Steampunk Gear"] = 136499185196929,
+		-- Rare (20)
+		["Quantum Burst"] = 103209297867083,
+		["Digital Phantom"] = 79999064209190,
+		["Neon Wisp"] = 77652389135468,
+		["Silicon Spirit"] = 137527521272734,
+		["Hologram Glow"] = 73488899820239,
+		["Star Spirit"] = 121577403102316,
+		["Cosmic Phantom"] = 71127496159453,
+		["Nebula Wisp"] = 139067902649003,
+		["Galaxy Glow"] = 111864323536779,
+		["Pulsar Puff"] = 97241011555032,
+		["Aviator Ace"] = 90255629687648,
+		["Space Explorer"] = 122060947934442,
+		["Lunar Phantom"] = 72123663040798,
+		["Starbound Spirit"] = 102646302063409,
+		["Orbit Glow"] = 106234874396712,
+		["Maestro Phantom"] = 103229031816187,
+		["Melody Wisp"] = 119331914985014,
+		["Harmony Spirit"] = 99492312539582,
+		["Rhythm Glow"] = 74236259746959,
+		["Symphony Puff"] = 71220521964493,
+		-- Epic (15)
+		["Crown Specter"] = 122496872150507,
+		["Sovereign Phantom"] = 130393586631615,
+		["Dynasty Spirit"] = 88225306341957,
+		["Empress Wisp"] = 128278028169037,
+		["Kingbright Glow"] = 78070499886999,
+		["Celestial Phantom"] = 129345131561030,
+		["Divine Spirit"] = 79807046752884,
+		["Seraph Wisp"] = 130344239314206,
+		["Halo Glow"] = 107423847093866,
+		["Blessed Puff"] = 73140453971473,
+		["Zenith Specter"] = 134165440230006,
+		["Valiant Phantom"] = 118765604096741,
+		["Crusade Spirit"] = 131282800044416,
+		["Guardian Wisp"] = 76541085575142,
+		["Armor Glow"] = 77928150850225,
+		-- Legendary (10)
+		["Eternal Phantom"] = 81229520643457,
+		["Mythic Wisp"] = 82856444482621,
+		["Transcendent Spirit"] = 129800537773994,
+		["Omniscient Glow"] = 85109108552388,
+		["Apex Phantom"] = 132259705509631,
+		["Timeless Specter"] = 121085106995480,
+		["Moonlit Echo"] = 138934323015136,
+		["Starforge Wisp"] = 90152349219305,
+		["Infinity Glow"] = 103776297040457,
+		["Prism Phantom"] = 95431339844173,
+		-- Corrupted (5)
+		["Infernal Crown"] = 132778053906484,
+		["Void Phantom"] = 115061687701311,
+		["Abyssal Spirit"] = 81458108978588,
+		["Shadowed Wisp"] = 128123426754041,
+		["Corrupted Glow"] = 96431930373257,
+	},
+
+	DEFAULT_IMAGE = "rbxassetid://6035047384",
+
 	RarityMap = {
-		-- Common
-		Puffling="Common",Wobbler="Common",Peekaboo="Common",Drifter="Common",Blinklet="Common",
-		Whispling="Common",Bubblo="Common",Snoozer="Common",Flickerbit="Common",Pufftail="Common",
-		Glowmite="Common",Squeakshade="Common",Mistyboo="Common",Hushling="Common",Flitter="Common",
-		Softshade="Common",["Pale Popper"]="Common",Wanderwisp="Common",Smolspirit="Common",Faintling="Common",
-
-		-- Uncommon
-		["Sparkling Sprite"]="Uncommon",Shadowling="Uncommon",Giggler="Uncommon",
-		["Lantern Wisp"]="Uncommon",Dustwhirl="Uncommon",Foghopper="Uncommon",
-		Glimmerbug="Uncommon",Chirpgeist="Uncommon",Murkling="Uncommon",Breezeboo="Uncommon",
-		Twitchlet="Uncommon",Glowcap="Uncommon",Frostpuff="Uncommon",Zaplet="Uncommon",
-		Leafwhirl="Uncommon",Pebblegeist="Uncommon",Sootshade="Uncommon",Bellowboo="Uncommon",
-		Gustling="Uncommon",Shimmerpod="Uncommon",
-
-		-- Rare
-		Voltgeist="Rare",Frostwhisper="Rare",Bloomshade="Rare",Geargrin="Rare",Tidebound="Rare",
-		Cinderwisp="Rare",Stormpetal="Rare",Ironwraith="Rare",Crystalshade="Rare",Moonpuff="Rare",
-		Rootgeist="Rare",Gloomtail="Rare",Slickshade="Rare",Brinewhisper="Rare",Glowvine="Rare",
-		Fangfrost="Rare",Stormling="Rare",Quartzgeist="Rare",Hollowpetal="Rare",Riftling="Rare",
-
-		-- Epic
-		["Phantom Knight"]="Epic",["Inferno Wraith"]="Epic",["Astral Drifter"]="Epic",
-		["Cryo Reaper"]="Epic",["Thunder Jester"]="Epic",["Solar Herald"]="Epic",
-		["Frost Monarch"]="Epic",["Storm Harbinger"]="Epic",["Abyss Diver"]="Epic",
-		["Crystal Titan"]="Epic",Blazebound="Epic",Starweaver="Epic",["Chrono Juggler"]="Epic",
-		Fangshade="Epic",["Gloom Reaver"]="Epic",["Tempest Warden"]="Epic",["Shard Serpent"]="Epic",
-		["Ember Phantom"]="Epic",["Void Herald"]="Epic",["Astral Knight"]="Epic",
-
-		-- Legendary
-		["Eclipse Seraph"]="Legendary",["Omega Polterlord"]="Legendary",["Chrono Spirit"]="Legendary",
-		["Nebula Sovereign"]="Legendary",["Aurora Herald"]="Legendary",["Solar Emperor"]="Legendary",
-		["Frost Tyrant"]="Legendary",["Rift Monarch"]="Legendary",["Abyss King"]="Legendary",
-		["Starborn Leviathan"]="Legendary",["Eternal Warden"]="Legendary",["Cosmic Oracle"]="Legendary",
-		["Glacier Archon"]="Legendary",["Thunder Emperor"]="Legendary",["Solaris Phantom"]="Legendary",
-		["Astral Sovereign"]="Legendary",["Eon Serpent"]="Legendary",["Void Archangel"]="Legendary",
-		Timebreaker="Legendary",["Galactic Reaper"]="Legendary",
-
-		-- Corrupted
-		Glitchspawn="Corrupted",["Void Maw"]="Corrupted",Redacted="Corrupted",
-		["Error Phantom"]="Corrupted",["Fractured Echo"]="Corrupted",["404 Wraith"]="Corrupted",
-		["Null Serpent"]="Corrupted",["Broken Herald"]="Corrupted",["Corrupt Titan"]="Corrupted",
-		Riftbreaker="Corrupted",["Data Leech"]="Corrupted",["Memory Eater"]="Corrupted",
-		["Packet Phantom"]="Corrupted",Lagspawn="Corrupted",Crashling="Corrupted",
-		Hexshade="Corrupted",["Corrupt Monarch"]="Corrupted",["Glitch Tyrant"]="Corrupted",
-		["Null Archon"]="Corrupted",["Forbidden Echo"]="Corrupted",
+		["Captain Wisp"]="Common",["Jolly Specter"]="Common",["Treasure Puff"]="Common",
+		["Plank Walker"]="Common",["Seafaring Glow"]="Common",["Arcane Puff"]="Common",
+		["Mystic Whisper"]="Common",["Spellbound Spirit"]="Common",["Enchanted Drift"]="Common",
+		["Potion Phantom"]="Common",["Royal Gleam"]="Common",["Regal Glow"]="Common",
+		["Majestic Wisp"]="Common",["Noble Specter"]="Common",["Throne Spirit"]="Common",
+		["Circuit Boo"]="Common",["Metal Phantom"]="Common",["Cyber Glow"]="Common",
+		["Powered Wisp"]="Common",["Spark Spirit"]="Common",["Shadow Blade"]="Common",
+		["Quickstep Puff"]="Common",["Silent Phantom"]="Common",["Swift Whisper"]="Common",
+		["Stealthy Glow"]="Common",["Honorable Wisp"]="Common",["Blade Spirit"]="Common",
+		["Warrior Phantom"]="Common",["Valor Glow"]="Common",["Steel Specter"]="Common",
+		["Frost Flicker"]="Common",["Ice Whisper"]="Common",["Chill Spirit"]="Common",
+		["Glacier Puff"]="Common",["Blizzard Glow"]="Common",["Candy Floof"]="Common",
+		["Sweet Puff"]="Common",["Sugar Wisp"]="Common",["Lollipop Spirit"]="Common",
+		["Gummy Phantom"]="Common",
+		["Storm Streak"]="Uncommon",["Thunder Wisp"]="Uncommon",["Cyclone Puff"]="Uncommon",
+		["Lightning Phantom"]="Uncommon",["Tempest Spirit"]="Uncommon",["Dragon Spirit"]="Uncommon",
+		["Dragon's Breath"]="Uncommon",["Flame Drake"]="Uncommon",["Ember Drake"]="Uncommon",
+		["Inferno Glow"]="Uncommon",["Fire Wisp"]="Uncommon",["Blaze Spirit"]="Uncommon",
+		["Spark Phantom"]="Uncommon",["Spark Drift"]="Uncommon",["Crystal Wink"]="Uncommon",
+		["Gem Spirit"]="Uncommon",["Sparkle Phantom"]="Uncommon",["Diamond Glow"]="Uncommon",
+		["Luminous Puff"]="Uncommon",["Ocean Drift"]="Uncommon",["Wave Whisper"]="Uncommon",
+		["Deep Phantom"]="Uncommon",["Coral Spirit"]="Uncommon",["Seafoam Glow"]="Uncommon",
+		["Jungle Drift"]="Uncommon",["Vine Spirit"]="Uncommon",["Tropical Puff"]="Uncommon",
+		["Forest Phantom"]="Uncommon",["Emerald Glow"]="Uncommon",["Steampunk Gear"]="Uncommon",
+		["Quantum Burst"]="Rare",["Digital Phantom"]="Rare",["Neon Wisp"]="Rare",
+		["Silicon Spirit"]="Rare",["Hologram Glow"]="Rare",["Star Spirit"]="Rare",
+		["Cosmic Phantom"]="Rare",["Nebula Wisp"]="Rare",["Galaxy Glow"]="Rare",
+		["Pulsar Puff"]="Rare",["Aviator Ace"]="Rare",["Space Explorer"]="Rare",
+		["Lunar Phantom"]="Rare",["Starbound Spirit"]="Rare",["Orbit Glow"]="Rare",
+		["Maestro Phantom"]="Rare",["Melody Wisp"]="Rare",["Harmony Spirit"]="Rare",
+		["Rhythm Glow"]="Rare",["Symphony Puff"]="Rare",
+		["Crown Specter"]="Epic",["Sovereign Phantom"]="Epic",["Dynasty Spirit"]="Epic",
+		["Empress Wisp"]="Epic",["Kingbright Glow"]="Epic",["Celestial Phantom"]="Epic",
+		["Divine Spirit"]="Epic",["Seraph Wisp"]="Epic",["Halo Glow"]="Epic",
+		["Blessed Puff"]="Epic",["Zenith Specter"]="Epic",["Valiant Phantom"]="Epic",
+		["Crusade Spirit"]="Epic",["Guardian Wisp"]="Epic",["Armor Glow"]="Epic",
+		["Eternal Phantom"]="Legendary",["Mythic Wisp"]="Legendary",["Transcendent Spirit"]="Legendary",
+		["Omniscient Glow"]="Legendary",["Apex Phantom"]="Legendary",["Timeless Specter"]="Legendary",
+		["Moonlit Echo"]="Legendary",["Starforge Wisp"]="Legendary",["Infinity Glow"]="Legendary",
+		["Prism Phantom"]="Legendary",
+		["Infernal Crown"]="Corrupted",["Void Phantom"]="Corrupted",["Abyssal Spirit"]="Corrupted",
+		["Shadowed Wisp"]="Corrupted",["Corrupted Glow"]="Corrupted",
 	},
 }
 
 return GhostData
 -- Built with assistance from Claude Code by Anthropic.
-
