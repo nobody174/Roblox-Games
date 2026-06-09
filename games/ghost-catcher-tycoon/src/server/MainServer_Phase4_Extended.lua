@@ -689,6 +689,9 @@ if catchRemote then
 			return
 		end
 
+		-- Deduct 10% charge per catch attempt
+		data.charge = math.max(0, data.charge - 10)
+
 		-- Find nearest ghost to player
 		local character = player.Character
 		if not character then return end
