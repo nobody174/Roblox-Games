@@ -167,11 +167,37 @@
 		ghostLabel.Text = "👻 Ghosts: 0"
 		ghostLabel.Parent = topPanel
 
-		-- Production rate display (left side, row 2)
+		-- Level display (left side, row 2)
+		local levelLabel = Instance.new("TextLabel")
+		levelLabel.Name = "LevelDisplay"
+		levelLabel.Size = UDim2.new(0, 150, 0, 30)
+		levelLabel.Position = UDim2.new(0, 10, 0, 45)
+		levelLabel.BackgroundTransparency = 1
+		levelLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+		levelLabel.TextSize = 14
+		levelLabel.Font = Enum.Font.GothamBold
+		levelLabel.TextXAlignment = Enum.TextXAlignment.Left
+		levelLabel.Text = "📊 Level: 1"
+		levelLabel.Parent = topPanel
+
+		-- XP/Progress display (left side, row 2, next to level)
+		local xpLabel = Instance.new("TextLabel")
+		xpLabel.Name = "XPDisplay"
+		xpLabel.Size = UDim2.new(0, 150, 0, 30)
+		xpLabel.Position = UDim2.new(0, 170, 0, 45)
+		xpLabel.BackgroundTransparency = 1
+		xpLabel.TextColor3 = Color3.fromRGB(200, 100, 255)
+		xpLabel.TextSize = 12
+		xpLabel.Font = Enum.Font.Gotham
+		xpLabel.TextXAlignment = Enum.TextXAlignment.Left
+		xpLabel.Text = "⭐ XP: 0%"
+		xpLabel.Parent = topPanel
+
+		-- Production rate display (left side, row 2, further right)
 		local productionLabel = Instance.new("TextLabel")
 		productionLabel.Name = "ProductionDisplay"
 		productionLabel.Size = UDim2.new(0, 200, 0, 30)
-		productionLabel.Position = UDim2.new(0, 10, 0, 45)
+		productionLabel.Position = UDim2.new(0, 330, 0, 45)
 		productionLabel.BackgroundTransparency = 1
 		productionLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
 		productionLabel.TextSize = 14
@@ -508,6 +534,8 @@
 		self.ui.tabBar = tabBar
 		self.ui.energyLabel = energyLabel
 		self.ui.coinsLabel = coinsLabel
+		self.ui.levelLabel = levelLabel
+		self.ui.xpLabel = xpLabel
 		self.ui.ghostLabel = ghostLabel
 		self.ui.productionLabel = productionLabel
 		self.ui.zoneLabel = zoneLabel
@@ -1345,6 +1373,16 @@
 			self.ui.coinsLabel.Text = "💰 Coins: " .. self:formatNumber(data.Coins)
 		end
 
+		if data.Level then
+			self.gameState.level = data.Level
+			self.ui.levelLabel.Text = "📊 Level: " .. data.Level
+		end
+
+		if data.CurrentXP and data.NextLevelXP then
+			local xpPercent = math.floor((data.CurrentXP / data.NextLevelXP) * 100)
+			self.ui.xpLabel.Text = "⭐ XP: " .. xpPercent .. "%"
+		end
+
 		if data.VacuumCharge then
 			self.gameState.vacuumCharge = data.VacuumCharge
 			local fillRatio = math.clamp(data.VacuumCharge / 100, 0, 1)
@@ -1508,7 +1546,14 @@
 	end
 
 	function GameClient:startUpdateLoop()
-		-- Periodically request game state
+		-- Listen to UpdateUI remote (real-time broadcast from server)
+		if self.remotes.UpdateUI then
+			self.remotes.UpdateUI.OnClientEvent:Connect(function(data)
+				self:updateUIFromData(data)
+			end)
+		end
+
+		-- Periodically request game state as fallback
 		task.spawn(function()
 			while true do
 				task.wait(Config.UI.UpdateFrequency)
