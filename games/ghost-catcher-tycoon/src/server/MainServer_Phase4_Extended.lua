@@ -130,7 +130,7 @@ local ZoneUnlockManager = require(game:GetService("ServerScriptService"):WaitFor
 print("[PHASE 4] Zone unlock system loaded")
 
 -- Load Quest System (Agent 4)
-local QuestManager = require(game:GetService("ServerScriptService"):WaitForChild("systems"):WaitForChild("QuestManager"))
+local QuestManager = require(game:GetService("ServerScriptService"):WaitForChild("QuestManager"))
 
 print("[PHASE 4] Quest system loaded")
 
