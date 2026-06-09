@@ -588,7 +588,7 @@ Players.PlayerAdded:Connect(function(player)
 	print("[PHASE 4] Zone unlock manager initialized for " .. player.Name)
 
 	-- Initialize quest manager
-	QuestManager:initializePlayer(userId)
+	QuestManager:initializePlayer(player)
 	print("[PHASE 4] Quest manager initialized for " .. player.Name)
 
 	-- Initialize data persistence
