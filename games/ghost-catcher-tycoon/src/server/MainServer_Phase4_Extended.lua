@@ -790,7 +790,7 @@ if catchRemote then
 			-- ================================================================
 			-- QUEST TRACKING: Track this ghost catch event
 			-- ================================================================
-			QuestManager:trackQuestEvent(player.UserId, "GhostCaught", {
+			QuestManager:trackQuestEvent(player, "GhostCaught", {
 				ghostName = ghostName,
 				rarity = rarity,
 				zone = currentZone,
@@ -833,7 +833,7 @@ if catchRemote then
 				print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. catchResult.roll .. " vs " .. catchResult.catchRate .. "%)")
 
 				-- Track the attempt anyway (for quest stats)
-				QuestManager:trackQuestEvent(player.UserId, "CatchAttempt", {
+				QuestManager:trackQuestEvent(player, "CatchAttempt", {
 					ghostName = ghostName,
 					rarity = rarity,
 					success = false,
