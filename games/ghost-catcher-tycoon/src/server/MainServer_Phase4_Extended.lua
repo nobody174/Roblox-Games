@@ -755,6 +755,9 @@ if catchRemote then
 			-- CATCH SUCCESSFUL
 			print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. catchResult.coinsGained .. " coins!")
 
+			-- Reset charge on successful catch
+			data.charge = 0
+
 			-- Add to ghost inventory
 			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
 			data.ghostInventory[inventoryKey] = {
@@ -825,7 +828,8 @@ if catchRemote then
 				end
 				return
 			else
-				-- Ghost escaped
+				-- Ghost escaped - still reset charge
+				data.charge = 0
 				print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. catchResult.roll .. " vs " .. catchResult.catchRate .. "%)")
 
 				-- Track the attempt anyway (for quest stats)
@@ -845,11 +849,16 @@ if catchRemote then
 		-- Update UI with new energy/coins/level
 		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
 		if updateRemote then
+			local levelInfo = LevelSystem:getLevelInfo(player.UserId)
 			updateRemote:FireClient(player, {
 				Coins = data.coins,
 				Ghosts = data.ghosts,
+				GhostCount = data.ghosts,
 				Energy = PlayerInventory:getEnergy(player.UserId),
-				Level = LevelSystem:getLevel(player.UserId),
+				Level = levelInfo.level,
+				CurrentXP = levelInfo.currentXP,
+				NextLevelXP = levelInfo.nextLevelXP,
+				VacuumCharge = data.charge,
 			})
 		end
 	end)
