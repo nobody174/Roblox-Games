@@ -1433,11 +1433,15 @@ task.spawn(function()
 				-- Broadcast UI update
 				local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
 				if updateRemote then
+					local levelInfo = LevelSystem:getLevelInfo(player.UserId)
 					updateRemote:FireClient(player, {
 						VacuumCharge = data.charge,
 						Coins = data.coins,
 						Energy = data.energy,
 						GhostCount = data.ghosts,
+						Level = levelInfo.level,
+						CurrentXP = levelInfo.currentXP,
+						NextLevelXP = levelInfo.nextLevelXP,
 						GhostInventory = data.ghostInventory,
 						Rooms = data.rooms,
 						UnlockedZones = data.unlockedZones,
