@@ -3,9 +3,8 @@
 -- Handles catch attempts, success rates, and rewards
 --
 
-local EquipmentData = require(script.Parent.Parent.shared.EquipmentData)
-local GhostData = require(script.Parent.Parent.shared.GhostData)
-local PlayerInventory = require(script.Parent.PlayerInventory)
+local EquipmentData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("EquipmentData"))
+local PlayerInventory = require(script.Parent:WaitForChild("PlayerInventory"))
 
 local CatchingSystem = {}
 
