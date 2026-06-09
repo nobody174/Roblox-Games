@@ -117,6 +117,28 @@ local CatchingSystem = require(game:GetService("ServerScriptService"):WaitForChi
 
 print("[PHASE 4] Equipment systems loaded")
 
+-- Load Progression System modules (Agent 1)
+local LevelSystem = require(game:GetService("ServerScriptService"):WaitForChild("systems"):WaitForChild("LevelSystem"))
+local SkillTree = require(game:GetService("ServerScriptService"):WaitForChild("systems"):WaitForChild("SkillTree"))
+local PlayerProgression = require(game:GetService("ServerScriptService"):WaitForChild("systems"):WaitForChild("PlayerProgression"))
+
+print("[PHASE 4] Progression systems loaded")
+
+-- Load Zone Unlock System (Agent 3)
+local ZoneUnlockManager = require(game:GetService("ServerScriptService"):WaitForChild("ZoneUnlockManager"))
+
+print("[PHASE 4] Zone unlock system loaded")
+
+-- Load Quest System (Agent 4)
+local QuestManager = require(game:GetService("ServerScriptService"):WaitForChild("systems"):WaitForChild("QuestManager"))
+
+print("[PHASE 4] Quest system loaded")
+
+-- Load Data Persistence (Agent 5)
+local DataPersistence = require(game:GetService("ServerScriptService"):WaitForChild("DataPersistence"))
+
+print("[PHASE 4] Data persistence loaded")
+
 -- Ghost spawning setup
 local activeGhosts = {}
 local rarityColors = {
@@ -554,6 +576,24 @@ Players.PlayerAdded:Connect(function(player)
 	-- Initialize equipment inventory
 	PlayerInventory:initializePlayer(userId)
 	print("[PHASE 4] Equipment inventory initialized for " .. player.Name)
+
+	-- Initialize progression systems
+	LevelSystem:initializePlayer(userId)
+	SkillTree:initializePlayer(userId)
+	PlayerProgression:initializePlayer(userId)
+	print("[PHASE 4] Progression systems initialized for " .. player.Name)
+
+	-- Initialize zone unlock manager
+	ZoneUnlockManager:initializePlayer(userId)
+	print("[PHASE 4] Zone unlock manager initialized for " .. player.Name)
+
+	-- Initialize quest manager
+	QuestManager:initializePlayer(userId)
+	print("[PHASE 4] Quest manager initialized for " .. player.Name)
+
+	-- Initialize data persistence
+	local loadedData = DataPersistence:loadPlayerData(player)
+	print("[PHASE 4] Data persistence initialized for " .. player.Name)
 end)
 
 -- Hook player leave to save data to DataStore
@@ -562,18 +602,24 @@ Players.PlayerRemoving:Connect(function(player)
 	local data = playerData[userId]
 
 	if data then
-		-- Save to DataStore
-		local saveSuccess = dataManager:savePlayerData(player)
-		if saveSuccess then
-			print("[PHASE 4] Saved player data for " .. player.Name .. " to DataStore")
-		else
-			warn("[PHASE 4] Failed to save player data for " .. player.Name)
+		-- Save via DataPersistence immediately (force save on leave)
+		DataPersistence:savePlayerData(player, true)
+		print("[PHASE 4] Saved player data via DataPersistence for " .. player.Name)
+
+		-- Also save to old dataManager for compatibility
+		if dataManager then
+			local saveSuccess = dataManager:savePlayerData(player)
+			if saveSuccess then
+				print("[PHASE 4] Saved player data for " .. player.Name .. " to DataStore")
+			else
+				warn("[PHASE 4] Failed to save player data for " .. player.Name)
+			end
 		end
 
 		-- Clear from memory
 		playerData[userId] = nil
 
-		-- Clean up equipment inventory
+		-- Clean up progression systems
 		PlayerInventory:removePlayer(userId)
 		print("[PHASE 4] Cleaned up equipment for " .. player.Name)
 	end
@@ -583,6 +629,16 @@ end)
 task.spawn(function()
 	while true do
 		task.wait(30)
+
+		-- Save via DataPersistence (new unified system)
+		for userId, _ in pairs(playerData) do
+			local player = Players:FindFirstChild(tostring(userId))
+			if player then
+				DataPersistence:savePlayerData(player)
+			end
+		end
+
+		-- Also save via old dataManager for compatibility
 		if dataManager then
 			for userId, data in pairs(playerData) do
 				local player = Players:FindFirstChild(tostring(userId))
@@ -679,36 +735,118 @@ if catchRemote then
 			return
 		end
 
-		-- Deduct charge
-		data.charge = math.max(data.charge - 10, 0)
+		-- ================================================================
+		-- NEW: Use CatchingSystem for attempt with equipment
+		-- ================================================================
 
-		-- Award coins based on rarity
-		local coinReward = {
-			Common = 1,
-			Uncommon = 3,
-			Rare = 10,
-			Epic = 25,
-			Legendary = 50,
-			Corrupted = 75,
-		}
-		local coins = coinReward[rarity] or 1
-		data.coins = data.coins + coins
-		data.ghosts = data.ghosts + 1
-
-		-- Add to ghost inventory
-		local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
-		data.ghostInventory[inventoryKey] = { name = ghostName, level = 1, rarity = rarity }
-
-		-- Remove ghost from world (destroy whole model if it exists)
-		local ghostParent = closestGhost.Parent
-		if ghostParent and ghostParent:IsA("Model") then
-			ghostParent:Destroy()
-		else
-			closestGhost:Destroy()
+		local currentZone = "Unknown Zone"
+		if zoneManager then
+			currentZone = zoneManager:detectPlayerZone(playerPos) or "Unknown Zone"
 		end
-		activeGhosts[closestGhost] = nil
 
-		print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. coins .. " coins!")
+		local catchResult = CatchingSystem:attemptCatch(player, closestGhost, currentZone)
+
+		if catchResult.success then
+			-- CATCH SUCCESSFUL
+			print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. catchResult.coinsGained .. " coins!")
+
+			-- Add to ghost inventory
+			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
+			data.ghostInventory[inventoryKey] = {
+				name = ghostName,
+				level = 1,
+				rarity = rarity,
+				xpGained = catchResult.xpGained,
+				caughtWith = catchResult.equipment,
+				zone = catchResult.zone,
+			}
+
+			-- Update player coins from inventory system
+			data.coins = PlayerInventory:getCoins(player.UserId)
+			data.ghosts = data.ghosts + 1
+
+			-- ================================================================
+			-- PROGRESSION HOOKS: Add XP to player
+			-- ================================================================
+			LevelSystem:addXP(player.UserId, catchResult.xpGained)
+
+			-- Check for level-ups and auto-unlock zones
+			local newLevel = LevelSystem:getLevel(player.UserId)
+			local oldLevel = newLevel - 1
+			if newLevel > oldLevel then
+				-- Level up occurred, check for zone unlocks
+				ZoneUnlockManager:checkAutoUnlocks(player.UserId, newLevel)
+				print("[PHASE 4] " .. player.Name .. " leveled up to " .. newLevel .. "!")
+			end
+
+			-- ================================================================
+			-- QUEST TRACKING: Track this ghost catch event
+			-- ================================================================
+			QuestManager:trackQuestEvent(player.UserId, "GhostCaught", {
+				ghostName = ghostName,
+				rarity = rarity,
+				zone = currentZone,
+			})
+
+			-- Check if any quests were completed
+			local completedQuests = QuestManager:checkQuestCompletion(player.UserId)
+			if completedQuests and #completedQuests > 0 then
+				print("[PHASE 4] " .. player.Name .. " completed " .. #completedQuests .. " quest(s)")
+			end
+
+			-- ================================================================
+			-- DATA PERSISTENCE: Queue save
+			-- ================================================================
+			DataPersistence:updatePlayerData(player, {
+				coins = data.coins,
+				ghosts = data.ghosts,
+				ghostInventory = data.ghostInventory,
+			})
+
+			-- Notify player of success
+			local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+			if notifyRemote then
+				local msg = "✅ Caught " .. ghostName .. "! +" .. catchResult.coinsGained .. " coins, +" .. catchResult.xpGained .. " XP"
+				notifyRemote:FireClient(player, msg, Color3.fromRGB(0, 255, 0))
+			end
+
+		else
+			-- CATCH FAILED
+			if catchResult.reason == "NOT_ENOUGH_ENERGY" then
+				print("[PHASE 4] " .. player.Name .. " tried to catch but not enough energy")
+				local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+				if notifyRemote then
+					notifyRemote:FireClient(player, "Not enough energy! (" .. catchResult.currentEnergy .. "/" .. catchResult.energyNeeded .. ")", Color3.fromRGB(255, 100, 100))
+				end
+				return
+			else
+				-- Ghost escaped
+				print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. catchResult.roll .. " vs " .. catchResult.catchRate .. "%)")
+
+				-- Track the attempt anyway (for quest stats)
+				QuestManager:trackQuestEvent(player.UserId, "CatchAttempt", {
+					ghostName = ghostName,
+					rarity = rarity,
+					success = false,
+				})
+
+				local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+				if notifyRemote then
+					notifyRemote:FireClient(player, "❌ Ghost escaped! Try stronger equipment.", Color3.fromRGB(255, 150, 100))
+				end
+			end
+		end
+
+		-- Update UI with new energy/coins/level
+		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
+		if updateRemote then
+			updateRemote:FireClient(player, {
+				Coins = data.coins,
+				Ghosts = data.ghosts,
+				Energy = PlayerInventory:getEnergy(player.UserId),
+				Level = LevelSystem:getLevel(player.UserId),
+			})
+		end
 	end)
 	print("[PHASE 4] Catch handler connected")
 end
