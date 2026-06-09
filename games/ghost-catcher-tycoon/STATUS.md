@@ -1,6 +1,6 @@
 <!--
   Ghost Catcher Tycoon - Game Status
-  Author:  nobody174 (vartdal@gmail.com)
+  Author:  nobody174 (nobodylearn174@gmail.com)
   Repo:    https://github.com/nobody174/roblox-games
   License: All rights reserved © 2025 nobody174
   "It's never too late to give up!"
@@ -234,7 +234,7 @@ All systems follow server-authoritative design:
 **Watcher Agent:** Autonomous build session completed  
 **Code Added:** 1,300+ lines across 6 commits  
 **Ready for:** MVP Studio Testing  
-**Contact:** vartdal@gmail.com
+**Contact:** nobodylearn174@gmail.com
 
 ## What's New (Phases 5-10)
 

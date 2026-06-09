@@ -1,6 +1,6 @@
 <!--
   Ghost Catcher Tycoon — Publishing Guide
-  Author:  nobody174 (vartdal@gmail.com)
+  Author:  nobody174 (nobodylearn174@gmail.com)
   Repo:    https://github.com/nobody174/roblox-games
   License: All rights reserved © 2025 nobody174
   "It's never too late to give up!"
@@ -175,7 +175,7 @@ If enabling GamePasses:
 
 ---
 
-**Contact:** vartdal@gmail.com  
+**Contact:** nobodylearn174@gmail.com  
 **Repository:** https://github.com/nobody174/roblox-games
 
 Built with Claude Code by Anthropic.

@@ -1,6 +1,6 @@
 <!--
   Ghost Catcher Tycoon — Session Summary (Phase 6 & Priority 4)
-  Author:  nobody174 (vartdal@gmail.com)
+  Author:  nobody174 (nobodylearn174@gmail.com)
   Repo:    https://github.com/nobody174/roblox-games
   License: All rights reserved © 2025 nobody174
   "It's never too late to give up!"
@@ -429,7 +429,7 @@ The only remaining task is converting 2 HTML files to PNG format (20 minutes), t
 
 ---
 
-**Built by:** nobody174 (vartdal@gmail.com)  
+**Built by:** nobody174 (nobodylearn174@gmail.com)  
 **With:** Claude Code by Anthropic  
 **Repository:** https://github.com/nobody174/roblox-games  
 **License:** All rights reserved © 2025 nobody174
