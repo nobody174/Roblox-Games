@@ -4,10 +4,10 @@
 -- Handles auto-unlocking equipment and zones based on player level
 --
 
-local LevelSystem = require(script.Parent.LevelSystem)
-local SkillTree = require(script.Parent.SkillTree)
-local EquipmentData = require(script.Parent.Parent.Parent.shared.EquipmentData)
-local PlayerInventory = require(script.Parent.Parent.PlayerInventory)
+local LevelSystem = require(script.Parent:WaitForChild("LevelSystem"))
+local SkillTree = require(script.Parent:WaitForChild("SkillTree"))
+local EquipmentData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("EquipmentData"))
+local PlayerInventory = require(game:GetService("ServerScriptService"):WaitForChild("PlayerInventory"))
 
 local PlayerProgression = {}
 
