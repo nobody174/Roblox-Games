@@ -1,0 +1,8 @@
+**/.git
+**/.github
+**/node_modules
+**/*.lock
+**/place.rbxl.lock
+**/.DS_Store
+**/Thumbs.db
+**/Desktop.ini

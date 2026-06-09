@@ -1,0 +1,482 @@
+{
+  "1": {
+    "name": "Captain Wisp",
+    "asset_id": 0
+  },
+  "2": {
+    "name": "Jolly Specter",
+    "asset_id": 0
+  },
+  "3": {
+    "name": "Treasure Puff",
+    "asset_id": 0
+  },
+  "4": {
+    "name": "Plank Walker",
+    "asset_id": 0
+  },
+  "5": {
+    "name": "Seafaring Glow",
+    "asset_id": 0
+  },
+  "6": {
+    "name": "Arcane Puff",
+    "asset_id": 0
+  },
+  "7": {
+    "name": "Mystic Whisper",
+    "asset_id": 0
+  },
+  "8": {
+    "name": "Spellbound Spirit",
+    "asset_id": 0
+  },
+  "9": {
+    "name": "Enchanted Drift",
+    "asset_id": 0
+  },
+  "10": {
+    "name": "Potion Phantom",
+    "asset_id": 0
+  },
+  "11": {
+    "name": "Royal Gleam",
+    "asset_id": 0
+  },
+  "12": {
+    "name": "Regal Glow",
+    "asset_id": 0
+  },
+  "13": {
+    "name": "Majestic Wisp",
+    "asset_id": 0
+  },
+  "14": {
+    "name": "Noble Specter",
+    "asset_id": 0
+  },
+  "15": {
+    "name": "Throne Spirit",
+    "asset_id": 0
+  },
+  "16": {
+    "name": "Circuit Boo",
+    "asset_id": 0
+  },
+  "17": {
+    "name": "Metal Phantom",
+    "asset_id": 0
+  },
+  "18": {
+    "name": "Cyber Glow",
+    "asset_id": 0
+  },
+  "19": {
+    "name": "Powered Wisp",
+    "asset_id": 0
+  },
+  "20": {
+    "name": "Spark Spirit",
+    "asset_id": 0
+  },
+  "21": {
+    "name": "Shadow Blade",
+    "asset_id": 0
+  },
+  "22": {
+    "name": "Quickstep Puff",
+    "asset_id": 0
+  },
+  "23": {
+    "name": "Silent Phantom",
+    "asset_id": 0
+  },
+  "24": {
+    "name": "Swift Whisper",
+    "asset_id": 0
+  },
+  "25": {
+    "name": "Stealthy Glow",
+    "asset_id": 0
+  },
+  "26": {
+    "name": "Honorable Wisp",
+    "asset_id": 0
+  },
+  "27": {
+    "name": "Blade Spirit",
+    "asset_id": 0
+  },
+  "28": {
+    "name": "Warrior Phantom",
+    "asset_id": 0
+  },
+  "29": {
+    "name": "Valor Glow",
+    "asset_id": 0
+  },
+  "30": {
+    "name": "Steel Specter",
+    "asset_id": 0
+  },
+  "31": {
+    "name": "Frost Flicker",
+    "asset_id": 0
+  },
+  "32": {
+    "name": "Ice Whisper",
+    "asset_id": 0
+  },
+  "33": {
+    "name": "Chill Spirit",
+    "asset_id": 0
+  },
+  "34": {
+    "name": "Glacier Puff",
+    "asset_id": 0
+  },
+  "35": {
+    "name": "Blizzard Glow",
+    "asset_id": 0
+  },
+  "36": {
+    "name": "Candy Floof",
+    "asset_id": 0
+  },
+  "37": {
+    "name": "Sweet Puff",
+    "asset_id": 0
+  },
+  "38": {
+    "name": "Sugar Wisp",
+    "asset_id": 0
+  },
+  "39": {
+    "name": "Lollipop Spirit",
+    "asset_id": 0
+  },
+  "40": {
+    "name": "Gummy Phantom",
+    "asset_id": 0
+  },
+  "41": {
+    "name": "Storm Streak",
+    "asset_id": 0
+  },
+  "42": {
+    "name": "Thunder Wisp",
+    "asset_id": 0
+  },
+  "43": {
+    "name": "Cyclone Puff",
+    "asset_id": 0
+  },
+  "44": {
+    "name": "Lightning Phantom",
+    "asset_id": 0
+  },
+  "45": {
+    "name": "Tempest Spirit",
+    "asset_id": 0
+  },
+  "46": {
+    "name": "Dragon Spirit",
+    "asset_id": 0
+  },
+  "47": {
+    "name": "Dragon's Breath",
+    "asset_id": 0
+  },
+  "48": {
+    "name": "Flame Drake",
+    "asset_id": 0
+  },
+  "49": {
+    "name": "Ember Drake",
+    "asset_id": 0
+  },
+  "50": {
+    "name": "Inferno Glow",
+    "asset_id": 0
+  },
+  "51": {
+    "name": "Fire Wisp",
+    "asset_id": 0
+  },
+  "52": {
+    "name": "Blaze Spirit",
+    "asset_id": 0
+  },
+  "53": {
+    "name": "Spark Phantom",
+    "asset_id": 0
+  },
+  "54": {
+    "name": "Spark Drift",
+    "asset_id": 0
+  },
+  "55": {
+    "name": "Crystal Wink",
+    "asset_id": 0
+  },
+  "56": {
+    "name": "Gem Spirit",
+    "asset_id": 0
+  },
+  "57": {
+    "name": "Sparkle Phantom",
+    "asset_id": 0
+  },
+  "58": {
+    "name": "Diamond Glow",
+    "asset_id": 0
+  },
+  "59": {
+    "name": "Luminous Puff",
+    "asset_id": 0
+  },
+  "60": {
+    "name": "Ocean Drift",
+    "asset_id": 0
+  },
+  "61": {
+    "name": "Wave Whisper",
+    "asset_id": 0
+  },
+  "62": {
+    "name": "Deep Phantom",
+    "asset_id": 0
+  },
+  "63": {
+    "name": "Coral Spirit",
+    "asset_id": 0
+  },
+  "64": {
+    "name": "Seafoam Glow",
+    "asset_id": 0
+  },
+  "65": {
+    "name": "Jungle Drift",
+    "asset_id": 0
+  },
+  "66": {
+    "name": "Vine Spirit",
+    "asset_id": 0
+  },
+  "67": {
+    "name": "Tropical Puff",
+    "asset_id": 0
+  },
+  "68": {
+    "name": "Forest Phantom",
+    "asset_id": 0
+  },
+  "69": {
+    "name": "Emerald Glow",
+    "asset_id": 0
+  },
+  "70": {
+    "name": "Steampunk Gear",
+    "asset_id": 0
+  },
+  "71": {
+    "name": "Quantum Burst",
+    "asset_id": 0
+  },
+  "72": {
+    "name": "Digital Phantom",
+    "asset_id": 0
+  },
+  "73": {
+    "name": "Neon Wisp",
+    "asset_id": 0
+  },
+  "74": {
+    "name": "Silicon Spirit",
+    "asset_id": 0
+  },
+  "75": {
+    "name": "Hologram Glow",
+    "asset_id": 0
+  },
+  "76": {
+    "name": "Star Spirit",
+    "asset_id": 0
+  },
+  "77": {
+    "name": "Cosmic Phantom",
+    "asset_id": 0
+  },
+  "78": {
+    "name": "Nebula Wisp",
+    "asset_id": 0
+  },
+  "79": {
+    "name": "Galaxy Glow",
+    "asset_id": 0
+  },
+  "80": {
+    "name": "Pulsar Puff",
+    "asset_id": 0
+  },
+  "81": {
+    "name": "Aviator Ace",
+    "asset_id": 0
+  },
+  "82": {
+    "name": "Space Explorer",
+    "asset_id": 0
+  },
+  "83": {
+    "name": "Lunar Phantom",
+    "asset_id": 0
+  },
+  "84": {
+    "name": "Starbound Spirit",
+    "asset_id": 0
+  },
+  "85": {
+    "name": "Orbit Glow",
+    "asset_id": 0
+  },
+  "86": {
+    "name": "Maestro Phantom",
+    "asset_id": 0
+  },
+  "87": {
+    "name": "Melody Wisp",
+    "asset_id": 0
+  },
+  "88": {
+    "name": "Harmony Spirit",
+    "asset_id": 0
+  },
+  "89": {
+    "name": "Rhythm Glow",
+    "asset_id": 0
+  },
+  "90": {
+    "name": "Symphony Puff",
+    "asset_id": 0
+  },
+  "91": {
+    "name": "Crown Specter",
+    "asset_id": 0
+  },
+  "92": {
+    "name": "Sovereign Phantom",
+    "asset_id": 0
+  },
+  "93": {
+    "name": "Dynasty Spirit",
+    "asset_id": 0
+  },
+  "94": {
+    "name": "Empress Wisp",
+    "asset_id": 0
+  },
+  "95": {
+    "name": "Kingbright Glow",
+    "asset_id": 0
+  },
+  "96": {
+    "name": "Celestial Phantom",
+    "asset_id": 0
+  },
+  "97": {
+    "name": "Divine Spirit",
+    "asset_id": 0
+  },
+  "98": {
+    "name": "Seraph Wisp",
+    "asset_id": 0
+  },
+  "99": {
+    "name": "Halo Glow",
+    "asset_id": 0
+  },
+  "100": {
+    "name": "Blessed Puff",
+    "asset_id": 0
+  },
+  "101": {
+    "name": "Zenith Specter",
+    "asset_id": 0
+  },
+  "102": {
+    "name": "Valiant Phantom",
+    "asset_id": 0
+  },
+  "103": {
+    "name": "Crusade Spirit",
+    "asset_id": 0
+  },
+  "104": {
+    "name": "Guardian Wisp",
+    "asset_id": 0
+  },
+  "105": {
+    "name": "Armor Glow",
+    "asset_id": 0
+  },
+  "106": {
+    "name": "Eternal Phantom",
+    "asset_id": 0
+  },
+  "107": {
+    "name": "Mythic Wisp",
+    "asset_id": 0
+  },
+  "108": {
+    "name": "Transcendent Spirit",
+    "asset_id": 0
+  },
+  "109": {
+    "name": "Omniscient Glow",
+    "asset_id": 0
+  },
+  "110": {
+    "name": "Apex Phantom",
+    "asset_id": 0
+  },
+  "111": {
+    "name": "Timeless Specter",
+    "asset_id": 0
+  },
+  "112": {
+    "name": "Moonlit Echo",
+    "asset_id": 0
+  },
+  "113": {
+    "name": "Starforge Wisp",
+    "asset_id": 0
+  },
+  "114": {
+    "name": "Infinity Glow",
+    "asset_id": 0
+  },
+  "115": {
+    "name": "Prism Phantom",
+    "asset_id": 0
+  },
+  "116": {
+    "name": "Infernal Crown",
+    "asset_id": 0
+  },
+  "117": {
+    "name": "Void Phantom",
+    "asset_id": 0
+  },
+  "118": {
+    "name": "Abyssal Spirit",
+    "asset_id": 0
+  },
+  "119": {
+    "name": "Shadowed Wisp",
+    "asset_id": 0
+  },
+  "120": {
+    "name": "Corrupted Glow",
+    "asset_id": 0
+  }
+}

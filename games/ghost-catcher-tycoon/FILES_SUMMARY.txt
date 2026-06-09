@@ -1,0 +1,79 @@
+════════════════════════════════════════════════════════════════════════════════
+  COMPLETE FILE CHANGES SUMMARY - Ghost Catcher Tycoon
+════════════════════════════════════════════════════════════════════════════════
+
+NEW FILES TO CREATE IN STUDIO:
+────────────────────────────────────────────────────────────────────────────────
+
+1. ServerScriptService > GhostAI (ModuleScript)
+   ✓ Copy from: src/server/GhostAI.lua
+   ✓ Size: ~195 lines
+   ✓ Does: Ghost AI behavior (Common=stationary, Uncommon=wander, Rare=flee, etc.)
+
+2. ServerScriptService > PhaseManager (ModuleScript)
+   ✓ Copy from: src/server/PhaseManager.lua
+   ✓ Size: ~165 lines
+   ✓ Does: Create private Starting Area instances per player
+
+────────────────────────────────────────────────────────────────────────────────
+
+EXISTING FILES TO UPDATE IN STUDIO:
+────────────────────────────────────────────────────────────────────────────────
+
+3. ServerScriptService > MainServer_Phase4_Extended (Script)
+   ✓ Replace with: src/server/MainServer_Phase4_Extended.lua
+   ✓ Size: ~1250+ lines
+   ✓ Changed:
+     - Added GhostAI require (line 111)
+     - Modified spawnGhost() to accept targetFolder (line 162)
+     - Added GhostAI initialization (line 327)
+     - Wrapped spawn loop in startGhostSpawnLoop() function (line 343)
+     - Added startGhostSpawnLoop() call after ZoneManager init (line 1250)
+
+4. ServerScriptService > ZoneManager (ModuleScript)
+   ✓ Replace with: src/server/ZoneManager.lua
+   ✓ Size: ~260 lines
+   ✓ Changed:
+     - Added PhaseManager require (line 10)
+     - Added PhaseManager initialization in initialize() (line 39-58)
+     - Modified zone detection to check private phases first (line 154-190)
+
+════════════════════════════════════════════════════════════════════════════════
+
+QUICK TEST STEPS:
+════════════════════════════════════════════════════════════════════════════════
+
+1. Create GhostAI and PhaseManager in ServerScriptService (copy entire file contents)
+2. Replace MainServer_Phase4_Extended and ZoneManager with new versions
+3. Press PLAY
+4. Open Output window
+5. Look for:
+   ✓ [PhaseManager] Created private phase #1
+   ✓ [PHASE 4] Spawn cycle #1: Spawned X ghosts
+6. Walk around, catch a ghost
+7. Stop and Play again - ghost should still be in inventory
+
+════════════════════════════════════════════════════════════════════════════════
+
+THE MAGIC THAT NOW WORKS:
+════════════════════════════════════════════════════════════════════════════════
+
+BEFORE:
+- All players spawned in shared "Hub" zone
+- Ghosts spawned only in shared ZoneContainer
+
+AFTER:
+- Each player gets private "Phase_#_PlayerName" with cloned Hub
+- Player teleported to their private phase on join
+- Ghosts spawn in:
+  ✓ Shared zones (Whisper Woods, Foggy Fields, etc.)
+  ✓ Each player's private Starting Area
+- Ghosts have smart AI:
+  ✓ Common: Stand still
+  ✓ Uncommon: Wander slowly
+  ✓ Rare: Flee from player
+  ✓ Epic: Aggressively flee
+  ✓ Legendary: Teleport away
+  ✓ Corrupted: Aggressively teleport
+
+════════════════════════════════════════════════════════════════════════════════

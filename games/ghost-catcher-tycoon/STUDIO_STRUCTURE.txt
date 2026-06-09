@@ -1,0 +1,203 @@
+════════════════════════════════════════════════════════════════════════════════
+  ROBLOX STUDIO - EXPECTED FILE STRUCTURE
+════════════════════════════════════════════════════════════════════════════════
+
+After copying all files, your Studio ServerScriptService should look like this:
+
+────────────────────────────────────────────────────────────────────────────────
+
+ServerScriptService/
+│
+├── 📄 MainServer_Phase4_Extended (Script) [UPDATED ✅]
+│   ├── ~1250+ lines
+│   ├── Contains: Ghost spawning, catch handlers, data management
+│   └── Key: Calls startGhostSpawnLoop() after ZoneManager init
+│
+├── 📦 ZoneManager (ModuleScript) [UPDATED ✅]
+│   ├── ~260 lines
+│   ├── Contains: Zone detection, barriers, phase awareness
+│   └── Key: Creates and manages PhaseManager instance
+│
+├── 📦 GhostAI (ModuleScript) [NEW ✅]
+│   ├── ~195 lines
+│   ├── Contains: Ghost behavior AI (stationary → teleporting)
+│   └── Key: Called when ghost spawns with GhostAI:initializeGhost()
+│
+├── 📦 PhaseManager (ModuleScript) [NEW ✅]
+│   ├── ~165 lines
+│   ├── Contains: Private zone instance creation & cleanup
+│   └── Key: Creates Phase_#_PlayerName folders for each player
+│
+├── 📦 AdminCommands (ModuleScript) [unchanged]
+│
+├── 📁 Data/ (Folder) [unchanged]
+│   └── 📦 DataManager (ModuleScript)
+│       └── Contains: DataStore save/load logic
+│
+├── 📁 systems/ (Folder) [unchanged]
+│   ├── SystemManager
+│   ├── Quests
+│   ├── Bosses
+│   └── [etc...]
+│
+└── 📁 Tests/ (Folder) [unchanged]
+
+════════════════════════════════════════════════════════════════════════════════
+
+WHAT'S NEW/CHANGED:
+════════════════════════════════════════════════════════════════════════════════
+
+NEW FILES (Must Create):
+  ✅ GhostAI - Makes ghosts behave smartly based on rarity
+  ✅ PhaseManager - Creates private zones for each player
+
+MODIFIED FILES (Must Replace):
+  ✅ MainServer_Phase4_Extended - Integrated GhostAI + PhaseManager spawning
+  ✅ ZoneManager - Integrated PhaseManager for zone awareness
+
+UNCHANGED FILES (No touch):
+  • AdminCommands
+  • Data/DataManager
+  • systems/*
+  • Tests/*
+
+════════════════════════════════════════════════════════════════════════════════
+
+DEPENDENCY DIAGRAM:
+════════════════════════════════════════════════════════════════════════════════
+
+When game starts:
+
+1. MainServer_Phase4_Extended loads
+   ├─ Requires GhostAI ✅
+   └─ Requires Constants, Config, GhostData, ZoneData
+
+2. ZoneManager loads
+   ├─ Requires PhaseManager ✅
+   └─ Requires ZoneData
+
+3. ZoneManager:initialize() called
+   ├─ Creates PhaseManager instance
+   ├─ PhaseManager:initialize() creates private phases for players
+   └─ Stores phaseManager in self.phaseManager
+
+4. startGhostSpawnLoop() called
+   ├─ Spawns ghosts in shared zones
+   ├─ Spawns ghosts in player private phases (using phaseManager reference)
+   └─ GhostAI:initializeGhost() called for each ghost
+
+5. Zone detection runs
+   ├─ Checks if player in private phase (via phaseManager)
+   └─ Falls back to shared zone detection
+
+════════════════════════════════════════════════════════════════════════════════
+
+MODULE LOAD ORDER:
+════════════════════════════════════════════════════════════════════════════════
+
+This is the order modules load (must all exist):
+
+1. Constants (ReplicatedStorage/shared)
+2. Config (ReplicatedStorage/shared)
+3. GhostData (ReplicatedStorage/shared)
+4. ZoneData (ReplicatedStorage/shared)
+5. ↓
+6. MainServer_Phase4_Extended (Script)
+   ├─ GhostAI (ModuleScript) ← YOU CREATE THIS
+   └─ DataManager (already exists)
+7. ↓
+8. ZoneManager (ModuleScript)
+   └─ PhaseManager (ModuleScript) ← YOU CREATE THIS
+
+════════════════════════════════════════════════════════════════════════════════
+
+VISUAL: HOW PHASEMANAGER INTEGRATES:
+════════════════════════════════════════════════════════════════════════════════
+
+BEFORE (Old System):
+
+  Player Joins
+      ↓
+  Spawned in shared "Hub" zone
+      ↓
+  All players see same ghosts
+      ↓
+  Can't have private home zones
+
+AFTER (New System with PhaseManager):
+
+  Player Joins
+      ↓
+  PhaseManager creates Phase_1_PlayerName folder
+      ↓
+  Clones Hub zone into Phase_1_PlayerName
+      ↓
+  Teleports player to their private phase
+      ↓
+  Ghost spawner spawns in:
+      • Shared zones (Whisper Woods, Foggy Fields, etc.)
+      • Player's private Hub phase
+      ↓
+  Zone detector checks:
+      • Is player in private phase? (via phaseManager:isZoneInPhase)
+      • If yes → "Starting Area"
+      • If no → Check shared zones
+      ↓
+  Player can catch ghosts in private phase
+      ↓
+  Data saved to DataStore
+      ↓
+  Player rejoin:
+      • New phase created
+      • Previous data loaded
+      • Ready to catch more!
+
+════════════════════════════════════════════════════════════════════════════════
+
+KEY POINTS:
+════════════════════════════════════════════════════════════════════════════════
+
+✅ PhaseManager creates folders in WORKSPACE (not ReplicatedStorage)
+   └─ Workspace/Phase_1_PlayerName/Hub (cloned)
+
+✅ Each Phase folder is TEMPORARY
+   └─ Deleted when player leaves (no data loss, data in DataStore)
+
+✅ GhostAI doesn't need separate folder
+   └─ Single module, simple behavior definitions
+
+✅ Both PhaseManager and GhostAI require from ServerScriptService
+   └─ Must be in ServerScriptService, exact names matter
+
+✅ Spawn loop waits for initialization
+   └─ startGhostSpawnLoop() only called AFTER ZoneManager:initialize()
+   └─ This ensures phaseManager exists before spawning
+
+════════════════════════════════════════════════════════════════════════════════
+
+COMMON MISTAKES:
+════════════════════════════════════════════════════════════════════════════════
+
+❌ Creating GhostAI as a Script instead of ModuleScript
+   → Use the grey ModuleScript icon, not blue Script icon
+
+❌ Putting GhostAI/PhaseManager in a folder
+   → They must be directly in ServerScriptService
+
+❌ Misspelling module names (e.g., "GhostAI.lua" instead of "GhostAI")
+   → Studio will look for exact name "GhostAI"
+
+❌ Not replacing ENTIRE MainServer/ZoneManager files
+   → Copy/paste the complete file, not just parts
+
+❌ Forgetting to create one of the modules
+   → "Module required but not found" error will appear
+
+✅ CORRECT:
+   ServerScriptService/
+   ├─ GhostAI (ModuleScript)
+   ├─ PhaseManager (ModuleScript)
+   ├─ MainServer_Phase4_Extended (Script)
+   └─ ZoneManager (ModuleScript)
+
+════════════════════════════════════════════════════════════════════════════════

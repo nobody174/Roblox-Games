@@ -1,0 +1,141 @@
+════════════════════════════════════════════════════════════════════════════════
+  EXACT FILE LOCATIONS - Copy/Paste Coordinates
+════════════════════════════════════════════════════════════════════════════════
+
+📁 ON YOUR COMPUTER (vscode):
+────────────────────────────────────────────────────────────────────────────────
+
+NEW FILES:
+  src/server/GhostAI.lua                       (~195 lines)
+  src/server/PhaseManager.lua                  (~165 lines)
+
+MODIFIED FILES:
+  src/server/MainServer_Phase4_Extended.lua    (~1250+ lines)
+  src/server/ZoneManager.lua                   (~260 lines)
+
+Documentation/Guides:
+  UPDATES_FOR_STUDIO.md                        (Detailed update guide)
+  FILES_SUMMARY.txt                            (This quick reference)
+  FILE_LOCATIONS.txt                           (You are here)
+  TEST_PERSISTENCE.md                          (Testing guide)
+
+════════════════════════════════════════════════════════════════════════════════
+
+📊 IN ROBLOX STUDIO:
+────────────────────────────────────────────────────────────────────────────────
+
+ServerScriptService structure should be:
+│
+├── 📄 MainServer_Phase4_Extended (Script) - REPLACE with new version
+│
+├── 📦 ZoneManager (ModuleScript) - REPLACE with new version
+│
+├── 📦 PhaseManager (ModuleScript) ← CREATE NEW
+│
+├── 📦 GhostAI (ModuleScript) ← CREATE NEW
+│
+├── 📁 Data
+│   └── DataManager (ModuleScript) - don't touch
+│
+├── 📁 systems
+│   └── SystemManager, Quests, etc. - don't touch
+│
+└── [other scripts...]
+
+════════════════════════════════════════════════════════════════════════════════
+
+🚀 STEP-BY-STEP STUDIO UPDATE:
+════════════════════════════════════════════════════════════════════════════════
+
+1. CREATE GhostAI MODULE:
+   a. In Studio, open ServerScriptService
+   b. Click "+" icon → ModuleScript
+   c. Name it "GhostAI"
+   d. Open src/server/GhostAI.lua in vscode
+   e. Copy ALL contents
+   f. Paste into GhostAI ModuleScript in Studio
+   g. Press Save
+
+2. CREATE PhaseManager MODULE:
+   a. In Studio, open ServerScriptService
+   b. Click "+" icon → ModuleScript
+   c. Name it "PhaseManager"
+   d. Open src/server/PhaseManager.lua in vscode
+   e. Copy ALL contents
+   f. Paste into PhaseManager ModuleScript in Studio
+   g. Press Save
+
+3. UPDATE MainServer_Phase4_Extended:
+   a. In Studio, open ServerScriptService > MainServer_Phase4_Extended
+   b. Select ALL (Ctrl+A)
+   c. Open src/server/MainServer_Phase4_Extended.lua in vscode
+   d. Copy ALL contents
+   e. Back to Studio, paste to replace
+   f. Press Save
+
+4. UPDATE ZoneManager:
+   a. In Studio, open ServerScriptService > ZoneManager
+   b. Select ALL (Ctrl+A)
+   c. Open src/server/ZoneManager.lua in vscode
+   d. Copy ALL contents
+   e. Back to Studio, paste to replace
+   f. Press Save
+
+5. TEST:
+   a. Close all script editors
+   b. Click PLAY button
+   c. Open Output window (View → Output)
+   d. Look for startup messages
+   e. Wait for "Spawn cycle #1: Spawned X ghosts"
+   f. Walk around and catch a ghost!
+
+════════════════════════════════════════════════════════════════════════════════
+
+✅ VERIFICATION CHECKLIST:
+════════════════════════════════════════════════════════════════════════════════
+
+After copying all files, verify in Studio Output:
+
+[ ] [PhaseManager] Initializing...
+[ ] [PhaseManager] Created private phase #1 for [PlayerName]
+[ ] [PhaseManager] Initialized!
+[ ] [ZoneManager] Initializing...
+[ ] [ZoneManager] ZoneContainer found, proceeding...
+[ ] [ZoneManager] Initialized!
+[ ] [PHASE 4] ZoneManager initialized, starting ghost spawn loop...
+[ ] [PHASE 4] Spawn cycle #1: Spawned X ghosts
+
+If you see all of these: ✅ Everything is working!
+
+════════════════════════════════════════════════════════════════════════════════
+
+❌ COMMON MISTAKES TO AVOID:
+════════════════════════════════════════════════════════════════════════════════
+
+❌ Creating a Script instead of ModuleScript for GhostAI/PhaseManager
+   → Use ModuleScript (grey icon), not Script (blue icon)
+
+❌ Forgetting to create one of the new modules
+   → You MUST create both GhostAI and PhaseManager
+
+❌ Not replacing the entire MainServer_Phase4_Extended file
+   → Copy ENTIRE file, not just parts
+
+❌ Naming the modules differently (e.g., "GhostAI.lua" instead of "GhostAI")
+   → Exact names matter!
+
+❌ Mixing old and new code
+   → Replace completely, don't manually merge
+
+════════════════════════════════════════════════════════════════════════════════
+
+💡 TIPS:
+════════════════════════════════════════════════════════════════════════════════
+
+• Keep vscode and Studio open side-by-side for easy copy/paste
+• Use Ctrl+Home to go to start of file in Studio
+• Use Ctrl+A to select all in Studio script editor
+• After pasting, wait for Studio to finish "updating"
+• If things don't work, check Output for red error messages
+
+════════════════════════════════════════════════════════════════════════════════

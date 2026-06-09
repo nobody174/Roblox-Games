@@ -1,0 +1,121 @@
+ID,Name,Theme,Rarity,Accessory,Expression,Pattern
+1,Captain Wisp,Pirate,Common,Eyepatch,Confident,None
+2,Jolly Specter,Pirate,Common,Scarf,Happy,None
+3,Treasure Puff,Pirate,Common,Backpack,Excited,None
+4,Plank Walker,Pirate,Common,Top Hat,Mischievous,Stripes
+5,Seafaring Glow,Pirate,Common,Lantern,Relaxed,None
+6,Arcane Puff,Wizard,Common,Wizard Hat,Curious,Sparkles
+7,Mystic Whisper,Wizard,Common,Wizard Hat,Confident,Stars
+8,Spellbound Spirit,Wizard,Common,None,Determined,Swirls
+9,Enchanted Drift,Wizard,Common,None,Proud,Crystals
+10,Potion Phantom,Wizard,Common,None,Excited,Clouds
+11,Royal Gleam,Royal,Common,Crown,Proud,Sparkles
+12,Regal Glow,Royal,Common,Crown,Happy,None
+13,Majestic Wisp,Royal,Common,Crown,Confident,Stars
+14,Noble Specter,Royal,Common,Top Hat,Relaxed,None
+15,Throne Spirit,Royal,Common,None,Determined,None
+16,Circuit Boo,Robot,Common,Antenna,Excited,Gears
+17,Metal Phantom,Robot,Common,Antenna,Determined,None
+18,Cyber Glow,Robot,Common,Headphones,Curious,Lightning
+19,Powered Wisp,Robot,Common,Backpack,Happy,None
+20,Spark Spirit,Robot,Common,None,Confident,Sparkles
+21,Shadow Blade,Ninja,Common,Backpack,Mischievous,None
+22,Quickstep Puff,Ninja,Common,None,Determined,None
+23,Silent Phantom,Ninja,Common,Scarf,Proud,None
+24,Swift Whisper,Ninja,Common,None,Excited,None
+25,Stealthy Glow,Ninja,Common,Headphones,Curious,None
+26,Honorable Wisp,Samurai,Common,None,Proud,None
+27,Blade Spirit,Samurai,Common,None,Determined,Stripes
+28,Warrior Phantom,Samurai,Common,None,Confident,None
+29,Valor Glow,Samurai,Common,None,Excited,Stars
+30,Steel Specter,Samurai,Common,Cape,Relaxed,None
+31,Frost Flicker,Frost,Common,None,Sleepy,Snowflakes
+32,Ice Whisper,Frost,Common,None,Relaxed,Snowflakes
+33,Chill Spirit,Frost,Common,None,Happy,Crystals
+34,Glacier Puff,Frost,Common,None,Curious,None
+35,Blizzard Glow,Frost,Common,None,Excited,Snowflakes
+36,Candy Floof,Candy,Common,None,Happy,Hearts
+37,Sweet Puff,Candy,Common,Flower,Excited,Sparkles
+38,Sugar Wisp,Candy,Common,None,Mischievous,None
+39,Lollipop Spirit,Candy,Common,None,Happy,None
+40,Gummy Phantom,Candy,Common,None,Relaxed,None
+41,Storm Streak,Storm,Uncommon,Antenna,Determined,Lightning
+42,Thunder Wisp,Storm,Uncommon,None,Excited,Lightning
+43,Cyclone Puff,Storm,Uncommon,None,Confident,Clouds
+44,Lightning Phantom,Storm,Uncommon,None,Mischievous,Lightning
+45,Tempest Spirit,Storm,Uncommon,None,Proud,None
+46,Dragon Spirit,Dragon,Uncommon,None,Determined,Flames
+47,Dragon's Breath,Dragon,Uncommon,None,Proud,Flames
+48,Flame Drake,Dragon,Uncommon,None,Confident,Flames
+49,Ember Drake,Dragon,Uncommon,None,Excited,Sparkles
+50,Inferno Glow,Fire,Uncommon,None,Determined,Flames
+51,Fire Wisp,Fire,Uncommon,None,Excited,Flames
+52,Blaze Spirit,Fire,Uncommon,None,Confident,Flames
+53,Spark Phantom,Fire,Uncommon,None,Proud,None
+54,Spark Drift,Fire,Uncommon,None,Mischievous,Sparkles
+55,Crystal Wink,Crystal,Uncommon,Crown,Curious,Crystals
+56,Gem Spirit,Crystal,Uncommon,None,Excited,Crystals
+57,Sparkle Phantom,Crystal,Uncommon,None,Happy,Sparkles
+58,Diamond Glow,Crystal,Uncommon,None,Confident,Crystals
+59,Luminous Puff,Crystal,Uncommon,None,Relaxed,Sparkles
+60,Ocean Drift,Ocean,Uncommon,None,Relaxed,None
+61,Wave Whisper,Ocean,Uncommon,None,Happy,Clouds
+62,Deep Phantom,Ocean,Uncommon,None,Curious,None
+63,Coral Spirit,Ocean,Uncommon,Flower,Excited,Stars
+64,Seafoam Glow,Ocean,Uncommon,None,Confident,None
+65,Jungle Drift,Jungle,Uncommon,Leaf Crown,Determined,Leaves
+66,Vine Spirit,Jungle,Uncommon,Flower,Excited,Leaves
+67,Tropical Puff,Jungle,Uncommon,Leaf Crown,Happy,None
+68,Forest Phantom,Jungle,Uncommon,None,Curious,Leaves
+69,Emerald Glow,Jungle,Uncommon,None,Relaxed,None
+70,Steampunk Gear,Steampunk,Uncommon,Top Hat,Determined,Gears
+71,Quantum Burst,Cyber,Rare,Headphones,Excited,Lightning
+72,Digital Phantom,Cyber,Rare,Glasses,Determined,Gears
+73,Neon Wisp,Cyber,Rare,Antenna,Confident,Sparkles
+74,Silicon Spirit,Cyber,Rare,None,Happy,None
+75,Hologram Glow,Cyber,Rare,None,Curious,Stars
+76,Star Spirit,Space,Rare,Star Crown,Proud,Stars
+77,Cosmic Phantom,Space,Rare,None,Excited,Sparkles
+78,Nebula Wisp,Space,Rare,Antenna,Confident,Swirls
+79,Galaxy Glow,Space,Rare,None,Curious,Stars
+80,Pulsar Puff,Space,Rare,None,Determined,Sparkles
+81,Aviator Ace,Astronaut,Rare,None,Confident,None
+82,Space Explorer,Astronaut,Rare,Backpack,Excited,Stars
+83,Lunar Phantom,Astronaut,Rare,None,Curious,None
+84,Starbound Spirit,Astronaut,Rare,None,Proud,Stars
+85,Orbit Glow,Astronaut,Rare,Antenna,Happy,None
+86,Maestro Phantom,Musician,Rare,None,Happy,None
+87,Melody Wisp,Musician,Rare,Headphones,Excited,None
+88,Harmony Spirit,Musician,Rare,None,Confident,None
+89,Rhythm Glow,Musician,Rare,None,Proud,None
+90,Symphony Puff,Musician,Rare,None,Relaxed,None
+91,Crown Specter,Royal,Epic,Crown,Proud,Sparkles
+92,Sovereign Phantom,Royal,Epic,Crown,Determined,Stars
+93,Dynasty Spirit,Royal,Epic,Top Hat,Confident,None
+94,Empress Wisp,Royal,Epic,None,Happy,Sparkles
+95,Kingbright Glow,Royal,Epic,Crown,Excited,Stars
+96,Celestial Phantom,Angel,Epic,Star Crown,Proud,Sparkles
+97,Divine Spirit,Angel,Epic,None,Confident,Clouds
+98,Seraph Wisp,Angel,Epic,None,Happy,Sparkles
+99,Halo Glow,Angel,Epic,None,Determined,Stars
+100,Blessed Puff,Angel,Epic,None,Relaxed,None
+101,Zenith Specter,Knight,Epic,Cape,Determined,None
+102,Valiant Phantom,Knight,Epic,None,Proud,None
+103,Crusade Spirit,Knight,Epic,None,Confident,Lightning
+104,Guardian Wisp,Knight,Epic,None,Excited,Stars
+105,Armor Glow,Knight,Epic,None,Happy,None
+106,Eternal Phantom,Legendary,Legendary,Crown,Determined,Sparkles
+107,Mythic Wisp,Legendary,Legendary,None,Proud,Stars
+108,Transcendent Spirit,Legendary,Legendary,None,Confident,Sparkles
+109,Omniscient Glow,Legendary,Legendary,None,Happy,Clouds
+110,Apex Phantom,Legendary,Legendary,None,Excited,None
+111,Timeless Specter,Legendary,Legendary,None,Relaxed,Stars
+112,Moonlit Echo,Legendary,Legendary,None,Sleepy,None
+113,Starforge Wisp,Legendary,Legendary,None,Curious,None
+114,Infinity Glow,Legendary,Legendary,None,Mischievous,None
+115,Prism Phantom,Legendary,Legendary,None,Confident,None
+116,Infernal Crown,Corrupted,Corrupted,Crown,Mischievous,Flames
+117,Void Phantom,Corrupted,Corrupted,None,Determined,Swirls
+118,Abyssal Spirit,Corrupted,Corrupted,None,Proud,None
+119,Shadowed Wisp,Corrupted,Corrupted,None,Confident,None
+120,Corrupted Glow,Corrupted,Corrupted,None,Excited,Lightning

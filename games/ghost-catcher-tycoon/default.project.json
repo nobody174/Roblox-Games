@@ -1,0 +1,56 @@
+{
+  "name": "Ghost Catcher Tycoon",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "MainServer_Phase4_Extended": {
+        "$path": "src/server/MainServer_Phase4_Extended.lua"
+      },
+      "AdminCommands": {
+        "$path": "src/server/AdminCommands.lua"
+      },
+      "SystemManager": {
+        "$className": "Folder",
+        "$path": "src/server/systems"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "GameClient": {
+          "$path": "src/client/GameClient.lua"
+        },
+        "AdminLog": {
+          "$path": "src/client/AdminLog.lua"
+        },
+        "AdminChat": {
+          "$path": "src/client/AdminChat.lua"
+        },
+        "ClientModules": {
+          "$className": "Folder",
+          "$path": "src/client/modules"
+        }
+      }
+    },
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "shared": {
+        "$className": "Folder",
+        "GhostData": {
+          "$path": "src/shared/GhostData.lua"
+        },
+        "Config": {
+          "$path": "src/shared/Config.lua"
+        }
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "DataManager": {
+        "$path": "src/server/data/DataManager.lua"
+      }
+    }
+  }
+}
