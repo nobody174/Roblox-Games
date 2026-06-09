@@ -755,9 +755,6 @@ if catchRemote then
 			-- CATCH SUCCESSFUL
 			print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. catchResult.coinsGained .. " coins!")
 
-			-- Reset charge on successful catch
-			data.charge = 0
-
 			-- Add to ghost inventory
 			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
 			data.ghostInventory[inventoryKey] = {
@@ -828,8 +825,7 @@ if catchRemote then
 				end
 				return
 			else
-				-- Ghost escaped - still reset charge
-				data.charge = 0
+				-- Ghost escaped
 				print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. catchResult.roll .. " vs " .. catchResult.catchRate .. "%)")
 
 				-- Track the attempt anyway (for quest stats)
