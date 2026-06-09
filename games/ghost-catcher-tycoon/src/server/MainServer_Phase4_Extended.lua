@@ -110,6 +110,13 @@ local GhostData = require(game:GetService("ReplicatedStorage"):WaitForChild("sha
 local ZoneData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("ZoneData"))
 local GhostAI = require(game:GetService("ServerScriptService"):WaitForChild("GhostAI"))
 
+-- Load Equipment System modules
+local EquipmentData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("EquipmentData"))
+local PlayerInventory = require(game:GetService("ServerScriptService"):WaitForChild("PlayerInventory"))
+local CatchingSystem = require(game:GetService("ServerScriptService"):WaitForChild("CatchingSystem"))
+
+print("[PHASE 4] Equipment systems loaded")
+
 -- Ghost spawning setup
 local activeGhosts = {}
 local rarityColors = {
@@ -543,6 +550,10 @@ Players.PlayerAdded:Connect(function(player)
 	if zoneManager then
 		-- ZoneManager will handle this in startZoneDetection
 	end
+
+	-- Initialize equipment inventory
+	PlayerInventory:initializePlayer(userId)
+	print("[PHASE 4] Equipment inventory initialized for " .. player.Name)
 end)
 
 -- Hook player leave to save data to DataStore
@@ -561,6 +572,10 @@ Players.PlayerRemoving:Connect(function(player)
 
 		-- Clear from memory
 		playerData[userId] = nil
+
+		-- Clean up equipment inventory
+		PlayerInventory:removePlayer(userId)
+		print("[PHASE 4] Cleaned up equipment for " .. player.Name)
 	end
 end)
 
@@ -991,6 +1006,54 @@ if unlockZoneRemote then
 	end)
 	print("[PHASE 4] UnlockZone handler connected")
 end
+
+-- ==================== EQUIPMENT MANAGEMENT REMOTES ====================
+
+-- Purchase Equipment
+local purchaseEquipmentRemote = createRemote("PurchaseEquipment", "RemoteFunction")
+purchaseEquipmentRemote.OnServerInvoke = function(player, equipmentName)
+	local userId = player.UserId
+	local result = CatchingSystem:purchaseEquipment(userId, equipmentName)
+
+	if result.success then
+		print("[PHASE 4] " .. player.Name .. " purchased " .. equipmentName)
+		local data = initPlayerData(userId)
+		data.coins = PlayerInventory:getCoins(userId)
+	else
+		print("[PHASE 4] " .. player.Name .. " failed to purchase " .. equipmentName .. ": " .. result.reason)
+	end
+
+	return result
+end
+
+-- Equip Equipment
+local equipEquipmentRemote = createRemote("EquipEquipment", "RemoteFunction")
+equipEquipmentRemote.OnServerInvoke = function(player, equipmentName)
+	local userId = player.UserId
+	local result = CatchingSystem:equipEquipment(userId, equipmentName)
+
+	if result.success then
+		print("[PHASE 4] " .. player.Name .. " equipped " .. equipmentName)
+	end
+
+	return result
+end
+
+-- Get Equipment Info
+local getEquipmentRemote = createRemote("GetEquipmentInfo", "RemoteFunction")
+getEquipmentRemote.OnServerInvoke = function(player, ghostRarity)
+	local userId = player.UserId
+	return CatchingSystem:getEquipmentInfo(userId, ghostRarity)
+end
+
+-- Get All Player Equipment
+local getPlayerEquipmentRemote = createRemote("GetPlayerEquipment", "RemoteFunction")
+getPlayerEquipmentRemote.OnServerInvoke = function(player)
+	local userId = player.UserId
+	return CatchingSystem:getPlayerEquipmentStats(userId)
+end
+
+print("[PHASE 4] Equipment management remotes created")
 
 -- ==================== PVP SYSTEM ====================
 
