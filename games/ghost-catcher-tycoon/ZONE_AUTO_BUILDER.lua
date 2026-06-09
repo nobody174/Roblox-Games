@@ -18,6 +18,28 @@ if existingZones then
 	return
 end
 
+-- Check for saved map template first (with retry loop)
+local ss = game:GetService("ServerStorage")
+local savedMapTemplate = nil
+for retry = 1, 20 do
+	task.wait(0.1)
+	savedMapTemplate = ss:FindFirstChild("SavedMapTemplate")
+	if savedMapTemplate and savedMapTemplate:IsA("Folder") then
+		break
+	end
+end
+
+if savedMapTemplate and savedMapTemplate:IsA("Folder") then
+	-- Load from template (much faster!)
+	local mapClone = savedMapTemplate:Clone()
+	mapClone.Name = "ZoneContainer"
+	mapClone.Parent = workspace
+	print("[ZoneAutoBuilder] ⚡ Loaded map from template (SavedMapTemplate)")
+	return
+else
+	print("[ZoneAutoBuilder] ⚠️ No template found in ServerStorage, rebuilding map")
+end
+
 local zoneContainer = Instance.new("Folder")
 zoneContainer.Name = "ZoneContainer"
 zoneContainer.Parent = workspace
@@ -598,5 +620,15 @@ print("[ZoneAutoBuilder] Bridges: 5 (connecting zones)")
 print("[ZoneAutoBuilder] Ladders: 4 per zone (recovery)")
 print("[ZoneAutoBuilder] Portals: 5 (zone progression)")
 print("[ZoneAutoBuilder] Props: Trees, Cacti, Tombstones, Ice, Neon pads")
+
+-- Save the completed map to ServerStorage for next startup
+local ss = game:GetService("ServerStorage")
+local savedMapTemplate = ss:FindFirstChild("SavedMapTemplate")
+if not savedMapTemplate then
+	local mapClone = zoneContainer:Clone()
+	mapClone.Name = "SavedMapTemplate"
+	mapClone.Parent = ss
+	print("[ZoneAutoBuilder] 💾 Map template saved to ServerStorage (will load instantly next restart)")
+end
 
 -- Built with assistance from Claude Code by Anthropic.

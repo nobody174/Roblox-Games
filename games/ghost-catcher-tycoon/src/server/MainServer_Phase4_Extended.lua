@@ -131,11 +131,13 @@ print("[PHASE 4] Zone unlock system loaded")
 
 -- Load Quest System (Agent 4)
 local QuestManager = require(game:GetService("ServerScriptService"):WaitForChild("QuestManager"))
+QuestManager = QuestManager:new()
 
 print("[PHASE 4] Quest system loaded")
 
 -- Load Data Persistence (Agent 5)
 local DataPersistence = require(game:GetService("ServerScriptService"):WaitForChild("DataPersistence"))
+DataPersistence = DataPersistence:new()
 
 print("[PHASE 4] Data persistence loaded")
 
@@ -497,6 +499,22 @@ print("[PHASE 4] Ghost spawning started")
 
 local playerData = {}
 
+-- For Studio testing: load persisted playerData from ReplicatedStorage if it exists
+local persistedDataStore = rs:FindFirstChild("PlayerDataStore")
+if persistedDataStore and persistedDataStore:IsA("StringValue") and persistedDataStore.Value ~= "" then
+	local success, persistedData = pcall(function()
+		return loadstring("return " .. persistedDataStore.Value)()
+	end)
+	if success and persistedData and typeof(persistedData) == "table" then
+		playerData = persistedData
+		print("[PHASE 4] Loaded persisted player data from ReplicatedStorage")
+		-- Debug: show what was loaded
+		for userId, data in pairs(playerData) do
+			print("[PHASE 4] DEBUG: Loaded userId=" .. tostring(userId) .. ", ghosts=" .. tostring(data.ghosts) .. ", ghostInventory keys=" .. tostring(next(data.ghostInventory) and "HAS_DATA" or "EMPTY"))
+		end
+	end
+end
+
 -- Expose playerData globally so admin commands can access it
 _G.GhostCatcherPlayerData = playerData
 
@@ -531,34 +549,13 @@ end
 Players.PlayerAdded:Connect(function(player)
 	local userId = player.UserId
 
-	-- Load from DataStore if available (or create new)
-	local dmData = nil
-	if dataManager then
-		dmData = dataManager:loadPlayerData(player)
-	end
-
-	-- Initialize or load simple data structure for fast access
-	if dmData and dmData.Coins then
-		-- Restore from previous session
-		playerData[userId] = {
-			charge = 0, -- Charge always resets on join
-			coins = dmData.Coins or 0,
-			ghosts = (dmData.GhostCount or 0),
-			ghostInventory = dmData.GhostInventory or {},
-			rooms = dmData.Rooms or {
-				GhostChamber = { level = 0 },
-				TrainingFacility = { level = 0 },
-				EnergyReactor = { level = 0 },
-				ResearchLab = { level = 0 },
-				BossArena = { level = 0 },
-			},
-			unlockedZones = dmData.UnlockedZones or { ["Whisper Woods"] = true },
-		}
-		print("[PHASE 4] Loaded player data for " .. player.Name .. " from DataStore")
-	else
-		-- New player
+	-- Check if playerData already has data from ReplicatedStorage load
+	if not playerData[userId] or (not playerData[userId].ghostInventory or not next(playerData[userId].ghostInventory)) then
+		-- Initialize if not already done
 		initPlayerData(userId)
-		print("[PHASE 4] Created new player data for " .. player.Name)
+		print("[PHASE 4] Initialized new player data for " .. player.Name)
+	else
+		print("[PHASE 4] Loaded player data for " .. player.Name .. " from persistent storage")
 	end
 
 	-- Initialize player in SystemManager systems (for Quests, Bosses, etc.)
@@ -575,6 +572,7 @@ Players.PlayerAdded:Connect(function(player)
 
 	-- Initialize equipment inventory
 	PlayerInventory:initializePlayer(userId)
+	PlayerInventory:setEnergy(userId, 500) -- Give starting energy
 	print("[PHASE 4] Equipment inventory initialized for " .. player.Name)
 
 	-- Initialize progression systems
@@ -594,6 +592,25 @@ Players.PlayerAdded:Connect(function(player)
 	-- Initialize data persistence
 	local loadedData = DataPersistence:loadPlayerData(player)
 	print("[PHASE 4] Data persistence initialized for " .. player.Name)
+
+	-- Sync from persistent data (DataPersistence takes priority over old dataManager)
+	if loadedData then
+		print("[PHASE 4] DEBUG: loadedData exists, ghosts struct: " .. tostring(loadedData.ghosts))
+		if loadedData.ghosts then
+			print("[PHASE 4] DEBUG: ghosts.inventory = " .. tostring(loadedData.ghosts.inventory) .. ", totalCaught = " .. tostring(loadedData.ghosts.totalCaught))
+		end
+		if loadedData.ghosts and loadedData.ghosts.inventory and (loadedData.ghosts.totalCaught or 0) > 0 then
+			playerData[userId].ghostInventory = loadedData.ghosts.inventory
+			playerData[userId].ghosts = loadedData.ghosts.totalCaught or 0
+			print("[PHASE 4] Restored " .. playerData[userId].ghosts .. " ghosts from persistent data for " .. player.Name)
+		end
+		if loadedData.resources and loadedData.resources.coins and loadedData.resources.coins > 0 then
+			playerData[userId].coins = loadedData.resources.coins
+			print("[PHASE 4] Restored " .. playerData[userId].coins .. " coins from persistent data for " .. player.Name)
+		end
+	else
+		print("[PHASE 4] DEBUG: loadedData is nil!")
+	end
 end)
 
 -- Hook player leave to save data to DataStore
@@ -602,6 +619,14 @@ Players.PlayerRemoving:Connect(function(player)
 	local data = playerData[userId]
 
 	if data then
+		-- Update persistent data with current ghost inventory before saving
+		DataPersistence:updatePlayerData(player, {
+			ghosts = {
+				inventory = data.ghostInventory,
+				totalCaught = data.ghosts,
+			}
+		})
+
 		-- Save via DataPersistence immediately (force save on leave)
 		DataPersistence:savePlayerData(player, true)
 		print("[PHASE 4] Saved player data via DataPersistence for " .. player.Name)
@@ -614,6 +639,42 @@ Players.PlayerRemoving:Connect(function(player)
 			else
 				warn("[PHASE 4] Failed to save player data for " .. player.Name)
 			end
+		end
+
+		-- Save to ReplicatedStorage for Studio persistence (use StringValue, not ModuleScript)
+		local persistedDataStore = rs:FindFirstChild("PlayerDataStore")
+		if not persistedDataStore then
+			persistedDataStore = Instance.new("StringValue")
+			persistedDataStore.Name = "PlayerDataStore"
+			persistedDataStore.Parent = rs
+		end
+
+		-- Build Lua table string (simpler than JSON)
+		local luaTableStr = "{\n"
+		local hasData = false
+		for uId, uData in pairs(playerData) do
+			if uData and next(uData.ghostInventory) then
+				hasData = true
+				luaTableStr = luaTableStr .. "  [" .. uId .. "] = {\n"
+				luaTableStr = luaTableStr .. "    ghosts = " .. uData.ghosts .. ",\n"
+				luaTableStr = luaTableStr .. "    coins = " .. uData.coins .. ",\n"
+				luaTableStr = luaTableStr .. "    ghostInventory = {\n"
+
+				for inventoryKey, ghost in pairs(uData.ghostInventory) do
+					luaTableStr = luaTableStr .. "      ['" .. inventoryKey .. "'] = {name='" .. ghost.name .. "', level=" .. ghost.level .. ", rarity='" .. ghost.rarity .. "'},\n"
+				end
+
+				luaTableStr = luaTableStr .. "    }\n"
+				luaTableStr = luaTableStr .. "  },\n"
+			end
+		end
+		luaTableStr = luaTableStr .. "}\n"
+
+		persistedDataStore.Value = luaTableStr
+		if hasData then
+			print("[PHASE 4] ✅ Saved player data to ReplicatedStorage")
+		else
+			print("[PHASE 4] No ghosts to save")
 		end
 
 		-- Clear from memory
@@ -631,9 +692,19 @@ task.spawn(function()
 		task.wait(30)
 
 		-- Save via DataPersistence (new unified system)
-		for userId, _ in pairs(playerData) do
+		for userId, data in pairs(playerData) do
 			local player = Players:FindFirstChild(tostring(userId))
 			if player then
+				-- Sync current playerData state to persistent storage before saving
+				DataPersistence:updatePlayerData(player, {
+					resources = {
+						coins = data.coins,
+					},
+					ghosts = {
+						totalCaught = data.ghosts,
+						inventory = data.ghostInventory,
+					}
+				})
 				DataPersistence:savePlayerData(player)
 			end
 		end
@@ -739,7 +810,7 @@ if catchRemote then
 		end
 
 		-- ================================================================
-		-- NEW: Use CatchingSystem for attempt with equipment
+		-- CATCH ATTEMPT: Determine success based on rarity
 		-- ================================================================
 
 		local currentZone = "Unknown Zone"
@@ -752,11 +823,46 @@ if catchRemote then
 			end
 		end
 
-		local catchResult = CatchingSystem:attemptCatch(player, closestGhost, currentZone)
+		-- Simple catch rate by rarity (no equipment needed for Phase 4)
+		local catchRateByRarity = {
+			Common = 80,
+			Uncommon = 65,
+			Rare = 50,
+			Epic = 35,
+			Legendary = 20,
+			Corrupted = 10,
+		}
 
-		if catchResult.success then
+		-- Coin rewards by rarity
+		local coinsByRarity = {
+			Common = 50,
+			Uncommon = 100,
+			Rare = 250,
+			Epic = 500,
+			Legendary = 1500,
+			Corrupted = 5000,
+		}
+
+		-- XP rewards by rarity
+		local xpByRarity = {
+			Common = 25,
+			Uncommon = 50,
+			Rare = 100,
+			Epic = 200,
+			Legendary = 500,
+			Corrupted = 1000,
+		}
+
+		local catchRate = catchRateByRarity[rarity] or 50
+		local roll = math.random(0, 100)
+		local success = roll <= catchRate
+
+		if success then
 			-- CATCH SUCCESSFUL
-			print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. catchResult.coinsGained .. " coins!")
+			local coinsGained = coinsByRarity[rarity] or 50
+			local xpGained = xpByRarity[rarity] or 25
+
+			print("[PHASE 4] " .. player.Name .. " caught " .. ghostName .. " (" .. rarity .. ") for " .. coinsGained .. " coins!")
 
 			-- Add to ghost inventory
 			local inventoryKey = ghostName .. "_" .. math.random(1000, 9999)
@@ -764,84 +870,66 @@ if catchRemote then
 				name = ghostName,
 				level = 1,
 				rarity = rarity,
-				xpGained = catchResult.xpGained,
-				caughtWith = catchResult.equipment,
-				zone = catchResult.zone,
 			}
 
-			-- Update player coins from inventory system
-			data.coins = PlayerInventory:getCoins(player.UserId)
+			-- Award coins and XP
+			data.coins = data.coins + coinsGained
 			data.ghosts = data.ghosts + 1
 
-			-- ================================================================
-			-- PROGRESSION HOOKS: Add XP to player
-			-- ================================================================
-			LevelSystem:addXP(player.UserId, catchResult.xpGained)
+			-- Destroy the ghost
+			activeGhosts[closestGhost] = nil
+			closestGhost.Parent.Parent = nil  -- Destroy the model
+
+			-- Add XP to player
+			LevelSystem:addXP(player.UserId, xpGained)
 
 			-- Check for level-ups and auto-unlock zones
 			local newLevel = LevelSystem:getLevel(player.UserId)
 			local oldLevel = newLevel - 1
 			if newLevel > oldLevel then
-				-- Level up occurred, check for zone unlocks
 				ZoneUnlockManager:checkAutoUnlocks(player.UserId, newLevel)
 				print("[PHASE 4] " .. player.Name .. " leveled up to " .. newLevel .. "!")
 			end
 
-			-- ================================================================
-			-- QUEST TRACKING: Track this ghost catch event
-			-- ================================================================
+			-- Track quest event
 			QuestManager:trackQuestEvent(player, "GhostCaught", {
 				ghostName = ghostName,
 				rarity = rarity,
 				zone = currentZone,
 			})
 
-			-- Check if any quests were completed
-			local completedQuests = QuestManager:checkQuestCompletion(player.UserId)
-			if completedQuests and #completedQuests > 0 then
-				print("[PHASE 4] " .. player.Name .. " completed " .. #completedQuests .. " quest(s)")
-			end
-
-			-- ================================================================
-			-- DATA PERSISTENCE: Queue save
-			-- ================================================================
+			-- Save data
 			DataPersistence:updatePlayerData(player, {
-				coins = data.coins,
-				ghosts = data.ghosts,
-				ghostInventory = data.ghostInventory,
+				resources = {
+					coins = data.coins,
+				},
+				ghosts = {
+					totalCaught = data.ghosts,
+					inventory = data.ghostInventory,
+				}
 			})
 
-			-- Notify player of success
+			-- Notify player
 			local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
 			if notifyRemote then
-				local msg = "✅ Caught " .. ghostName .. "! +" .. catchResult.coinsGained .. " coins, +" .. catchResult.xpGained .. " XP"
+				local msg = "✅ Caught " .. ghostName .. "! +" .. coinsGained .. " coins, +" .. xpGained .. " XP"
 				notifyRemote:FireClient(player, msg, Color3.fromRGB(0, 255, 0))
 			end
 
 		else
-			-- CATCH FAILED
-			if catchResult.reason == "NOT_ENOUGH_ENERGY" then
-				print("[PHASE 4] " .. player.Name .. " tried to catch but not enough energy")
-				local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
-				if notifyRemote then
-					notifyRemote:FireClient(player, "Not enough energy! (" .. catchResult.currentEnergy .. "/" .. catchResult.energyNeeded .. ")", Color3.fromRGB(255, 100, 100))
-				end
-				return
-			else
-				-- Ghost escaped
-				print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. catchResult.roll .. " vs " .. catchResult.catchRate .. "%)")
+			-- CATCH FAILED - Ghost escaped
+			print("[PHASE 4] " .. player.Name .. " attempted to catch " .. ghostName .. " but ghost escaped (roll: " .. roll .. " vs " .. catchRate .. "%)")
 
-				-- Track the attempt anyway (for quest stats)
-				QuestManager:trackQuestEvent(player, "CatchAttempt", {
-					ghostName = ghostName,
-					rarity = rarity,
-					success = false,
-				})
+			-- Track the attempt anyway
+			QuestManager:trackQuestEvent(player, "CatchAttempt", {
+				ghostName = ghostName,
+				rarity = rarity,
+				success = false,
+			})
 
-				local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
-				if notifyRemote then
-					notifyRemote:FireClient(player, "❌ Ghost escaped! Try stronger equipment.", Color3.fromRGB(255, 150, 100))
-				end
+			local notifyRemote = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+			if notifyRemote then
+				notifyRemote:FireClient(player, "❌ Ghost escaped! (" .. catchRate .. "% catch rate)", Color3.fromRGB(255, 150, 100))
 			end
 		end
 
@@ -1020,6 +1108,14 @@ if releaseGhostRemote then
 		data.ghostInventory[ghostKey] = nil
 		data.ghosts = math.max(0, data.ghosts - 1)
 
+		-- Save to persistent storage
+		DataPersistence:updatePlayerData(player, {
+			ghosts = {
+				totalCaught = data.ghosts,
+				inventory = data.ghostInventory,
+			}
+		})
+
 		-- Broadcast updated state
 		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
 		if updateRemote then
@@ -1089,6 +1185,17 @@ if hatchEggRemote then
 		data.ghosts = data.ghosts + 1
 
 		print("[PHASE 4] " .. player.Name .. " hatched " .. eggName .. " and received " .. hatchedName .. " (" .. rarity .. ")!")
+
+		-- Save to persistent storage
+		DataPersistence:updatePlayerData(player, {
+			resources = {
+				coins = data.coins,
+			},
+			ghosts = {
+				totalCaught = data.ghosts,
+				inventory = data.ghostInventory,
+			}
+		})
 
 		-- Send immediate broadcast to update client UI
 		local updateRemote = remotesFolder:FindFirstChild(Constants.Remotes.UpdateUI)
