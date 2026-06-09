@@ -741,7 +741,12 @@ if catchRemote then
 
 		local currentZone = "Unknown Zone"
 		if zoneManager then
-			currentZone = zoneManager:detectPlayerZone(playerPos) or "Unknown Zone"
+			local success, result = pcall(function()
+				return zoneManager:detectPlayerZone(playerPos)
+			end)
+			if success and result then
+				currentZone = result
+			end
 		end
 
 		local catchResult = CatchingSystem:attemptCatch(player, closestGhost, currentZone)
