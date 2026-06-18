@@ -25,19 +25,20 @@ local MAX_GHOSTS_PER_ZONE = 5
 local GHOST_DESPAWN_TIME = 60
 local SPAWN_CHECK_INTERVAL = 3
 
--- Map ZoneData keys to ZoneContainer folder names (built by ZONE_AUTO_BUILDER)
+-- Map ZoneData keys to WorldBuilder island folder names (under ZoneContainer/Islands/)
 local ZONE_FOLDER_MAPPING = {
-	["Whisper Woods"] = "Zone_1_Meadow",
-	["Foggy Fields"] = "Zone_2_Desert",
-	["Gloomy Graveyard"] = "Zone_3_Frost",
-	["Electro Alley"] = "Zone_4_Haunted",
-	["Frostbite Caverns"] = "Zone_5_Tech",
-	["Sunken Spirit Reef"] = "Zone_6_Reef",
-	["Clocktower District"] = "Zone_7_Clock",
-	["Astral Observatory"] = "Zone_8_Astral",
-	["Phantom Fortress"] = "Zone_9_Phantom",
-	["The Rift"] = "Zone_10_Rift",
-	["Eternity Nexus"] = "Zone_11_Eternity",
+	["Starting Area"] = "Hub",
+	["Whisper Woods"] = "Whisper Woods",
+	["Foggy Fields"] = "Foggy Fields",
+	["Gloomy Graveyard"] = "Gloomy Graveyard",
+	["Electro Alley"] = "Electro Alley",
+	["Frostbite Caverns"] = "Frostbite Caverns",
+	["Sunken Spirit Reef"] = "Sunken Spirit Reef",
+	["Clocktower District"] = "Clocktower District",
+	["Astral Observatory"] = "Astral Observatory",
+	["Phantom Fortress"] = "Phantom Fortress",
+	["The Rift"] = "The Rift",
+	["Eternity Nexus"] = "Eternity Nexus",
 }
 
 function GhostSpawner:new()
@@ -88,7 +89,14 @@ function GhostSpawner:spawnGhostInZone(zoneName)
 		return nil
 	end
 
-	local zoneFolder = zoneContainer:FindFirstChild(zoneFolderName)
+	-- Navigate to ZoneContainer/Islands/IslandName
+	local islandsFolder = zoneContainer:FindFirstChild("Islands")
+	if not islandsFolder then
+		warn("[GhostSpawner] Islands folder not found in ZoneContainer")
+		return nil
+	end
+
+	local zoneFolder = islandsFolder:FindFirstChild(zoneFolderName)
 	if not zoneFolder then
 		warn("[GhostSpawner] Zone folder not found: " .. zoneFolderName .. " (ZoneData key: " .. zoneName .. ")")
 		return nil
@@ -124,13 +132,26 @@ function GhostSpawner:spawnGhostInZone(zoneName)
 		return nil
 	end
 
-	-- Random position within zone
-	local zonePos = zoneFolder:FindFirstChild("ZoneMarker") or zoneFolder
-	local spawnPos = zonePos.Position + Vector3.new(
-		math.random(-SPAWN_RADIUS, SPAWN_RADIUS),
-		10,
-		math.random(-SPAWN_RADIUS, SPAWN_RADIUS)
-	)
+	-- Random position within zone (find any terrain part to use as center)
+	local terrainPart = nil
+	for _, child in ipairs(zoneFolder:GetChildren()) do
+		if child:IsA("BasePart") then
+			terrainPart = child
+			break
+		end
+	end
+
+	local spawnPos
+	if terrainPart then
+		spawnPos = terrainPart.Position + Vector3.new(
+			math.random(-SPAWN_RADIUS, SPAWN_RADIUS),
+			25,  -- Increased from 10 to 25 studs above terrain to spawn above ground
+			math.random(-SPAWN_RADIUS, SPAWN_RADIUS)
+		)
+	else
+		-- Fallback if no terrain found
+		spawnPos = Vector3.new(0, 50, 0)
+	end
 
 	-- Create ghost instance
 	stats.Position = spawnPos
@@ -161,19 +182,24 @@ function GhostSpawner:spawnGhostInZone(zoneName)
 	return ghostInstance
 end
 
--- Spawn ghosts in all zones periodically
+-- Spawn ghosts in all zones periodically (shared zones only, not private Home)
 function GhostSpawner:startSpawning()
 	task.spawn(function()
 		while true do
 			task.wait(SPAWN_CHECK_INTERVAL)
 
-			for zoneName, _ in pairs(ZoneData) do
-				self:spawnGhostInZone(zoneName)
+			-- Spawn in shared exploration zones (Whisper Woods, Foggy Fields, etc.)
+			-- Skip Starting Area/Hub (public but handled separately) and Home (private per-player)
+			for zoneName, zoneInfo in pairs(ZoneData) do
+				-- Skip public hub and private home zones
+				if zoneName ~= "Starting Area" and not zoneInfo.IsPrivate then
+					self:spawnGhostInZone(zoneName)
+				end
 			end
 		end
 	end)
 
-	print("[GhostSpawner] Started spawning ghosts in all zones")
+	print("[GhostSpawner] Started spawning ghosts in shared exploration zones")
 end
 
 -- Get all active ghosts in a zone

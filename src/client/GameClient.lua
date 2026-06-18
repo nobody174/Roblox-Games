@@ -52,3 +52,4 @@ function GameClient:waitForRemotes()
 	self.remotes.UpdateUI = remotesFolder:WaitForChild(Constants.Remotes.UpdateUI)
 	self.remotes.GetGameState = remotesFolder:WaitForChild(Constants.Remotes.GetGameState)
 	self.remotes.ShowNotification = remotesFolder:FindFirstChild(Constants.Remotes.ShowNotification)
+end

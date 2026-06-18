@@ -152,25 +152,22 @@ function TrainingSystem:tick(player)
 		local ghost = self.ghostSystem:getGhost(player, ghostId)
 		if not ghost then
 			table.insert(completed, ghostId)
-			goto continue
-		end
+		else
+			local elapsedTime = now - training.startTime
+			local targetTime = self:calculateTotalTrainingTime(ghost, training.currentLevel, training.targetLevel)
 
-		local elapsedTime = now - training.startTime
-		local targetTime = self:calculateTotalTrainingTime(ghost, training.currentLevel, training.targetLevel)
+			if elapsedTime >= targetTime then
+				-- Complete training
+				ghost.level = training.targetLevel
+				table.insert(completed, ghostId)
 
-		if elapsedTime >= targetTime then
-			-- Complete training
-			ghost.level = training.targetLevel
-			table.insert(completed, ghostId)
-
-			-- Notify client
-			local remote = Constants.Paths.ReplicatedStorage:FindChild("Remotes"):FindChild(Constants.Remotes.ShowNotification)
-			if remote then
-				remote:FireClient(player, "Ghost trained to level " .. training.targetLevel .. "!")
+				-- Notify client
+				local remote = Constants.Paths.ReplicatedStorage:FindChild("Remotes"):FindChild(Constants.Remotes.ShowNotification)
+				if remote then
+					remote:FireClient(player, "Ghost trained to level " .. training.targetLevel .. "!")
+				end
 			end
 		end
-
-		::continue::
 	end
 
 	-- Remove completed trainings

@@ -15,7 +15,7 @@ function PhaseManager:new()
 	return self
 end
 
--- Create a private Starting Area instance for a player
+-- Create a private Home instance for a player
 function PhaseManager:createPlayerPhase(player)
 	local userId = player.UserId
 
@@ -32,16 +32,27 @@ function PhaseManager:createPlayerPhase(player)
 	phaseFolder.Name = "Phase_" .. phaseId .. "_" .. player.Name
 	phaseFolder.Parent = workspace
 
-	-- Clone Starting Area (Hub) into this phase
+	-- Clone Home zone (private HQ) into this phase
+	-- TODO: Create a Home island template in ZoneContainer that can be cloned
 	local zoneContainer = workspace:FindFirstChild("ZoneContainer")
 	if zoneContainer then
-		local hubZone = zoneContainer:FindFirstChild("Hub")
-		if hubZone then
-			-- Clone the Hub zone for this player's private instance
-			local clonedHub = hubZone:Clone()
-			clonedHub.Name = "Hub"
-			clonedHub.Parent = phaseFolder
+		local homeZone = zoneContainer:FindFirstChild("Home")
+		if homeZone then
+			-- Clone the Home zone for this player's private instance
+			local clonedHome = homeZone:Clone()
+			clonedHome.Name = "Home"
+			clonedHome.Parent = phaseFolder
+		else
+			-- Create a basic home folder if template doesn't exist yet
+			local basicHome = Instance.new("Folder")
+			basicHome.Name = "Home"
+			basicHome.Parent = phaseFolder
 		end
+	else
+		-- Create a basic home folder if ZoneContainer doesn't exist
+		local basicHome = Instance.new("Folder")
+		basicHome.Name = "Home"
+		basicHome.Parent = phaseFolder
 	end
 
 	-- Store phase info
@@ -53,7 +64,7 @@ function PhaseManager:createPlayerPhase(player)
 
 	self.playerPhases[userId] = phaseId
 
-	print("[PhaseManager] Created private phase #" .. phaseId .. " for " .. player.Name)
+	print("[PhaseManager] Created private phase #" .. phaseId .. " (Home) for " .. player.Name)
 
 	return phaseId
 end
@@ -70,7 +81,7 @@ function PhaseManager:getPlayerPhaseFolder(player)
 	return nil
 end
 
--- Teleport player to their private Starting Area phase
+-- Teleport player to their private Home phase
 function PhaseManager:teleportPlayerToPhase(player)
 	local phaseFolder = self:getPlayerPhaseFolder(player)
 	if not phaseFolder then
@@ -82,15 +93,15 @@ function PhaseManager:teleportPlayerToPhase(player)
 		return false
 	end
 
-	-- Find the Hub zone in the phase folder
-	local hubZone = phaseFolder:FindFirstChild("Hub")
-	if not hubZone then
+	-- Find the Home zone in the phase folder (player's private HQ)
+	local homeZone = phaseFolder:FindFirstChild("Home")
+	if not homeZone then
 		return false
 	end
 
 	-- Find terrain part to spawn near
 	local terrainPart = nil
-	for _, child in ipairs(hubZone:GetChildren()) do
+	for _, child in ipairs(homeZone:GetChildren()) do
 		if child:IsA("BasePart") then
 			terrainPart = child
 			break
@@ -145,32 +156,25 @@ function PhaseManager:initialize()
 
 	local Players = game:GetService("Players")
 
-	-- Create phases for existing players
+	-- Create phases for existing players (but don't auto-teleport)
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player.Character then
 			self:createPlayerPhase(player)
-			-- Delay teleport to ensure character is ready
-			task.delay(0.5, function()
-				if player and player.Parent then
-					self:teleportPlayerToPhase(player)
-				end
-			end)
 		end
 	end
 
-	-- Create phase for new players on spawn
+	-- Create phase for new players on spawn (but don't auto-teleport)
+	-- Players start in shared Hub and can teleport to Home on demand
 	Players.PlayerAdded:Connect(function(player)
 		player.CharacterAdded:Connect(function(character)
 			task.wait(0.5) -- Wait for character to be fully loaded
 
-			-- Create phase if doesn't exist
+			-- Create phase if doesn't exist (but keep player in shared zones)
 			if not self.playerPhases[player.UserId] then
 				self:createPlayerPhase(player)
 			end
 
-			-- Teleport to private phase
-			self:teleportPlayerToPhase(player)
-			print("[PhaseManager] Teleported " .. player.Name .. " to private phase")
+			print("[PhaseManager] Created Home phase for " .. player.Name .. " (stays in shared Hub)")
 		end)
 	end)
 

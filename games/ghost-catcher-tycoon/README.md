@@ -1,7 +1,8 @@
 <!--
   Ghost Catcher Tycoon
   Author:  nobody174 (nobodylearn174@gmail.com)
-  Repo:    https://github.com/nobody174/roblox-games
+  Repo:    https://github.com/nobody174/Roblox-Games
+  Sub-path: games/ghost-catcher-tycoon/
   License: All rights reserved © 2025 nobody174
   "It's never too late to give up!"
 -->

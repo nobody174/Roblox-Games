@@ -1,52 +1,96 @@
-<!--
-  Ghost Catcher Tycoon
-  Author:  nobody174 (vartdal@gmail.com)
-  Repo:    https://github.com/nobody174/roblox-games
-  License: All rights reserved © 2025 nobody174
-  "It's never too late to give up!"
--->
+# Roblox Games Hub
 
-# Ghost Catcher Tycoon
+A collection of Roblox games developed as personal projects. This repository serves as a central hub for all Roblox game developments.
 
+**⚠️ Status:** All games under development (uncompleted)
+
+## Games
+
+### 1. Ghost Catcher Tycoon
 A fun tycoon/simulator hybrid where players catch ghosts, manage their HQ, and climb the ranks!
 
-## Game Overview
+**Status:** 🚧 In Development  
+**Genre:** Tycoon/Simulator  
+**Players:** Single-player (with leaderboards)  
+**Documentation:** [Ghost Catcher Tycoon README](games/ghost-catcher-tycoon/README.md)
 
-**Genre**: Tycoon/Simulator  
-**Players**: Single-player (with leaderboards)  
-**Core Loop**: Click to charge → Catch ghosts → Bring home → Train → Upgrade HQ → Repeat
+**Core Loop:**
+- Click to charge vacuum
+- Catch ghosts in different zones
+- Bring home and train ghosts
+- Upgrade HQ
+- Expand to new zones
+- Collect rare ghosts
 
-### What Players Do
-
-1. **Catch Ghosts** - Charge vacuum by clicking, catch ghosts in different zones
-2. **Bring Home** - Transport ghosts back to HQ for energy production
-3. **Train Ghosts** - Improve stats to catch faster, earn more energy
-4. **Upgrade HQ** - Unlock rooms and facilities for better production
-5. **Expand** - Unlock new zones and fight boss ghosts
-6. **Collect** - Find rare ghosts with unique personalities
-
-## Game Features
-
-### Core Mechanics
+**Key Features:**
 - ✅ Click-based vacuum charging
 - ✅ Ghost catching with difficulty/rarity
 - ✅ Passive energy generation
 - ✅ Ghost training system
-- ✅ HQ room upgrades (tycoon)
+- ✅ HQ room upgrades (tycoon mechanics)
 - ✅ Auto-catch/Auto-train systems
 - ✅ Zone progression
 - ✅ Boss ghost battles
 - ✅ Ghost rarity system (Common, Uncommon, Rare, Legendary)
 
-### Systems
-- **Data System**: Persistent player data with DataStore
-- **Currency**: Ecto-Energy (main currency)
-- **Storage**: Ghost inventory with limits (upgradeable)
-- **Monetization**: GamePasses & Developer Products
+## Project Structure
+
+```
+Roblox-Games/
+├── README.md (this file - Hub overview)
+├── games/
+│   ├── ghost-catcher-tycoon/
+│   │   ├── README.md (Game-specific documentation)
+│   │   ├── src/
+│   │   │   ├── client/
+│   │   │   ├── server/
+│   │   │   └── shared/
+│   │   ├── tests/
+│   │   ├── docs/
+│   │   ├── place.rbxl (Roblox game file)
+│   │   └── ...
+│   │
+│   └── [more games will be added here]
+│
+├── .github/workflows/ (CI/CD)
+└── LICENSE
+```
 
 ## Getting Started
 
-See [SETUP.md](docs/SETUP.md) for installation and testing instructions.
+For detailed setup and testing instructions for a specific game, see the game's individual README:
+- [Ghost Catcher Tycoon Setup](games/ghost-catcher-tycoon/docs/SETUP.md)
+
+## Development
+
+Each game is contained in its own folder under `games/`. To add a new game:
+1. Create a new folder: `games/[game-name]/`
+2. Add game files and documentation
+3. Create a README specific to that game
+4. Update this hub README with game information
+
+## Testing
+
+Each game has its own test suite. See individual game documentation for testing procedures.
+
+## License
+
+All code in this repository is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Author
+
+**Developer:** nobody174  
+**Email:** nobodylearn174@gmail.com  
+**Created:** 2026
+
+## Important Note
+
+⚠️ **All games in this repository are currently under development and are not completed.** They are shared for:
+- Development progress tracking
+- Community feedback and testing
+- Portfolio purposes
+
+Games may have bugs, incomplete features, or breaking changes. Use at your own risk.
 
 ## Project Structure
 

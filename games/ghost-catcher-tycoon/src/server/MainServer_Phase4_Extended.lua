@@ -105,10 +105,8 @@ print("[PHASE 4] Remotes created (including optional handlers)")
 
 -- ==================== GAME CONFIGURATION ====================
 
--- Load GhostData and ZoneData for spawning
+-- Load GhostData for rarity/catch rates
 local GhostData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("GhostData"))
-local ZoneData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("ZoneData"))
-local GhostAI = require(game:GetService("ServerScriptService"):WaitForChild("GhostAI"))
 
 -- Load Equipment System modules
 local EquipmentData = require(game:GetService("ReplicatedStorage"):WaitForChild("shared"):WaitForChild("EquipmentData"))
@@ -179,243 +177,21 @@ local zoneConfig = {
 	["Frostbite Caverns"] = { unlocked = false, cost = 42000 },
 }
 
--- Available ghosts for hatching (simplified list)
+-- Available ghosts for hatching — pulled from GhostData rarities (120 total)
 local availableGhosts = {
-	Common = { "Puffling", "Wobbler", "Peekaboo", "Drifter", "Blinklet" },
-	Uncommon = { "Sparkling Sprite", "Shadowling", "Giggler", "Lantern Wisp", "Dustwhirl" },
-	Rare = { "Voltgeist", "Frostwhisper", "Bloomshade", "Geargrin", "Tidebound" },
-	Epic = { "Phantom Knight", "Inferno Wraith", "Astral Drifter", "Cryo Reaper", "Thunder Jester" },
-	Legendary = { "Ancient One", "Void King", "Star Reaper", "Eternal Shade", "Primordial Ghost" },
+	Common = { "Captain Wisp","Jolly Specter","Treasure Puff","Plank Walker","Seafaring Glow","Arcane Puff","Mystic Whisper","Spellbound Spirit","Enchanted Drift","Potion Phantom","Royal Gleam","Regal Glow","Majestic Wisp","Noble Specter","Throne Spirit","Circuit Boo","Metal Phantom","Cyber Glow","Powered Wisp","Spark Spirit","Shadow Blade","Quickstep Puff","Silent Phantom","Swift Whisper","Stealthy Glow","Honorable Wisp","Blade Spirit","Warrior Phantom","Valor Glow","Steel Specter","Frost Flicker","Ice Whisper","Chill Spirit","Glacier Puff","Blizzard Glow","Candy Floof","Sweet Puff","Sugar Wisp","Lollipop Spirit","Gummy Phantom" },
+	Uncommon = { "Storm Streak","Thunder Wisp","Cyclone Puff","Lightning Phantom","Tempest Spirit","Dragon Spirit","Dragon's Breath","Flame Drake","Ember Drake","Inferno Glow","Fire Wisp","Blaze Spirit","Spark Phantom","Spark Drift","Crystal Wink","Gem Spirit","Sparkle Phantom","Diamond Glow","Luminous Puff","Ocean Drift","Wave Whisper","Deep Phantom","Coral Spirit","Seafoam Glow","Jungle Drift","Vine Spirit","Tropical Puff","Forest Phantom","Emerald Glow","Steampunk Gear" },
+	Rare = { "Quantum Burst","Digital Phantom","Neon Wisp","Silicon Spirit","Hologram Glow","Star Spirit","Cosmic Phantom","Nebula Wisp","Galaxy Glow","Pulsar Puff","Aviator Ace","Space Explorer","Lunar Phantom","Starbound Spirit","Orbit Glow","Maestro Phantom","Melody Wisp","Harmony Spirit","Rhythm Glow","Symphony Puff" },
+	Epic = { "Crown Specter","Sovereign Phantom","Dynasty Spirit","Empress Wisp","Kingbright Glow","Celestial Phantom","Divine Spirit","Seraph Wisp","Halo Glow","Blessed Puff","Zenith Specter","Valiant Phantom","Crusade Spirit","Guardian Wisp","Armor Glow" },
+	Legendary = { "Eternal Phantom","Mythic Wisp","Transcendent Spirit","Omniscient Glow","Apex Phantom","Timeless Specter","Moonlit Echo","Starforge Wisp","Infinity Glow","Prism Phantom" },
+	Corrupted = { "Infernal Crown","Void Phantom","Abyssal Spirit","Shadowed Wisp","Corrupted Glow" },
 }
 
 -- ==================== GHOST SPAWNING ====================
 
--- Modified spawnGhost to support both shared zones and phased zones
-local function spawnGhost(zoneName, targetFolder)
-	-- Use targetFolder if provided (for private phases), otherwise use shared ZoneContainer
-	local searchContainer = targetFolder or workspace:FindFirstChild("ZoneContainer")
-	if not searchContainer then return nil end
+-- Ghost spawning is handled by GhostSpawner system (via SystemManager)
+-- GhostSpawner uses GhostInstanceBuilder to create ghost instances with proper stats and rendering
 
-	local zoneFolder = searchContainer:FindFirstChild(zoneName)
-	if not zoneFolder then return nil end
-
-	-- Get zone-specific spawn pool from ZoneData
-	local zoneInfo = ZoneData[zoneName]
-	if not zoneInfo or not zoneInfo.Spawns then
-		return nil -- Zone has no spawn data
-	end
-
-	-- Select ghost using weighted random from zone's spawn pool
-	local totalWeight = 0
-	for _, spawnEntry in ipairs(zoneInfo.Spawns) do
-		totalWeight = totalWeight + spawnEntry.Weight
-	end
-
-	local randomWeight = math.random(1, totalWeight)
-	local currentWeight = 0
-	local ghostName = "Puffling" -- Fallback
-	local rarity = "Common" -- Fallback
-
-	for _, spawnEntry in ipairs(zoneInfo.Spawns) do
-		currentWeight = currentWeight + spawnEntry.Weight
-		if randomWeight <= currentWeight then
-			ghostName = spawnEntry.Ghost
-			rarity = spawnEntry.Rarity or "Common"  -- Use rarity from spawn pool
-			break
-		end
-	end
-	local color = rarityColors[rarity] or Color3.fromRGB(200, 200, 200)
-
-	-- Find zone terrain to spawn near it
-	local terrainPart = nil
-	for _, child in ipairs(zoneFolder:GetChildren()) do
-		if child:IsA("BasePart") then
-			terrainPart = child
-			break
-		end
-	end
-
-	-- Spawn position relative to zone terrain
-	local zoneCenter = terrainPart and terrainPart.Position or Vector3.new(0, 25, 0)
-	local spawnPos = zoneCenter + Vector3.new(math.random(-50, 50), 15, math.random(-50, 50))
-
-	-- Build a ghost model: round head + glowing eyes (simplified)
-	local ghostModel = Instance.new("Model")
-	ghostModel.Name = ghostName
-	ghostModel.Parent = zoneFolder
-
-	-- Main head (round sphere)
-	local body = Instance.new("Part")
-	body.Name = "Body"
-	body.Shape = Enum.PartType.Ball
-	body.Size = Vector3.new(3, 3, 3)
-	body.CanCollide = false
-	body.Anchored = false
-	body.Color = color
-	body.Material = Enum.Material.SmoothPlastic
-	body.Transparency = 0.15
-	body.TopSurface = Enum.SurfaceType.Smooth
-	body.BottomSurface = Enum.SurfaceType.Smooth
-	body.CastShadow = false
-	body.Position = spawnPos
-	body.Parent = ghostModel
-	ghostModel.PrimaryPart = body
-
-	-- Left eye
-	local eyeL = Instance.new("Part")
-	eyeL.Name = "EyeL"
-	eyeL.Shape = Enum.PartType.Ball
-	eyeL.Size = Vector3.new(0.6, 0.6, 0.6)
-	eyeL.CanCollide = false
-	eyeL.Anchored = false
-	eyeL.Color = Color3.fromRGB(255, 255, 255)
-	eyeL.Material = Enum.Material.Neon
-	eyeL.CastShadow = false
-	eyeL.Position = spawnPos + Vector3.new(-0.6, 0.4, -1.3)
-	eyeL.Parent = ghostModel
-
-	local eyeLWeld = Instance.new("WeldConstraint")
-	eyeLWeld.Part0 = body
-	eyeLWeld.Part1 = eyeL
-	eyeLWeld.Parent = body
-
-	-- Right eye
-	local eyeR = eyeL:Clone()
-	eyeR.Name = "EyeR"
-	eyeR.Position = spawnPos + Vector3.new(0.6, 0.4, -1.3)
-	eyeR.Parent = ghostModel
-
-	local eyeRWeld = Instance.new("WeldConstraint")
-	eyeRWeld.Part0 = body
-	eyeRWeld.Part1 = eyeR
-	eyeRWeld.Parent = body
-
-
-	-- Glow light
-	local light = Instance.new("PointLight")
-	light.Brightness = 1.5
-	light.Range = 18
-	light.Color = color
-	light.Parent = body
-
-	-- Keep it floating (no gravity)
-	local bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-	bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
-	bodyVelocity.Parent = body
-
-	-- Gentle bobbing animation
-	local baseY = spawnPos.Y
-	local bobTask = task.spawn(function()
-		local t = 0
-		while ghostModel.Parent do
-			t = t + 0.05
-			local newY = baseY + math.sin(t) * 0.8
-			bodyVelocity.Velocity = Vector3.new(0, (newY - body.Position.Y) * 5, 0)
-			task.wait(0.05)
-		end
-	end)
-
-	-- Name/rarity billboard above ghost
-	local billboard = Instance.new("BillboardGui")
-	billboard.Size = UDim2.new(0, 120, 0, 45)
-	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-	billboard.MaxDistance = 40
-	billboard.AlwaysOnTop = false
-	billboard.Parent = body
-
-	local nameLabel = Instance.new("TextLabel")
-	nameLabel.Size = UDim2.new(1, 0, 0.6, 0)
-	nameLabel.BackgroundTransparency = 1
-	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	nameLabel.TextStrokeTransparency = 0
-	nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-	nameLabel.TextSize = 13
-	nameLabel.Font = Enum.Font.GothamBold
-	nameLabel.Text = ghostName
-	nameLabel.Parent = billboard
-
-	local rarityLabel = Instance.new("TextLabel")
-	rarityLabel.Size = UDim2.new(1, 0, 0.4, 0)
-	rarityLabel.Position = UDim2.new(0, 0, 0.6, 0)
-	rarityLabel.BackgroundTransparency = 1
-	rarityLabel.TextColor3 = color
-	rarityLabel.TextStrokeTransparency = 0
-	rarityLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-	rarityLabel.TextSize = 11
-	rarityLabel.Font = Enum.Font.Gotham
-	rarityLabel.Text = rarity
-	rarityLabel.Parent = billboard
-
-	-- Use body as the catch target, tag with attributes
-	body:SetAttribute("GhostName", ghostName)
-	body:SetAttribute("Rarity", rarity)
-	ghostModel:SetAttribute("GhostName", ghostName)
-	ghostModel:SetAttribute("Rarity", rarity)
-
-	-- Track by model (catch code checks Part, so also track body)
-	activeGhosts[body] = { name = ghostName, rarity = rarity }
-	local ghost = body  -- keep variable name for catch system compatibility
-
-	-- Initialize AI behavior based on rarity
-	GhostAI:initializeGhost(ghostModel, rarity)
-
-	-- Auto-despawn after 60 seconds
-	task.delay(60, function()
-		if ghostModel.Parent then
-			activeGhosts[body] = nil
-			ghostModel:Destroy()
-		end
-	end)
-
-	return ghost
-end
-
--- Spawn ghosts every N seconds in all zones (mapped from ZoneData)
--- Spawning will start after ZoneManager is initialized (to ensure PhaseManager is ready)
-local spawnLoopStarted = false
-
-local function startGhostSpawnLoop()
-	if spawnLoopStarted then return end
-	spawnLoopStarted = true
-
-	task.spawn(function()
-		local spawnCount = 0
-		while true do
-			task.wait(Config.GhostSpawnRate)
-			-- Zone names now match ZoneAutoBuilder output (theme names)
-			local zoneMapping = {
-				"Hub",  -- Starting Area
-				"Whisper Woods",
-				"Foggy Fields",
-				"Gloomy Graveyard",
-				"Electro Alley",
-				"Frostbite Caverns",
-				"Sunken Spirit Reef",
-				"Clocktower District",
-				"Astral Observatory",
-				"Phantom Fortress",
-				"The Rift",
-				"Eternity Nexus",
-			}
-
-			spawnCount = spawnCount + 1
-			local spawnedThisRound = 0
-			for _, zoneName in ipairs(zoneMapping) do
-				if spawnGhost(zoneName) then
-					spawnedThisRound = spawnedThisRound + 1
-				end
-			end
-
-			-- Don't spawn ghosts in Starting Area - it's a home/HQ zone
-			-- (PhaseManager still creates private phases, but they're ghost-free)
-
-			if spawnedThisRound > 0 then
-				print("[PHASE 4] Spawn cycle #" .. spawnCount .. ": Spawned " .. spawnedThisRound .. " ghosts")
-			end
-		end
-	end)
-end
 
 -- Expose world-spawn for admin testing (used by !sw command)
 _G.AdminSpawnWorld = function(player, ghostName)
@@ -493,7 +269,10 @@ _G.AdminSpawnWorld = function(player, ghostName)
 	print("[ADMIN] Spawned " .. ghostName .. " in world near " .. player.Name)
 end
 
-print("[PHASE 4] Ghost spawning started")
+-- DISABLED: Ghost spawning in MainServer (players are in private phases created by PhaseManager)
+-- The GhostSpawner system (via SystemManager) handles spawning in player phases
+-- startGhostSpawnLoop()
+-- print("[PHASE 4] Ghost spawning started")
 
 -- ==================== PLAYER DATA ====================
 
@@ -1561,14 +1340,14 @@ end)
 -- ==================== STARTUP ====================
 
 -- Initialize ZoneManager for zone detection and barriers
+-- ZoneManager handles: zone detection, phase management, and barrier creation
 if zoneManager and zoneManager.initialize then
 	zoneManager:initialize()
-	print("[PHASE 4] ZoneManager initialized, starting ghost spawn loop...")
-	startGhostSpawnLoop()
+	print("[PHASE 4] ZoneManager initialized (zone detection + phase management active)")
 end
 
 print("[PHASE 4] ✅ Phase 4 extended testing server ready!")
-print("[PHASE 4] Ghosts spawning every " .. Config.GhostSpawnRate .. " seconds in all zones")
+print("[PHASE 4] Ghost spawning managed by GhostSpawner system in player phases")
 print("[PHASE 4] Catch distance: " .. Config.GhostCatchDistance .. " studs (must be within this range)")
 print("[PHASE 4] Click CHARGE to increase vacuum charge by 25%")
 print("[PHASE 4] Click CATCH to catch nearby ghosts and earn coins")

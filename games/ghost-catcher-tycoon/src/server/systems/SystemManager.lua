@@ -111,6 +111,13 @@ function SystemManager:initialize()
 	end
 
 	systemsInitialized = true
+
+	-- Start GhostSpawner after all systems are initialized
+	local ghostSpawner = systems["GhostSpawner"]
+	if ghostSpawner and ghostSpawner.startSpawning then
+		ghostSpawner:startSpawning()
+	end
+
 	print("[SystemManager] ✓ All systems initialized")
 	return true
 end

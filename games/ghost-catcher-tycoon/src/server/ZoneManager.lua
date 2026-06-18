@@ -220,47 +220,49 @@ function ZoneManager:detectPlayerZone(hrp)
 
 	-- First, check if player is ON a bridge (threshold covers entire bridge length)
 	local bridgeThreshold = 100  -- Bridges are 100 studs long, this covers the full length
-	local bridgesFolder = zoneContainer:FindFirstChild("Bridges")
-	if bridgesFolder then
-		-- Check all parts in the Bridges folder
-		for _, child in ipairs(bridgesFolder:GetDescendants()) do
-			if child:IsA("BasePart") then
-				local distance = (hrp.Position - child.Position).Magnitude
-				if distance < bridgeThreshold then
-					return "Bridge"
+	local structuresFolder = zoneContainer:FindFirstChild("Structures")
+	if structuresFolder then
+		local bridgesFolder = structuresFolder:FindFirstChild("Bridges")
+		if bridgesFolder then
+			-- Check all parts in the Bridges folder
+			for _, child in ipairs(bridgesFolder:GetDescendants()) do
+				if child:IsA("BasePart") then
+					local distance = (hrp.Position - child.Position).Magnitude
+					if distance < bridgeThreshold then
+						return "Bridge"
+					end
 				end
 			end
 		end
 	end
 
-	-- If not on a bridge, find closest zone island
+	-- If not on a bridge, find closest zone island by checking island folder positions
+	-- Island folder centers are defined in WorldBuilder
+	local islandPositions = {
+		Hub = Vector3.new(0, 10, 0),
+		["Whisper Woods"] = Vector3.new(500, 10, 0),
+		["Foggy Fields"] = Vector3.new(0, 10, 500),
+		["Gloomy Graveyard"] = Vector3.new(0, 10, 1000),
+		["Electro Alley"] = Vector3.new(-500, 10, 0),
+		["Frostbite Caverns"] = Vector3.new(0, 10, 1500),
+		["Sunken Spirit Reef"] = Vector3.new(500, 10, 2000),
+		["Clocktower District"] = Vector3.new(0, 10, 2500),
+		["Astral Observatory"] = Vector3.new(-500, 10, 2000),
+		["Phantom Fortress"] = Vector3.new(500, 10, 2500),
+		["The Rift"] = Vector3.new(1000, 10, 1500),
+		["Eternity Nexus"] = Vector3.new(1000, 10, 2000),
+	}
+
 	local closestZone = "Starting Area"
-	local closestDistance = 500 -- Large threshold
+	local closestDistance = 250 -- Island radius threshold (350x350 islands, so ~250 studs to edge)
 
-	for _, zoneFolder in ipairs(zoneContainer:GetChildren()) do
-		if zoneFolder:IsA("Folder") or zoneFolder:IsA("Model") then
-			-- Skip bridges folder in this pass (already checked above)
-			if zoneFolder.Name ~= "Bridges" then
-				-- Find terrain part (usually named "Terrain" or similar)
-				local terrainPart = nil
-				for _, child in ipairs(zoneFolder:GetChildren()) do
-					if child:IsA("BasePart") then
-						terrainPart = child
-						break
-					end
-				end
+	for islandName, islandCenter in pairs(islandPositions) do
+		local distance = (hrp.Position - islandCenter).Magnitude
 
-				if terrainPart then
-					local distance = (hrp.Position - terrainPart.Position).Magnitude
-
-					-- If player is reasonably close to this zone's terrain
-					if distance < closestDistance then
-						closestDistance = distance
-						-- Map workspace folder name to ZoneData name
-						closestZone = ZONE_MAPPING[zoneFolder.Name] or zoneFolder.Name
-					end
-				end
-			end
+		-- If player is within threshold of this island
+		if distance < closestDistance then
+			closestDistance = distance
+			closestZone = ZONE_MAPPING[islandName] or islandName
 		end
 	end
 

@@ -38,7 +38,14 @@ function GhostInstanceBuilder:CreateGhostInstance(stats, parent)
 	ghost.Material = Enum.Material.Neon
 	ghost.TopSurface = Enum.SurfaceType.Smooth
 	ghost.BottomSurface = Enum.SurfaceType.Smooth
+	ghost.Position = stats.Position or Vector3.new(0, 25, 0)  -- Use spawn position from stats
 	ghost.Parent = parent
+
+	-- Add BodyVelocity to prevent falling and allow gentle floating
+	local bodyVelocity = Instance.new("BodyVelocity")
+	bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+	bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)  -- Only counteract gravity (Y-axis)
+	bodyVelocity.Parent = ghost
 
 	-- Store ghost data as attributes
 	ghost:SetAttribute("GhostName", stats.Name)
